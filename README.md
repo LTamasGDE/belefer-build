@@ -39,12 +39,13 @@ alkalmazás törlésekor az adatok is törlődnek.
 
 ## APK letöltése (Android)
 
-A friss teszt-APK a build-repó kiadásai között érhető el:
-<https://github.com/LTamasGDE/belefer-build/releases>. Nyisd meg a telefonon,
-töltsd le a `belefer-…-debug.apk` fájlt, és engedélyezd a telepítést
-ismeretlen forrásból. Minden CI-futás ezenkívül `belefer-android-debug-apk`
-artifactként is feltölti az APK-t (GitHub-bejelentkezéssel tölthető le, zip
-formában).
+A telepíthető APK a build-repó kiadásai között van, bejelentkezés nélkül
+letölthető: <https://github.com/LTamasGDE/belefer-build/releases/tag/26.11.0>.
+Telefonon a `belefer-26.11.0.apk` fájlt érdemes letölteni (release mód,
+debug-kulccsal aláírva). Nyisd meg a letöltött fájlt, és engedélyezd a
+telepítést ismeretlen forrásból. A `-debug.apk` változat hibakereséshez
+való. Minden CI-futás a debug APK-t `belefer-android-debug-apk`
+artifactként is feltölti (GitHub-bejelentkezéssel, zipben tölthető le).
 
 ## Felhős build és ellenőrzés
 

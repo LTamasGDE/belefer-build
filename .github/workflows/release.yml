@@ -43,14 +43,19 @@ jobs:
       - name: Tesztek
         run: flutter test
 
-      - name: Debug APK
+      - name: APK-k
         run: |
-          flutter build apk --debug
           VERSION=$(grep '^version:' pubspec.yaml | awk '{print $2}')
           echo "APP_VERSION=${VERSION}" >> "$GITHUB_ENV"
           mkdir -p dist
+          # Ajánlott: release módú (gyors, kicsi) APK, debug-kulccsal aláírva.
+          flutter build apk --release
+          cp build/app/outputs/flutter-apk/app-release.apk "dist/belefer-${{ inputs.tag }}.apk"
+          # Hibakereséshez: debug módú APK.
+          flutter build apk --debug
           cp build/app/outputs/flutter-apk/app-debug.apk "dist/belefer-${{ inputs.tag }}-debug.apk"
-          sha256sum dist/*.apk | tee dist/SHA256SUMS.txt
+          (cd dist && sha256sum *.apk | tee SHA256SUMS.txt)
+          ls -la dist
 
       - name: GitHub Release
         env:
@@ -60,9 +65,11 @@ jobs:
           cat > notes.md <<EOF
           Belefér ${TAG} – alkalmazásverzió ${APP_VERSION}, Flutter ${FLUTTER_VERSION}.
 
-          Android teszt-APK (debug-aláírással). Telepítés: töltsd le az .apk fájlt
-          a telefonon, nyisd meg, és engedélyezd az ismeretlen forrásból történő
-          telepítést a böngészőnek vagy a fájlkezelőnek.
+          Android teszt-APK. Telefonra a „belefer-${TAG}.apk” fájlt érdemes
+          letölteni (release mód, debug-kulccsal aláírva); a „-debug.apk”
+          hibakereséshez való. Telepítés: nyisd meg a letöltött fájlt, és
+          engedélyezd az ismeretlen forrásból történő telepítést a böngészőnek
+          vagy a fájlkezelőnek.
 
           Commit: ${GITHUB_SHA}
           EOF
