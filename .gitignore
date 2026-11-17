@@ -1,0 +1,30 @@
+# Flutter / Dart
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.pub-cache/
+.pub/
+/build/
+/coverage/
+*.iml
+*.ipr
+*.iws
+.idea/
+.vscode/
+.DS_Store
+*.log
+*.class
+*.lock.bak
+.history
+.svn/
+migrate_working_dir/
+app.*.symbols
+app.*.map.json
+
+# Android
+/android/app/debug
+/android/app/profile
+/android/app/release
+
+# Helyi kísérletek
+/tmp/

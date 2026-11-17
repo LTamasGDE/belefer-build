@@ -1,0 +1,56 @@
+# Egyszeri / ritka karbantartó munkafolyamat:
+# - legenerálja a hiányzó android/ és ios/ mappát a rögzített Flutter-verzióval,
+# - alkalmazza az arculatot (név, ikon, nyelv),
+# - frissíti a pubspec.lock-ot és formázza a Dart-kódot,
+# - az eredményt visszacommitolja, majd elindítja a CI-t.
+name: Bootstrap
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  actions: write
+
+env:
+  FLUTTER_VERSION: "3.47.9"
+
+jobs:
+  bootstrap:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          cache: true
+
+      - name: Flutter verzió
+        run: flutter --version
+
+      - name: Platformmappák és arculat
+        run: bash tool/bootstrap_platforms.sh
+
+      - name: Függőségek (pubspec.lock)
+        run: flutter pub get
+
+      - name: Formázás
+        run: dart format lib test integration_test
+
+      - name: Változások visszacommitolása
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          if git diff --cached --quiet; then
+            echo "Nincs commitolandó változás."
+          else
+            git commit -m "Generált platformfájlok, pubspec.lock és formázás (Flutter ${FLUTTER_VERSION})"
+            git push
+          fi
+          gh workflow run ci.yml --ref "${GITHUB_REF_NAME}"
