@@ -349,8 +349,10 @@ class _QuickActionButton extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = context.colors;
     return Semantics(
+      container: true,
       button: true,
       label: label,
+      onTap: onPressed,
       excludeSemantics: true,
       child: Material(
         color: colors.raised,

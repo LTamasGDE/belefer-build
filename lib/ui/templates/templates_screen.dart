@@ -168,7 +168,9 @@ class TemplateCard extends StatelessWidget {
         children: [
           Expanded(
             child: Semantics(
+              container: true,
               button: true,
+              onTap: () => openTemplateForm(context, existing: template),
               label: '${template.title} sablon szerkesztése, $details',
               excludeSemantics: true,
               child: InkWell(

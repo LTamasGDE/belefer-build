@@ -322,11 +322,12 @@ class _CategoryChip extends StatelessWidget {
         ? style.color.withValues(alpha: isDark ? 0.34 : 0.22)
         : colors.raised;
     final border = selected ? style.color : colors.line;
-    return Semantics(
-      button: true,
-      selected: selected,
-      inMutuallyExclusiveGroup: true,
-      child: Material(
+    return MergeSemantics(
+      child: Semantics(
+        button: true,
+        selected: selected,
+        inMutuallyExclusiveGroup: true,
+        child: Material(
         color: background,
         shape: StadiumBorder(
           side: BorderSide(color: border, width: selected ? 2 : 1),
@@ -363,6 +364,7 @@ class _CategoryChip extends StatelessWidget {
             ),
           ),
         ),
+      ),
       ),
     );
   }

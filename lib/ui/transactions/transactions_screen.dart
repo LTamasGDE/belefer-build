@@ -232,7 +232,9 @@ class TransactionTile extends StatelessWidget {
         '${formatForint(transaction.amount)}'
         '${note == null ? '' : ', megjegyzés: $note'}';
     return Semantics(
+      container: true,
       button: onTap != null,
+      onTap: onTap,
       label: semantic,
       excludeSemantics: true,
       child: Panel(

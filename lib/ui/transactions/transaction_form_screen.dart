@@ -257,7 +257,9 @@ class _DateField extends StatelessWidget {
     final textTheme = Theme.of(context).textTheme;
     final label = formatFullDate(date);
     return Semantics(
+      container: true,
       button: true,
+      onTap: onTap,
       label: 'Dátum: $label. Módosítás',
       excludeSemantics: true,
       child: Material(
@@ -369,8 +371,10 @@ class _TemplateChip extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = context.colors;
     return Semantics(
+      container: true,
       button: true,
       selected: selected,
+      onTap: onTap,
       label: 'Sablon: ${template.title}',
       excludeSemantics: true,
       child: Material(

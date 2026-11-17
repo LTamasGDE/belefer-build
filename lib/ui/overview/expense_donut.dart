@@ -117,6 +117,7 @@ class _SummaryLine extends StatelessWidget {
     final percent = formatPercentTenths(percentTenths);
     final total = formatForint(amount);
     return Semantics(
+      container: true,
       label: 'Havi kiadás összesen: $percent, $total',
       excludeSemantics: true,
       child: Text.rich(
@@ -268,7 +269,7 @@ class _DonutChart extends StatelessWidget {
                 key: const ValueKey('expense-donut'),
                 behavior: HitTestBehavior.opaque,
                 onTapUp: (details) {
-                  final id = _DonutPainter.hitTest(
+                  final id = _DonutPainter.sliceAt(
                     slices,
                     size,
                     details.localPosition,
@@ -319,7 +320,7 @@ class _DonutPainter extends CustomPainter {
       size.shortestSide / 2 - _selectedExtra / 2 - 2;
 
   /// Melyik szeletre esett a koppintás (vagy `null`).
-  static String? hitTest(
+  static String? sliceAt(
     List<CategorySlice> slices,
     Size size,
     Offset position,
@@ -418,8 +419,10 @@ class _LegendRow extends StatelessWidget {
     final percent = formatPercentTenths(slice.percentTenths);
     final amount = formatForint(slice.amount);
     return Semantics(
+      container: true,
       button: true,
       selected: selected,
+      onTap: onTap,
       label: '${slice.label}: $percent, $amount',
       hint: selected ? 'Kiemelés megszüntetése' : 'Kiemelés a diagramon',
       excludeSemantics: true,

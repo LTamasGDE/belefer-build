@@ -81,11 +81,12 @@ class _Pill<T> extends StatelessWidget {
     final foreground = selected
         ? (option.color == null ? colors.onAccent : Colors.white)
         : colors.textMuted;
-    return Semantics(
-      button: true,
-      selected: selected,
-      inMutuallyExclusiveGroup: true,
-      child: AnimatedContainer(
+    return MergeSemantics(
+      child: Semantics(
+        button: true,
+        selected: selected,
+        inMutuallyExclusiveGroup: true,
+        child: AnimatedContainer(
         duration: const Duration(milliseconds: 180),
         curve: Curves.easeOut,
         decoration: BoxDecoration(
@@ -124,6 +125,7 @@ class _Pill<T> extends StatelessWidget {
             ),
           ),
         ),
+      ),
       ),
     );
   }
