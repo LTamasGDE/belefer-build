@@ -226,6 +226,12 @@ class TransactionTile extends StatelessWidget {
     final category = categoryName(transaction.categoryId);
     final note = transaction.note;
     final isExpense = transaction.type == EntryType.expense;
+    // Nagy betűméretnél az összeg a megnevezés alá kerül.
+    final compact = MediaQuery.textScalerOf(context).scale(16) / 16 > 1.3;
+    final amount = AmountText(
+      amount: transaction.amount,
+      type: transaction.type,
+    );
     final semantic =
         '${transaction.title}, $category, '
         '${isExpense ? 'kiadás' : 'bevétel'} '
@@ -248,6 +254,9 @@ class TransactionTile extends StatelessWidget {
               vertical: Space.md,
             ),
             child: Row(
+              crossAxisAlignment: compact
+                  ? CrossAxisAlignment.start
+                  : CrossAxisAlignment.center,
               children: [
                 CategoryAvatar(transaction.categoryId),
                 const SizedBox(width: Space.md),
@@ -257,24 +266,27 @@ class TransactionTile extends StatelessWidget {
                     children: [
                       Text(
                         transaction.title,
-                        maxLines: 1,
+                        maxLines: compact ? 3 : 1,
                         overflow: TextOverflow.ellipsis,
                         style: textTheme.titleMedium,
                       ),
                       const SizedBox(height: 2),
                       Text(
                         note == null ? category : '$category · $note',
-                        maxLines: 1,
+                        maxLines: compact ? 2 : 1,
                         overflow: TextOverflow.ellipsis,
                         style: textTheme.bodySmall?.copyWith(
                           color: colors.textMuted,
                         ),
                       ),
+                      if (compact) ...[
+                        const SizedBox(height: Space.xs),
+                        amount,
+                      ],
                     ],
                   ),
                 ),
-                const SizedBox(width: Space.sm),
-                AmountText(amount: transaction.amount, type: transaction.type),
+                if (!compact) ...[const SizedBox(width: Space.sm), amount],
               ],
             ),
           ),

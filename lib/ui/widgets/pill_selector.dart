@@ -78,8 +78,10 @@ class _Pill<T> extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = context.colors;
     final accent = option.color ?? colors.accent;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final onColor = isDark ? colors.onAccent : Colors.white;
     final foreground = selected
-        ? (option.color == null ? colors.onAccent : Colors.white)
+        ? (option.color == null ? colors.onAccent : onColor)
         : colors.textMuted;
     return MergeSemantics(
       child: Semantics(

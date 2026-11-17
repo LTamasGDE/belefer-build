@@ -162,71 +162,92 @@ class TemplateCard extends StatelessWidget {
       categoryName(template.categoryId),
       amount == null ? 'összeg használatkor' : formatForint(amount),
     ].join(' · ');
+    // Nagy betűméretnél a „Használat” gomb a sablon adatai alá kerül.
+    final compact = MediaQuery.textScalerOf(context).scale(16) / 16 > 1.3;
+
+    final info = Semantics(
+      container: true,
+      button: true,
+      onTap: () => openTemplateForm(context, existing: template),
+      label: '${template.title} sablon szerkesztése, $details',
+      excludeSemantics: true,
+      child: InkWell(
+        onTap: () => openTemplateForm(context, existing: template),
+        child: Padding(
+          padding: const EdgeInsets.all(Space.md),
+          child: Row(
+            children: [
+              CategoryAvatar(template.categoryId),
+              const SizedBox(width: Space.md),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      template.title,
+                      maxLines: compact ? 3 : 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: textTheme.titleMedium,
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      details,
+                      maxLines: compact ? 3 : 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: textTheme.bodySmall?.copyWith(
+                        color: colors.textMuted,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+
+    final useButton = FilledButton(
+      key: ValueKey('use-template-${template.id}'),
+      onPressed: () => openTransactionForm(context, template: template),
+      style: FilledButton.styleFrom(
+        minimumSize: const Size(48, 44),
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+      ),
+      child: Text(
+        'Használat',
+        semanticsLabel: '${template.title} sablon használata',
+      ),
+    );
+
     return Panel(
       padding: EdgeInsets.zero,
       radius: 20,
-      child: Row(
-        children: [
-          Expanded(
-            child: Semantics(
-              container: true,
-              button: true,
-              onTap: () => openTemplateForm(context, existing: template),
-              label: '${template.title} sablon szerkesztése, $details',
-              excludeSemantics: true,
-              child: InkWell(
-                onTap: () => openTemplateForm(context, existing: template),
-                child: Padding(
-                  padding: const EdgeInsets.all(Space.md),
-                  child: Row(
-                    children: [
-                      CategoryAvatar(template.categoryId),
-                      const SizedBox(width: Space.md),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              template.title,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: textTheme.titleMedium,
-                            ),
-                            const SizedBox(height: 2),
-                            Text(
-                              details,
-                              maxLines: 2,
-                              overflow: TextOverflow.ellipsis,
-                              style: textTheme.bodySmall?.copyWith(
-                                color: colors.textMuted,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
+      child: compact
+          ? Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                info,
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(
+                    Space.md,
+                    0,
+                    Space.md,
+                    Space.md,
                   ),
+                  child: useButton,
                 ),
-              ),
+              ],
+            )
+          : Row(
+              children: [
+                Expanded(child: info),
+                Padding(
+                  padding: const EdgeInsets.only(right: Space.md),
+                  child: useButton,
+                ),
+              ],
             ),
-          ),
-          Padding(
-            padding: const EdgeInsets.only(right: Space.md),
-            child: FilledButton(
-              key: ValueKey('use-template-${template.id}'),
-              onPressed: () => openTransactionForm(context, template: template),
-              style: FilledButton.styleFrom(
-                minimumSize: const Size(48, 44),
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-              ),
-              child: Text(
-                'Használat',
-                semanticsLabel: '${template.title} sablon használata',
-              ),
-            ),
-          ),
-        ],
-      ),
     );
   }
 }

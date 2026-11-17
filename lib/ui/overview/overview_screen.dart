@@ -303,30 +303,41 @@ class _QuickActions extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;
-    return Row(
-      children: [
-        Expanded(
-          child: _QuickActionButton(
-            key: const ValueKey('quick-expense'),
-            label: 'Új kiadás',
-            icon: Icons.remove_rounded,
-            color: colors.expense,
-            onPressed: () =>
-                openTransactionForm(context, initialType: EntryType.expense),
-          ),
-        ),
-        const SizedBox(width: Space.md),
-        Expanded(
-          child: _QuickActionButton(
-            key: const ValueKey('quick-income'),
-            label: 'Új bevétel',
-            icon: Icons.add_rounded,
-            color: colors.income,
-            onPressed: () =>
-                openTransactionForm(context, initialType: EntryType.income),
-          ),
-        ),
-      ],
+    final expense = _QuickActionButton(
+      key: const ValueKey('quick-expense'),
+      label: 'Új kiadás',
+      icon: Icons.remove_rounded,
+      color: colors.expense,
+      onPressed: () =>
+          openTransactionForm(context, initialType: EntryType.expense),
+    );
+    final income = _QuickActionButton(
+      key: const ValueKey('quick-income'),
+      label: 'Új bevétel',
+      icon: Icons.add_rounded,
+      color: colors.income,
+      onPressed: () =>
+          openTransactionForm(context, initialType: EntryType.income),
+    );
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        // Nagy betűméretnél vagy keskeny helyen egymás alá kerülnek,
+        // hogy a feliratok ne törjenek szó közben.
+        final scale = MediaQuery.textScalerOf(context).scale(16) / 16;
+        if (constraints.maxWidth < 320 * scale) {
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [expense, const SizedBox(height: Space.sm), income],
+          );
+        }
+        return Row(
+          children: [
+            Expanded(child: expense),
+            const SizedBox(width: Space.md),
+            Expanded(child: income),
+          ],
+        );
+      },
     );
   }
 }

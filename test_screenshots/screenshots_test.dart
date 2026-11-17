@@ -191,6 +191,9 @@ void main() {
     await _shot(tester, '09_overview_large_text');
     await _tab(tester, 'Tételek');
     await _shot(tester, '10_transactions_large_text');
+    await _tab(tester, 'Sablonok');
+    await _shot(tester, '10b_templates_large_text');
+    await _tab(tester, 'Tételek');
     await tester.tap(find.text('Új tétel'));
     await tester.pumpAndSettle();
     final save = find.byKey(const ValueKey('save-transaction'));

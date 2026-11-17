@@ -28,12 +28,14 @@ class MonthSwitcher extends StatelessWidget {
             liveRegion: true,
             label: 'Kiválasztott hónap: $label',
             excludeSemantics: true,
-            child: Text(
-              label,
-              textAlign: TextAlign.center,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: Theme.of(context).textTheme.titleLarge,
+            child: FittedBox(
+              fit: BoxFit.scaleDown,
+              child: Text(
+                label,
+                textAlign: TextAlign.center,
+                maxLines: 1,
+                style: Theme.of(context).textTheme.titleLarge,
+              ),
             ),
           ),
         ),
