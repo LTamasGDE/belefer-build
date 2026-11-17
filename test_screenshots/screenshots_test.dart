@@ -65,8 +65,13 @@ Future<AppState> _state({bool withData = true, bool dark = false}) async {
       _tx(e, 'Lakbér', 180000, 'housing', 1, note: 'november'),
       _tx(e, 'Rezsi', 24800, 'utilities', 8),
       _tx(e, 'Heti bevásárlás', 31800, 'groceries', 9),
-      _tx(e, 'Hosszú megnevezésű közös hétvégi bevásárlás a piacon', 20500,
-          'groceries', 15),
+      _tx(
+        e,
+        'Hosszú megnevezésű közös hétvégi bevásárlás a piacon',
+        20500,
+        'groceries',
+        15,
+      ),
       _tx(e, 'Havi bérlet', 8950, 'transport', 3),
       _tx(e, 'Ebéd a csapattal', 14600, 'dining', 16),
       _tx(e, 'Zenei előfizetés', 1990, 'subscriptions', 12),
@@ -104,7 +109,10 @@ Future<AppState> _state({bool withData = true, bool dark = false}) async {
 
 Future<void> _pump(WidgetTester tester, AppState state) async {
   await tester.pumpWidget(
-    RepaintBoundary(key: const ValueKey('shot'), child: BeleferApp(state: state)),
+    RepaintBoundary(
+      key: const ValueKey('shot'),
+      child: BeleferApp(state: state),
+    ),
   );
   await tester.pumpAndSettle();
 }
