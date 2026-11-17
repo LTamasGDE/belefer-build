@@ -15,7 +15,6 @@ env:
 jobs:
   ios:
     name: iOS-szimulátor build + próba
-    needs: checks
     runs-on: ${{ inputs.runner }}
     timeout-minutes: 60
     steps:
