@@ -1,5 +1,6 @@
 import 'package:belefer/domain/formatting.dart';
 import 'package:belefer/domain/models.dart';
+import 'package:belefer/ui/transactions/transactions_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -56,7 +57,13 @@ void main() {
 
       await goToTab(tester, 'Tételek');
       expect(find.text('Lakbér'), findsOneWidget);
-      expect(find.text(formatForint(-185000, signed: true)), findsOneWidget);
+      expect(
+        find.descendant(
+          of: find.byType(TransactionTile),
+          matching: find.text(formatForint(-185000, signed: true)),
+        ),
+        findsOneWidget,
+      );
     },
   );
 

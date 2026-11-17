@@ -38,7 +38,7 @@ jobs:
         run: flutter pub get --enforce-lockfile
 
       - name: Formázás ellenőrzése
-        run: dart format --output=none --set-exit-if-changed lib test integration_test
+        run: dart format --output=none --set-exit-if-changed lib test integration_test test_screenshots
 
       - name: flutter analyze
         run: flutter analyze

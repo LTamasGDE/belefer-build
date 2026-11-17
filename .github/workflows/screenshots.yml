@@ -1,0 +1,56 @@
+# Képernyőképek valódi betűkészletekkel a vizuális ellenőrzéshez.
+# Az eredmény artifactként és a `screenshots` ágon is elérhető.
+name: Screenshots
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+env:
+  FLUTTER_VERSION: "3.47.9"
+
+jobs:
+  screenshots:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          cache: true
+
+      - name: Függőségek
+        run: flutter pub get --enforce-lockfile
+
+      - name: Képernyőképek
+        run: flutter test test_screenshots --update-goldens --reporter expanded || echo "SHOT_TEST_FAILED=1" >> "$GITHUB_ENV"
+
+      - uses: actions/upload-artifact@v6
+        with:
+          name: belefer-screenshots
+          path: test_screenshots/goldens/*.png
+          retention-days: 14
+
+      - name: Képek a screenshots ágra
+        env:
+          TOKEN: ${{ github.token }}
+        run: |
+          cd test_screenshots/goldens
+          git init -q
+          git checkout -q -b screenshots
+          git add -A
+          git -c user.name="github-actions[bot]" \
+              -c user.email="41898282+github-actions[bot]@users.noreply.github.com" \
+              commit -q -m "Képernyőképek: ${GITHUB_SHA}"
+          git push -q -f "https://x-access-token:${TOKEN}@github.com/${GITHUB_REPOSITORY}.git" screenshots
+
+      - name: Teszthibák jelzése
+        if: env.SHOT_TEST_FAILED == '1'
+        run: |
+          echo "::warning::A képernyőkép-tesztek hibát jeleztek (pl. túlcsordulás), lásd a naplót."
+          exit 1

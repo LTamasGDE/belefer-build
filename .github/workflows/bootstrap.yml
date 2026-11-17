@@ -38,7 +38,7 @@ jobs:
         run: flutter pub get
 
       - name: Formázás
-        run: dart format lib test integration_test
+        run: dart format lib test integration_test test_screenshots
 
       - name: Változások visszacommitolása
         env:
