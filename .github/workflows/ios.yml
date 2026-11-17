@@ -50,9 +50,22 @@ jobs:
           retention-days: 30
 
       - name: Alapfolyamat iOS-szimulátoron
+        timeout-minutes: 45
         run: |
           UDID=$(xcrun simctl list devices available -j | python3 tool/pick_simulator.py)
           echo "Szimulátor: $UDID"
           xcrun simctl boot "$UDID" || true
           xcrun simctl bootstatus "$UDID" -b
-          flutter test integration_test/app_flow_test.dart -d "$UDID" --reporter expanded
+          # Egy kísérlet legfeljebb 20 perc; elakadás esetén a szimulátor
+          # újraindul, és még egyszer lefut a próba.
+          for attempt in 1 2; do
+            if perl -e 'alarm shift; exec @ARGV' 1200 \
+              flutter test integration_test/app_flow_test.dart -d "$UDID" --reporter expanded; then
+              exit 0
+            fi
+            echo "::warning::Az iOS-próba ${attempt}. kísérlete nem sikerült vagy elakadt."
+            xcrun simctl shutdown "$UDID" || true
+            xcrun simctl boot "$UDID" || true
+            xcrun simctl bootstatus "$UDID" -b
+          done
+          exit 1
