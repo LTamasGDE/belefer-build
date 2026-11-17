@@ -56,10 +56,7 @@ void main() {
 
       await goToTab(tester, 'Tételek');
       expect(find.text('Lakbér'), findsOneWidget);
-      expect(
-        find.text(formatForint(-185000, signed: true)),
-        findsOneWidget,
-      );
+      expect(find.text(formatForint(-185000, signed: true)), findsOneWidget);
     },
   );
 

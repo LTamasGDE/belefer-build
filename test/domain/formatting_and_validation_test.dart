@@ -64,7 +64,10 @@ void main() {
     test('kategória csak a típusához tartozhat', () {
       expect(EntryRules.validateCategory(null, EntryType.expense), isNotNull);
       expect(EntryRules.validateCategory('housing', EntryType.expense), isNull);
-      expect(EntryRules.validateCategory('salary', EntryType.expense), isNotNull);
+      expect(
+        EntryRules.validateCategory('salary', EntryType.expense),
+        isNotNull,
+      );
       expect(EntryRules.validateCategory('salary', EntryType.income), isNull);
     });
 

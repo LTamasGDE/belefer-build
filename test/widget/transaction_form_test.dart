@@ -122,6 +122,9 @@ void main() {
     await tapVisible(tester, filter);
     expect(find.text('Bérlet'), findsNothing);
     expect(find.text('Novemberi bér'), findsOneWidget);
-    expect(state.transactions.where((t) => t.type == EntryType.income), hasLength(1));
+    expect(
+      state.transactions.where((t) => t.type == EntryType.income),
+      hasLength(1),
+    );
   });
 }

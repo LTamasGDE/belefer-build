@@ -328,43 +328,48 @@ class _CategoryChip extends StatelessWidget {
         selected: selected,
         inMutuallyExclusiveGroup: true,
         child: Material(
-        color: background,
-        shape: StadiumBorder(
-          side: BorderSide(color: border, width: selected ? 2 : 1),
-        ),
-        clipBehavior: Clip.antiAlias,
-        child: InkWell(
-          onTap: onTap,
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(minHeight: 44),
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  ExcludeSemantics(
-                    child: Icon(
-                      selected ? Icons.check_rounded : style.icon,
-                      size: 18,
-                      color: isDark
-                          ? Color.lerp(style.color, Colors.white, 0.3)
-                          : Color.lerp(style.color, Colors.black, 0.3),
+          color: background,
+          shape: StadiumBorder(
+            side: BorderSide(color: border, width: selected ? 2 : 1),
+          ),
+          clipBehavior: Clip.antiAlias,
+          child: InkWell(
+            onTap: onTap,
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(minHeight: 44),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 14,
+                  vertical: 10,
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    ExcludeSemantics(
+                      child: Icon(
+                        selected ? Icons.check_rounded : style.icon,
+                        size: 18,
+                        color: isDark
+                            ? Color.lerp(style.color, Colors.white, 0.3)
+                            : Color.lerp(style.color, Colors.black, 0.3),
+                      ),
                     ),
-                  ),
-                  const SizedBox(width: 6),
-                  Text(
-                    category.name,
-                    style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                      color: colors.text,
-                      fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
+                    const SizedBox(width: 6),
+                    Text(
+                      category.name,
+                      style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                        color: colors.text,
+                        fontWeight: selected
+                            ? FontWeight.w700
+                            : FontWeight.w500,
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
           ),
         ),
-      ),
       ),
     );
   }
