@@ -20,16 +20,20 @@ Future<void> _goToTab(WidgetTester tester, String label) async {
   await tester.pumpAndSettle();
 }
 
-Future<void> _tapVisible(WidgetTester tester, Finder finder) async {
-  await tester.ensureVisible(finder);
+Future<void> _scrollToCenter(WidgetTester tester, Finder finder) async {
+  await Scrollable.ensureVisible(tester.element(finder), alignment: 0.5);
   await tester.pumpAndSettle();
+}
+
+Future<void> _tapVisible(WidgetTester tester, Finder finder) async {
+  await _scrollToCenter(tester, finder);
   await tester.tap(finder);
   await tester.pumpAndSettle();
 }
 
 Future<void> _enterField(WidgetTester tester, String key, String text) async {
   final finder = find.byKey(ValueKey(key));
-  await tester.ensureVisible(finder);
+  await _scrollToCenter(tester, finder);
   await tester.enterText(finder, text);
   await tester.pump();
 }

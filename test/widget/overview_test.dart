@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import '../support/test_app.dart';
+import '../support/ui_helpers.dart';
 
 void main() {
   testWidgets('üres hónap: 0% | 0 Ft és érthető üres állapot', (tester) async {
@@ -40,20 +41,19 @@ void main() {
     expect(find.byKey(const ValueKey('center-total')), findsOneWidget);
 
     // Jelmagyarázat: koppintásra kiemelés név, százalék és összeg szerint.
-    await tester.tap(find.byKey(const ValueKey('legend-housing')));
-    await tester.pumpAndSettle();
+    await tapVisible(tester, find.byKey(const ValueKey('legend-housing')));
     expect(find.byKey(const ValueKey('center-housing')), findsOneWidget);
     expect(find.text('80,3%'), findsNWidgets(2));
     expect(find.text(ft(100000)), findsNWidgets(2));
 
     // Újabb koppintás megszünteti a kiemelést.
-    await tester.tap(find.byKey(const ValueKey('legend-housing')));
-    await tester.pumpAndSettle();
+    await tapVisible(tester, find.byKey(const ValueKey('legend-housing')));
     expect(find.byKey(const ValueKey('center-total')), findsOneWidget);
 
     // Koppintás közvetlenül a diagram szeletére (a gyűrű bal felső részén
     // a 19,7%-os Élelmiszer szelet van).
     final donut = find.byKey(const ValueKey('expense-donut'));
+    await scrollToCenter(tester, donut);
     final size = tester.getSize(donut);
     final ringRadius = size.shortestSide / 2 - 7;
     final center = tester.getCenter(donut);

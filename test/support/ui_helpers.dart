@@ -9,11 +9,17 @@ Future<void> goToTab(WidgetTester tester, String label) async {
   await tester.pumpAndSettle();
 }
 
-/// Látható helyre görget, majd koppint.
+/// A képernyő közepére görgeti az elemet (hogy ne takarja el például egy
+/// SnackBar), majd koppint rá.
 Future<void> tapVisible(WidgetTester tester, Finder finder) async {
-  await tester.ensureVisible(finder);
-  await tester.pumpAndSettle();
+  await scrollToCenter(tester, finder);
   await tester.tap(finder);
+  await tester.pumpAndSettle();
+}
+
+/// Görgetés úgy, hogy az elem a látható terület közepére kerüljön.
+Future<void> scrollToCenter(WidgetTester tester, Finder finder) async {
+  await Scrollable.ensureVisible(tester.element(finder), alignment: 0.5);
   await tester.pumpAndSettle();
 }
 
@@ -31,7 +37,7 @@ String fieldText(WidgetTester tester, String key) {
 /// Szöveg beírása egy kulccsal azonosított mezőbe.
 Future<void> enterField(WidgetTester tester, String key, String text) async {
   final finder = find.byKey(ValueKey(key));
-  await tester.ensureVisible(finder);
+  await scrollToCenter(tester, finder);
   await tester.enterText(finder, text);
   await tester.pump();
 }

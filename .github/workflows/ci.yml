@@ -20,7 +20,7 @@ env:
 jobs:
   checks:
     name: Formázás, analyze, tesztek
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@v6
@@ -49,7 +49,7 @@ jobs:
   android:
     name: Android APK + emulátoros próba
     needs: checks
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 45
     steps:
       - uses: actions/checkout@v6

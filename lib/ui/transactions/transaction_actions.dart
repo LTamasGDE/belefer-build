@@ -14,7 +14,7 @@ Future<void> openTransactionForm(
   EntryTemplate? template,
 }) async {
   final state = AppScope.read(context);
-  final messenger = ScaffoldMessenger.of(context);
+  final messenger = ScaffoldMessenger.of(context)..hideCurrentSnackBar();
   final result = await Navigator.of(context).push<TransactionFormResult>(
     MaterialPageRoute(
       fullscreenDialog: existing == null,

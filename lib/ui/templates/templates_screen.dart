@@ -15,6 +15,7 @@ Future<void> openTemplateForm(
   EntryTemplate? existing,
   EntryType initialType = EntryType.expense,
 }) {
+  ScaffoldMessenger.of(context).hideCurrentSnackBar();
   return Navigator.of(context).push<void>(
     MaterialPageRoute(
       fullscreenDialog: existing == null,
