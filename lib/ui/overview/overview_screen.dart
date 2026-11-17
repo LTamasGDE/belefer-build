@@ -327,7 +327,11 @@ class _QuickActions extends StatelessWidget {
         if (constraints.maxWidth < 320 * scale) {
           return Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [expense, const SizedBox(height: Space.sm), income],
+            children: [
+              expense,
+              const SizedBox(height: Space.sm),
+              income,
+            ],
           );
         }
         return Row(
