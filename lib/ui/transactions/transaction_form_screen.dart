@@ -126,9 +126,9 @@ class _TransactionFormScreenState extends State<TransactionFormScreen> {
     try {
       final saved = await AppScope.read(context).saveTransaction(transaction);
       if (!mounted) return;
-      Navigator.of(context).pop(
-        TransactionFormResult(TransactionFormOutcome.saved, saved),
-      );
+      Navigator.of(
+        context,
+      ).pop(TransactionFormResult(TransactionFormOutcome.saved, saved));
     } on Object {
       if (!mounted) return;
       setState(() => _saving = false);
@@ -155,9 +155,9 @@ class _TransactionFormScreenState extends State<TransactionFormScreen> {
     setState(() => _saving = true);
     await AppScope.read(context).deleteTransaction(existing.id!);
     if (!mounted) return;
-    Navigator.of(context).pop(
-      TransactionFormResult(TransactionFormOutcome.deleted, existing),
-    );
+    Navigator.of(
+      context,
+    ).pop(TransactionFormResult(TransactionFormOutcome.deleted, existing));
   }
 
   @override
@@ -230,7 +230,9 @@ class _TransactionFormScreenState extends State<TransactionFormScreen> {
                               ),
                             )
                           : const Icon(Icons.check_rounded),
-                      label: Text(widget.isEditing ? 'Módosítás mentése' : 'Mentés'),
+                      label: Text(
+                        widget.isEditing ? 'Módosítás mentése' : 'Mentés',
+                      ),
                     ),
                   ],
                 ),
@@ -262,7 +264,10 @@ class _DateField extends StatelessWidget {
         color: colors.raised,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(Radii.field),
-          side: BorderSide(color: Theme.of(context).colorScheme.outline, width: 1.2),
+          side: BorderSide(
+            color: Theme.of(context).colorScheme.outline,
+            width: 1.2,
+          ),
         ),
         clipBehavior: Clip.antiAlias,
         child: InkWell(

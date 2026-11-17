@@ -131,9 +131,9 @@ class _TemplateSection extends StatelessWidget {
               type == EntryType.expense
                   ? 'Még nincs kiadási sablon.'
                   : 'Még nincs bevételi sablon.',
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: colors.textMuted,
-              ),
+              style: Theme.of(
+                context,
+              ).textTheme.bodyMedium?.copyWith(color: colors.textMuted),
             ),
           ),
         for (final template in templates)

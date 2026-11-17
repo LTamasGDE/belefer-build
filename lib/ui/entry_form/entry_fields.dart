@@ -216,9 +216,7 @@ class AmountField extends StatelessWidget {
       decoration: InputDecoration(
         labelText: isRequired ? 'Összeg' : 'Összeg (nem kötelező)',
         suffixText: 'Ft',
-        helperText: isRequired
-            ? null
-            : 'Üresen hagyva használatkor adod meg.',
+        helperText: isRequired ? null : 'Üresen hagyva használatkor adod meg.',
       ),
       validator: (value) =>
           EntryRules.validateAmount(value, required: isRequired),
@@ -244,7 +242,10 @@ class CategoryField extends FormField<String> {
              crossAxisAlignment: CrossAxisAlignment.start,
              children: [
                Padding(
-                 padding: const EdgeInsets.only(left: Space.xs, bottom: Space.sm),
+                 padding: const EdgeInsets.only(
+                   left: Space.xs,
+                   bottom: Space.sm,
+                 ),
                  child: Text(
                    'Kategória',
                    style: textTheme.labelLarge?.copyWith(
@@ -269,7 +270,10 @@ class CategoryField extends FormField<String> {
                ),
                if (field.hasError)
                  Padding(
-                   padding: const EdgeInsets.only(left: Space.xs, top: Space.sm),
+                   padding: const EdgeInsets.only(
+                     left: Space.xs,
+                     top: Space.sm,
+                   ),
                    child: Text(
                      field.errorText!,
                      style: textTheme.bodySmall?.copyWith(

@@ -84,7 +84,9 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
         ),
       );
     } else {
-      children.add(_TotalLine(filter: _filter, total: total, count: items.length));
+      children.add(
+        _TotalLine(filter: _filter, total: total, count: items.length),
+      );
       CalendarDay? currentDay;
       for (final item in items) {
         if (item.date != currentDay) {
@@ -191,14 +193,19 @@ class _DayHeading extends StatelessWidget {
       label = formatDayHeading(day);
     }
     return Padding(
-      padding: const EdgeInsets.fromLTRB(Space.sm, Space.lg, Space.sm, Space.sm),
+      padding: const EdgeInsets.fromLTRB(
+        Space.sm,
+        Space.lg,
+        Space.sm,
+        Space.sm,
+      ),
       child: Semantics(
         header: true,
         child: Text(
           label,
-          style: Theme.of(context).textTheme.labelLarge?.copyWith(
-            color: colors.textMuted,
-          ),
+          style: Theme.of(
+            context,
+          ).textTheme.labelLarge?.copyWith(color: colors.textMuted),
         ),
       ),
     );
@@ -265,10 +272,7 @@ class TransactionTile extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(width: Space.sm),
-                AmountText(
-                  amount: transaction.amount,
-                  type: transaction.type,
-                ),
+                AmountText(amount: transaction.amount, type: transaction.type),
               ],
             ),
           ),

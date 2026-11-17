@@ -124,7 +124,10 @@ class SettingsScreen extends StatelessWidget {
                         child: Row(
                           children: [
                             Expanded(
-                              child: Text('Belefér', style: textTheme.titleLarge),
+                              child: Text(
+                                'Belefér',
+                                style: textTheme.titleLarge,
+                              ),
                             ),
                             Text(
                               'Verzió ${state.versionLabel}',

@@ -113,9 +113,9 @@ class _Pill<T> extends StatelessWidget {
                         option.label,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                          color: foreground,
-                        ),
+                        style: Theme.of(
+                          context,
+                        ).textTheme.labelLarge?.copyWith(color: foreground),
                       ),
                     ),
                   ],

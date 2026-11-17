@@ -47,9 +47,7 @@ String groupDigits(int value) {
 /// Negatív érték mínuszjellel jelenik meg. A [signed] esetén a pozitív
 /// összeg `+` jelet kap.
 String formatForint(int amount, {bool signed = false}) {
-  final sign = amount < 0
-      ? minusSign
-      : (signed && amount > 0 ? '+' : '');
+  final sign = amount < 0 ? minusSign : (signed && amount > 0 ? '+' : '');
   return '$sign${groupDigits(amount)}${nbsp}Ft';
 }
 

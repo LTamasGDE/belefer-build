@@ -40,9 +40,7 @@ Future<void> openTransactionForm(
   messenger.showSnackBar(
     SnackBar(
       content: Text(
-        otherMonth
-            ? '$kind mentve: ${formatYearMonth(month)}'
-            : '$kind mentve',
+        otherMonth ? '$kind mentve: ${formatYearMonth(month)}' : '$kind mentve',
       ),
       action: otherMonth
           ? SnackBarAction(

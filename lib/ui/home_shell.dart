@@ -38,10 +38,7 @@ class _HomeShellState extends State<HomeShell> {
             for (var i = 0; i < _screens.length; i++)
               TickerMode(
                 enabled: i == _index,
-                child: ExcludeFocus(
-                  excluding: i != _index,
-                  child: _screens[i],
-                ),
+                child: ExcludeFocus(excluding: i != _index, child: _screens[i]),
               ),
           ],
         ),

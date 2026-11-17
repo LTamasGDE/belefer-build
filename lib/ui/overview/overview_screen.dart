@@ -24,7 +24,12 @@ class OverviewScreen extends StatelessWidget {
     final hero = _BalanceCard(summary: summary);
     const actions = _QuickActions();
     final breakdown = Panel(
-      padding: const EdgeInsets.fromLTRB(Space.lg, Space.lg, Space.lg, Space.md),
+      padding: const EdgeInsets.fromLTRB(
+        Space.lg,
+        Space.lg,
+        Space.lg,
+        Space.md,
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -42,10 +47,7 @@ class OverviewScreen extends StatelessWidget {
     );
 
     return Scaffold(
-      appBar: AppBar(
-        title: const _Wordmark(),
-        toolbarHeight: 64,
-      ),
+      appBar: AppBar(title: const _Wordmark(), toolbarHeight: 64),
       body: LayoutBuilder(
         builder: (context, constraints) {
           final wide = constraints.maxWidth >= 840;
@@ -133,10 +135,7 @@ class _Wordmark extends StatelessWidget {
           ),
         ),
         const SizedBox(width: Space.sm),
-        Text(
-          'Belefér',
-          style: Theme.of(context).textTheme.headlineSmall,
-        ),
+        Text('Belefér', style: Theme.of(context).textTheme.headlineSmall),
       ],
     );
   }

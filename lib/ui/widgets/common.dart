@@ -70,14 +70,16 @@ class SectionTitle extends StatelessWidget {
   Widget build(BuildContext context) {
     final style = Theme.of(context).textTheme.titleMedium;
     return Padding(
-      padding: const EdgeInsets.fromLTRB(Space.xs, Space.lg, Space.xs, Space.sm),
+      padding: const EdgeInsets.fromLTRB(
+        Space.xs,
+        Space.lg,
+        Space.xs,
+        Space.sm,
+      ),
       child: Row(
         children: [
           Expanded(
-            child: Semantics(
-              header: true,
-              child: Text(text, style: style),
-            ),
+            child: Semantics(header: true, child: Text(text, style: style)),
           ),
           ?trailing,
         ],
@@ -190,11 +192,7 @@ class EmptyState extends StatelessWidget {
             ),
           ),
           const SizedBox(height: Space.lg),
-          Text(
-            title,
-            textAlign: TextAlign.center,
-            style: textTheme.titleLarge,
-          ),
+          Text(title, textAlign: TextAlign.center, style: textTheme.titleLarge),
           const SizedBox(height: Space.sm),
           Text(
             message,

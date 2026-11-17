@@ -29,7 +29,8 @@ class LocalStore {
   Future<List<Transaction>> loadTransactions() async {
     final records = await _transactions.find(_db);
     return [
-      for (final record in records) Transaction.fromMap(record.key, record.value),
+      for (final record in records)
+        Transaction.fromMap(record.key, record.value),
     ];
   }
 

@@ -232,10 +232,7 @@ abstract final class AppTheme {
         }),
         hintStyle: TextStyle(color: c.textMuted),
         errorStyle: TextStyle(color: c.danger, fontWeight: FontWeight.w500),
-        suffixStyle: TextStyle(
-          color: c.textMuted,
-          fontWeight: FontWeight.w600,
-        ),
+        suffixStyle: TextStyle(color: c.textMuted, fontWeight: FontWeight.w600),
         prefixIconColor: c.textMuted,
         errorMaxLines: 2,
       ),
@@ -262,9 +259,8 @@ abstract final class AppTheme {
       ),
       switchTheme: SwitchThemeData(
         thumbColor: WidgetStateProperty.resolveWith(
-          (states) => states.contains(WidgetState.selected)
-              ? c.onAccent
-              : c.textMuted,
+          (states) =>
+              states.contains(WidgetState.selected) ? c.onAccent : c.textMuted,
         ),
         trackColor: WidgetStateProperty.resolveWith(
           (states) =>
@@ -298,8 +294,7 @@ abstract final class AppTheme {
           return c.text;
         }),
         dayBackgroundColor: WidgetStateProperty.resolveWith(
-          (states) =>
-              states.contains(WidgetState.selected) ? c.accent : null,
+          (states) => states.contains(WidgetState.selected) ? c.accent : null,
         ),
       ),
       textSelectionTheme: TextSelectionThemeData(

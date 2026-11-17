@@ -15,7 +15,9 @@ const String defaultDatabaseName = 'belefer.db';
 /// Az adatok az alkalmazás saját, más alkalmazások számára nem elérhető
 /// tárhelyén vannak (Androidon az app adatkönyvtára, iOS-en az
 /// Application Support mappa).
-Future<AppState> openAppState({String databaseName = defaultDatabaseName}) async {
+Future<AppState> openAppState({
+  String databaseName = defaultDatabaseName,
+}) async {
   final directory = await getApplicationSupportDirectory();
   await directory.create(recursive: true);
   final store = await LocalStore.open(
