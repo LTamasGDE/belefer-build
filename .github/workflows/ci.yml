@@ -107,7 +107,9 @@ jobs:
   ios:
     name: iOS-szimulátor build + próba
     needs: checks
-    runs-on: macos-26
+    # Az arm64-es macOS runnerek kapacitáshiány miatt sokáig sorban állnak,
+    # az Intel-alapú macos-15-intel azonnal elérhető.
+    runs-on: macos-15-intel
     timeout-minutes: 60
     steps:
       - uses: actions/checkout@v6

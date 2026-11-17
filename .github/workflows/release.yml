@@ -73,9 +73,16 @@ jobs:
 
           Commit: ${GITHUB_SHA}
           EOF
-          gh release delete "$TAG" --yes --cleanup-tag 2>/dev/null || true
-          gh release create "$TAG" dist/*.apk dist/SHA256SUMS.txt \
-            --target "$GITHUB_SHA" \
-            --title "Belefér ${TAG} (${APP_VERSION})" \
-            --notes-file notes.md \
-            --prerelease
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            # Meglévő kiadás: a fájlok és a leírás frissítése (a címke marad).
+            gh release upload "$TAG" dist/*.apk dist/SHA256SUMS.txt --clobber
+            gh release edit "$TAG" \
+              --title "Belefér ${TAG} (${APP_VERSION})" \
+              --notes-file notes.md
+          else
+            gh release create "$TAG" dist/*.apk dist/SHA256SUMS.txt \
+              --target "$GITHUB_SHA" \
+              --title "Belefér ${TAG} (${APP_VERSION})" \
+              --notes-file notes.md \
+              --prerelease
+          fi

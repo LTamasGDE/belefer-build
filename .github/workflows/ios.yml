@@ -7,7 +7,7 @@ on:
       runner:
         description: "macOS runner címke"
         required: true
-        default: "macos-26"
+        default: "macos-15-intel"
 
 env:
   FLUTTER_VERSION: "3.47.9"
