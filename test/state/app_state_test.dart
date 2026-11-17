@@ -3,7 +3,7 @@ import 'package:belefer/domain/calendar.dart';
 import 'package:belefer/domain/models.dart';
 import 'package:belefer/state/app_state.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:sembast/sembast_memory.dart';
+import 'package:sembast/sembast_memory.dart' hide Transaction;
 
 import '../support/test_app.dart';
 

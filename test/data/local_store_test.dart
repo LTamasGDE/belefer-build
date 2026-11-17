@@ -4,7 +4,7 @@ import 'package:belefer/data/local_store.dart';
 import 'package:belefer/domain/calendar.dart';
 import 'package:belefer/domain/models.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:sembast/sembast_io.dart';
+import 'package:sembast/sembast_io.dart' hide Transaction;
 
 import '../support/test_app.dart';
 

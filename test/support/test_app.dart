@@ -5,7 +5,7 @@ import 'package:belefer/domain/formatting.dart';
 import 'package:belefer/domain/models.dart';
 import 'package:belefer/state/app_state.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:sembast/sembast_memory.dart';
+import 'package:sembast/sembast_memory.dart' hide Transaction;
 
 /// A tesztek rögzített „mai” napja: 2026. november 17., kedd.
 final CalendarDay testToday = CalendarDay(2026, 11, 17);

@@ -75,7 +75,7 @@ void main() {
 
     expect(
       tester.getSemantics(find.byKey(const ValueKey('legend-housing'))),
-      containsSemantics(
+      isSemantics(
         label: 'Lakhatás: 100%, ${ft(180000)}',
         isButton: true,
         hasTapAction: true,
