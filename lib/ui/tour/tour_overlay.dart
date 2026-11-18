@@ -244,55 +244,13 @@ class _TourOverlayState extends State<TourOverlay> {
         child: LayoutBuilder(
           key: _overlayKey,
           builder: (context, constraints) {
-            final size = constraints.biggest;
             final padding = MediaQuery.paddingOf(context);
-            const margin = Space.lg;
-            final maxCardWidth = (size.width - 2 * margin).clamp(0, 440);
-            Widget positioned;
-            if (hole == null) {
-              positioned = Center(
-                child: ConstrainedBox(
-                  constraints: BoxConstraints(
-                    maxWidth: maxCardWidth.toDouble(),
-                  ),
-                  child: card,
-                ),
-              );
-            } else {
-              // A kártya a kiemelt elem alá vagy fölé kerül; ha egyik helyen
-              // sem fér el (nagy elem), a képernyő aljára.
-              const needed = 250.0;
-              final spaceBelow = size.height - hole.bottom - padding.bottom;
-              final spaceAbove = hole.top - padding.top;
-              final double? top;
-              final double? bottom;
-              if (spaceBelow >= needed ||
-                  (spaceBelow >= spaceAbove && spaceBelow >= needed * 0.8)) {
-                top = hole.bottom + Space.md;
-                bottom = null;
-              } else if (spaceAbove >= needed) {
-                top = null;
-                bottom = size.height - hole.top + Space.md;
-              } else {
-                top = null;
-                bottom = padding.bottom + margin;
-              }
-              positioned = Positioned(
-                left: margin,
-                right: margin,
-                top: top,
-                bottom: bottom,
-                child: Align(
-                  alignment: Alignment.center,
-                  child: ConstrainedBox(
-                    constraints: BoxConstraints(
-                      maxWidth: maxCardWidth.toDouble(),
-                    ),
-                    child: card,
-                  ),
-                ),
-              );
-            }
+            final positioned = Positioned.fill(
+              child: CustomSingleChildLayout(
+                delegate: _CardLayout(hole: hole, padding: padding),
+                child: SingleChildScrollView(child: card),
+              ),
+            );
             return Stack(
               children: [
                 Positioned.fill(
@@ -318,6 +276,50 @@ class _TourOverlayState extends State<TourOverlay> {
       ),
     );
   }
+}
+
+/// A kártya helye: a kiemelt elem alatt, ha ott elfér; különben fölötte;
+/// ha egyik helyen sem, a képernyő alján (mindig a képernyőn belül).
+class _CardLayout extends SingleChildLayoutDelegate {
+  const _CardLayout({required this.hole, required this.padding});
+
+  final Rect? hole;
+  final EdgeInsets padding;
+
+  static const double _margin = Space.lg;
+  static const double _gap = Space.md;
+  static const double _maxWidth = 440;
+
+  @override
+  BoxConstraints getConstraintsForChild(BoxConstraints constraints) {
+    final width = (constraints.maxWidth - 2 * _margin).clamp(0.0, _maxWidth);
+    final height = (constraints.maxHeight - padding.vertical - 2 * _margin)
+        .clamp(0.0, double.infinity);
+    return BoxConstraints(maxWidth: width, minWidth: width, maxHeight: height);
+  }
+
+  @override
+  Offset getPositionForChild(Size size, Size childSize) {
+    final left = (size.width - childSize.width) / 2;
+    final hole = this.hole;
+    final minTop = padding.top + _margin;
+    final maxTop = size.height - padding.bottom - _margin - childSize.height;
+    if (hole == null) {
+      return Offset(left, ((size.height - childSize.height) / 2).clamp(
+        minTop,
+        maxTop < minTop ? minTop : maxTop,
+      ));
+    }
+    final below = hole.bottom + _gap;
+    if (below <= maxTop) return Offset(left, below);
+    final above = hole.top - _gap - childSize.height;
+    if (above >= minTop) return Offset(left, above);
+    return Offset(left, maxTop < minTop ? minTop : maxTop);
+  }
+
+  @override
+  bool shouldRelayout(_CardLayout oldDelegate) =>
+      oldDelegate.hole != hole || oldDelegate.padding != padding;
 }
 
 class _DimPainter extends CustomPainter {
