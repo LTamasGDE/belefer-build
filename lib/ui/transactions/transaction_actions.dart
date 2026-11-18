@@ -12,6 +12,7 @@ Future<void> openTransactionForm(
   Transaction? existing,
   EntryType initialType = EntryType.expense,
   EntryTemplate? template,
+  Transaction? prefill,
 }) async {
   final state = AppScope.read(context);
   final messenger = ScaffoldMessenger.of(context)..hideCurrentSnackBar();
@@ -22,6 +23,7 @@ Future<void> openTransactionForm(
         existing: existing,
         initialType: initialType,
         template: template,
+        prefill: prefill,
       ),
     ),
   );

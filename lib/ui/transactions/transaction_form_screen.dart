@@ -9,6 +9,7 @@ import '../theme/app_theme.dart';
 import '../theme/belefer_colors.dart';
 import '../widgets/common.dart';
 import '../widgets/confirm_dialog.dart';
+import '../widgets/date_field.dart';
 
 /// Az űrlap eredménye a hívó képernyő számára.
 enum TransactionFormOutcome { saved, deleted }
@@ -28,6 +29,7 @@ class TransactionFormScreen extends StatefulWidget {
     this.existing,
     this.initialType = EntryType.expense,
     this.template,
+    this.prefill,
   });
 
   /// Szerkesztendő tétel; `null` esetén új tétel készül.
@@ -36,6 +38,10 @@ class TransactionFormScreen extends StatefulWidget {
 
   /// Ha meg van adva, az űrlap ennek adataival nyílik meg, mai dátummal.
   final EntryTemplate? template;
+
+  /// Új tétel előre kitöltött adatai (pl. a gyorsrögzítésből vagy egy
+  /// blokkról); mentés előtt minden módosítható.
+  final Transaction? prefill;
 
   bool get isEditing => existing != null;
 
@@ -59,6 +65,9 @@ class _TransactionFormScreenState extends State<TransactionFormScreen> {
     if (existing != null) {
       _fields = EntryFieldsController.fromTransaction(existing);
       _date = existing.date;
+    } else if (widget.prefill != null) {
+      _fields = EntryFieldsController.fromTransaction(widget.prefill!);
+      _date = widget.prefill!.date;
     } else if (template != null) {
       _fields = EntryFieldsController.fromTemplate(template);
       _appliedTemplateId = template.id;
@@ -215,7 +224,7 @@ class _TransactionFormScreenState extends State<TransactionFormScreen> {
                     EntryFields(
                       controller: _fields,
                       amountRequired: true,
-                      afterTitle: _DateField(date: _date, onTap: _pickDate),
+                      afterTitle: DateField(date: _date, onTap: _pickDate),
                     ),
                     const SizedBox(height: Space.xl),
                     FilledButton.icon(
@@ -238,71 +247,6 @@ class _TransactionFormScreenState extends State<TransactionFormScreen> {
                 ),
               ),
             ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _DateField extends StatelessWidget {
-  const _DateField({required this.date, required this.onTap});
-
-  final CalendarDay date;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = context.colors;
-    final textTheme = Theme.of(context).textTheme;
-    final label = formatFullDate(date);
-    return Semantics(
-      container: true,
-      button: true,
-      onTap: onTap,
-      label: 'Dátum: $label. Módosítás',
-      excludeSemantics: true,
-      child: Material(
-        color: colors.raised,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(Radii.field),
-          side: BorderSide(
-            color: Theme.of(context).colorScheme.outline,
-            width: 1.2,
-          ),
-        ),
-        clipBehavior: Clip.antiAlias,
-        child: InkWell(
-          key: const ValueKey('field-date'),
-          onTap: onTap,
-          child: Padding(
-            padding: const EdgeInsets.symmetric(
-              horizontal: Space.lg,
-              vertical: Space.md,
-            ),
-            child: Row(
-              children: [
-                Icon(Icons.calendar_month_rounded, color: colors.textMuted),
-                const SizedBox(width: Space.md),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Dátum',
-                        style: textTheme.bodySmall?.copyWith(
-                          color: colors.textMuted,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                      const SizedBox(height: 2),
-                      Text(label, style: textTheme.bodyLarge),
-                    ],
-                  ),
-                ),
-                Icon(Icons.edit_rounded, size: 18, color: colors.textMuted),
-              ],
-            ),
           ),
         ),
       ),
