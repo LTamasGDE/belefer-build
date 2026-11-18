@@ -83,7 +83,11 @@ QuickEntryResult interpretReceipt(String text, QuickEntryContext context) {
     for (final line in lines) {
       final foldedLine = foldForMatching(line);
       if (_excludedLineWords.any(foldedLine.contains)) continue;
-      final amount = _lineAmount(line, excludeQuantities: true, needsCurrency: true);
+      final amount = _lineAmount(
+        line,
+        excludeQuantities: true,
+        needsCurrency: true,
+      );
       if (amount != null && (total == null || amount > total)) total = amount;
     }
     if (total == null) {
@@ -110,7 +114,8 @@ QuickEntryResult interpretReceipt(String text, QuickEntryContext context) {
     final foldedLine = foldForMatching(line);
     final match = findDate(line, tokenize(line), context.today);
     if (match == null) continue;
-    final strong = foldedLine.contains('kelt') ||
+    final strong =
+        foldedLine.contains('kelt') ||
         foldedLine.contains('datum') ||
         foldedLine.contains('teljesites');
     if (date == null || strong) date = match.day;
@@ -133,8 +138,11 @@ QuickEntryResult interpretReceipt(String text, QuickEntryContext context) {
         final keyParts = key.split(' ');
         final hit = keyParts.length > 1
             ? foldForMatching(line).contains(key)
-            : words.any((word) =>
-                word == key || (key.length >= 4 && fuzzyWordMatch(word, key)));
+            : words.any(
+                (word) =>
+                    word == key ||
+                    (key.length >= 4 && fuzzyWordMatch(word, key)),
+              );
         if (hit) {
           merchant = entry.name;
           categoryId = entry.categoryId;
@@ -156,9 +164,11 @@ QuickEntryResult interpretReceipt(String text, QuickEntryContext context) {
         final category = categoryById(keyword.categoryId);
         if (category == null || category.type != EntryType.expense) continue;
         if (keyword.key.contains(' ')) continue;
-        if (words.any((word) =>
-            word == keyword.key ||
-            (keyword.key.length >= 5 && fuzzyWordMatch(word, keyword.key)))) {
+        if (words.any(
+          (word) =>
+              word == keyword.key ||
+              (keyword.key.length >= 5 && fuzzyWordMatch(word, keyword.key)),
+        )) {
           scores.update(
             keyword.categoryId,
             (value) => value + keyword.weight,
@@ -168,10 +178,10 @@ QuickEntryResult interpretReceipt(String text, QuickEntryContext context) {
       }
     }
     if (scores.isNotEmpty) {
-      categoryId = (scores.entries.toList()
-            ..sort((a, b) => b.value.compareTo(a.value)))
-          .first
-          .key;
+      categoryId =
+          (scores.entries.toList()..sort((a, b) => b.value.compareTo(a.value)))
+              .first
+              .key;
     }
   }
 
@@ -218,11 +228,13 @@ int _keywordStrength(String foldedLine) {
     final parts = keyword.split(' ');
     final matches = parts.length > 1
         ? foldedLine.contains(keyword)
-        : words.any((word) =>
-            word == keyword ||
-            (keyword.length >= 6 &&
-                editDistance(word, keyword, maxDistance: 2) <= 2) ||
-            word.startsWith(keyword));
+        : words.any(
+            (word) =>
+                word == keyword ||
+                (keyword.length >= 6 &&
+                    editDistance(word, keyword, maxDistance: 2) <= 2) ||
+                word.startsWith(keyword),
+          );
     if (matches && strength > best) best = strength;
   }
   // Gyakori szövegfelismerési hibák: „0SSZESEN”, „OSSZESEN:”.
@@ -252,9 +264,9 @@ int? _lineAmount(
   if (filtered.isEmpty) return null;
   // A sor végén álló összeg a végösszeg („ÖSSZESEN 2 db 12 450”).
   filtered.sort(
-    (a, b) => a.tokenIndexes.reduce((x, y) => x > y ? x : y).compareTo(
-      b.tokenIndexes.reduce((x, y) => x > y ? x : y),
-    ),
+    (a, b) => a.tokenIndexes
+        .reduce((x, y) => x > y ? x : y)
+        .compareTo(b.tokenIndexes.reduce((x, y) => x > y ? x : y)),
   );
   final value = filtered.last.value;
   return value > 0 && value < 100000000 ? value : null;
@@ -265,9 +277,7 @@ String? _sellerLine(List<String> lines) {
     final folded = foldForMatching(lines[i]);
     for (final label in ['elado', 'szallito', 'kibocsato', 'szolgaltato']) {
       if (folded.startsWith(label)) {
-        final rest = lines[i]
-            .replaceFirst(RegExp(r'^[^:]*:\s*'), '')
-            .trim();
+        final rest = lines[i].replaceFirst(RegExp(r'^[^:]*:\s*'), '').trim();
         if (rest.isNotEmpty && rest != lines[i]) return rest;
         if (i + 1 < lines.length) return lines[i + 1];
       }
@@ -305,9 +315,10 @@ String _cleanCompanyName(String raw) {
     name = name
         .toLowerCase()
         .split(' ')
-        .map((word) => word.isEmpty
-            ? word
-            : word[0].toUpperCase() + word.substring(1))
+        .map(
+          (word) =>
+              word.isEmpty ? word : word[0].toUpperCase() + word.substring(1),
+        )
         .join(' ');
   }
   return name;

@@ -58,8 +58,10 @@ void main() {
         interval: 2,
         start: CalendarDay(2026, 11, 3),
       );
-      expect(biweekly.nextOccurrence(CalendarDay(2026, 11, 4)),
-          CalendarDay(2026, 11, 17));
+      expect(
+        biweekly.nextOccurrence(CalendarDay(2026, 11, 4)),
+        CalendarDay(2026, 11, 17),
+      );
     });
 
     test('éves tétel szökőnapon', () {
@@ -183,9 +185,7 @@ void main() {
     });
 
     test('kikapcsolva nincs emlékeztető', () {
-      final rule = _rule(
-        reminder: const ReminderSettings(enabled: true),
-      );
+      final rule = _rule(reminder: const ReminderSettings(enabled: true));
       expect(
         planReminders([rule], now: DateTime(2026, 11, 17), enabled: false),
         isEmpty,

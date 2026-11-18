@@ -80,7 +80,12 @@ final List<_Case> _cases = [
     category: 'groceries',
     title: 'Lidl',
   ),
-  const _Case('lidl 12 450', amount: 12450, category: 'groceries', title: 'Lidl'),
+  const _Case(
+    'lidl 12 450',
+    amount: 12450,
+    category: 'groceries',
+    title: 'Lidl',
+  ),
   const _Case('12450 ft lidl', amount: 12450, category: 'groceries'),
   const _Case('lild 3200', amount: 3200, category: 'groceries', title: 'Lidl'),
   const _Case('LIDL 3200FT', amount: 3200, title: 'Lidl'),
@@ -95,10 +100,19 @@ final List<_Case> _cases = [
   const _Case('aldi 2,5k', amount: 2500, title: 'Aldi'),
   const _Case('spar 1 234 ft', amount: 1234, title: 'Spar'),
   const _Case('penny marketben 4560', amount: 4560, title: 'Penny'),
-  const _Case('heti nagybevásárlás 32000', amount: 32000, category: 'groceries'),
+  const _Case(
+    'heti nagybevásárlás 32000',
+    amount: 32000,
+    category: 'groceries',
+  ),
   const _Case('bevasarlas 8900', amount: 8900, category: 'groceries'),
   const _Case('bevásároltam 6700-ért', amount: 6700, category: 'groceries'),
-  const _Case('kenyér 650', amount: 650, title: 'Kenyér', category: 'groceries'),
+  const _Case(
+    'kenyér 650',
+    amount: 650,
+    title: 'Kenyér',
+    category: 'groceries',
+  ),
   const _Case('tej 389', amount: 389, title: 'Tej'),
   const _Case('piac 4200', amount: 4200, title: 'Piac'),
   const _Case('pékség 1200', amount: 1200, title: 'Pékség'),
@@ -128,12 +142,26 @@ final List<_Case> _cases = [
   const _Case('fagyi 900', amount: 900, category: 'dining'),
   const _Case('kocsmában 3500', amount: 3500, category: 'dining'),
   // --- Közlekedés ---
-  const _Case('benzin 15e', amount: 15000, title: 'Benzin', category: 'transport'),
+  const _Case(
+    'benzin 15e',
+    amount: 15000,
+    title: 'Benzin',
+    category: 'transport',
+  ),
   const _Case('tankoltam 20000', amount: 20000, category: 'transport'),
   const _Case('tankoltam a molnál 18 500', amount: 18500, title: 'MOL'),
   const _Case('omv 12000', amount: 12000, category: 'transport'),
-  const _Case('bérlet 8950', amount: 8950, title: 'Bérlet', category: 'transport'),
-  const _Case('kifizettem a havi bérletet 8950', amount: 8950, category: 'transport'),
+  const _Case(
+    'bérlet 8950',
+    amount: 8950,
+    title: 'Bérlet',
+    category: 'transport',
+  ),
+  const _Case(
+    'kifizettem a havi bérletet 8950',
+    amount: 8950,
+    category: 'transport',
+  ),
   const _Case('taxi 4300', amount: 4300, category: 'transport'),
   const _Case('uber 3800', amount: 3800, title: 'Uber'),
   const _Case('parkolás 600', amount: 600, category: 'transport'),
@@ -190,7 +218,11 @@ final List<_Case> _cases = [
   _Case('hétfőn 4500 bolt', date: CalendarDay(2026, 11, 16)),
   _Case('kedden kávé 800', date: CalendarDay(2026, 11, 17)),
   _Case('nov 3 lidl 4500', amount: 4500, date: CalendarDay(2026, 11, 3)),
-  _Case('november 3-án lidl 4500', amount: 4500, date: CalendarDay(2026, 11, 3)),
+  _Case(
+    'november 3-án lidl 4500',
+    amount: 4500,
+    date: CalendarDay(2026, 11, 3),
+  ),
   _Case('2026.11.03 lidl 4500', amount: 4500, date: CalendarDay(2026, 11, 3)),
   _Case('2026-11-03 lidl 4500', amount: 4500, date: CalendarDay(2026, 11, 3)),
   _Case('11.03. lidl 4500', amount: 4500, date: CalendarDay(2026, 11, 3)),
@@ -199,7 +231,11 @@ final List<_Case> _cases = [
   _Case('3 napja ebéd 2500', amount: 2500, date: CalendarDay(2026, 11, 14)),
   _Case('egy hete mozi 2800', amount: 2800, date: CalendarDay(2026, 11, 10)),
   _Case('okt 28 ruha 9990', amount: 9990, date: CalendarDay(2026, 10, 28)),
-  _Case('december 24 ajándék 15000', amount: 15000, date: CalendarDay(2025, 12, 24)),
+  _Case(
+    'december 24 ajándék 15000',
+    amount: 15000,
+    date: CalendarDay(2025, 12, 24),
+  ),
   _Case('kávé 900', date: CalendarDay(2026, 11, 17)),
   // --- Bevételek ---
   const _Case(
@@ -212,13 +248,43 @@ final List<_Case> _cases = [
   const _Case('fizetés 420e', amount: 420000, type: _in, category: 'salary'),
   const _Case('fizu 380 ezer', amount: 380000, type: _in),
   const _Case('kaptam 5000-et anyától', amount: 5000, type: _in),
-  const _Case('zsebpénz 10000', amount: 10000, type: _in, category: 'gift_income'),
-  const _Case('ösztöndíj 45000', amount: 45000, type: _in, category: 'scholarship'),
-  const _Case('osztondij 45000', amount: 45000, type: _in, category: 'scholarship'),
+  const _Case(
+    'zsebpénz 10000',
+    amount: 10000,
+    type: _in,
+    category: 'gift_income',
+  ),
+  const _Case(
+    'ösztöndíj 45000',
+    amount: 45000,
+    type: _in,
+    category: 'scholarship',
+  ),
+  const _Case(
+    'osztondij 45000',
+    amount: 45000,
+    type: _in,
+    category: 'scholarship',
+  ),
   const _Case('visszakaptam a kauciót 150000', amount: 150000, type: _in),
-  const _Case('eladtam a biciklit 40000', amount: 40000, type: _in, category: 'side_income'),
-  const _Case('nyertem 20000', amount: 20000, type: _in, category: 'other_income'),
-  const _Case('korrepetálás 6000', amount: 6000, type: _in, category: 'side_income'),
+  const _Case(
+    'eladtam a biciklit 40000',
+    amount: 40000,
+    type: _in,
+    category: 'side_income',
+  ),
+  const _Case(
+    'nyertem 20000',
+    amount: 20000,
+    type: _in,
+    category: 'other_income',
+  ),
+  const _Case(
+    'korrepetálás 6000',
+    amount: 6000,
+    type: _in,
+    category: 'side_income',
+  ),
   const _Case('diákmunka 85000', amount: 85000, type: _in),
   // --- Ismétlődő: új ---
   const _Case(
@@ -411,10 +477,7 @@ void main() {
     });
 
     test('módosításnál a következő esedékességtől érvényes', () {
-      final result = interpretQuickEntry(
-        'mostantól 5490 a netflix',
-        context,
-      );
+      final result = interpretQuickEntry('mostantól 5490 a netflix', context);
       expect(result.intent, QuickIntent.changeRecurring);
       expect(result.targetRule?.id, 1);
       expect(result.date, CalendarDay(2026, 12, 5));

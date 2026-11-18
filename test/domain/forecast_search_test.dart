@@ -49,12 +49,31 @@ void main() {
       handledThrough: CalendarDay(2026, 11, 10),
     );
     final transactions = [
-      _t(1, EntryType.income, 'Fizetés', 400000, 'salary',
-          CalendarDay(2026, 11, 10), recurringId: 2),
-      _t(2, EntryType.expense, 'Lidl', 17000, 'groceries',
-          CalendarDay(2026, 11, 3)),
-      _t(3, EntryType.expense, 'Mozi', 17000, 'entertainment',
-          CalendarDay(2026, 11, 12)),
+      _t(
+        1,
+        EntryType.income,
+        'Fizetés',
+        400000,
+        'salary',
+        CalendarDay(2026, 11, 10),
+        recurringId: 2,
+      ),
+      _t(
+        2,
+        EntryType.expense,
+        'Lidl',
+        17000,
+        'groceries',
+        CalendarDay(2026, 11, 3),
+      ),
+      _t(
+        3,
+        EntryType.expense,
+        'Mozi',
+        17000,
+        'entertainment',
+        CalendarDay(2026, 11, 12),
+      ),
     ];
 
     test('az aktuális hónapban a várható tételekkel és a napi átlaggal', () {
@@ -101,14 +120,39 @@ void main() {
 
   group('keresés', () {
     final all = [
-      _t(1, EntryType.expense, 'Lidl bevásárlás', 12450, 'groceries',
-          CalendarDay(2026, 11, 3)),
-      _t(2, EntryType.expense, 'Kávé', 890, 'dining',
-          CalendarDay(2026, 11, 5), note: 'Starbucks a munkahely mellett'),
-      _t(3, EntryType.income, 'Fizetés', 420000, 'salary',
-          CalendarDay(2026, 10, 10)),
-      _t(4, EntryType.expense, 'Lakbér', 180000, 'housing',
-          CalendarDay(2026, 10, 1)),
+      _t(
+        1,
+        EntryType.expense,
+        'Lidl bevásárlás',
+        12450,
+        'groceries',
+        CalendarDay(2026, 11, 3),
+      ),
+      _t(
+        2,
+        EntryType.expense,
+        'Kávé',
+        890,
+        'dining',
+        CalendarDay(2026, 11, 5),
+        note: 'Starbucks a munkahely mellett',
+      ),
+      _t(
+        3,
+        EntryType.income,
+        'Fizetés',
+        420000,
+        'salary',
+        CalendarDay(2026, 10, 10),
+      ),
+      _t(
+        4,
+        EntryType.expense,
+        'Lakbér',
+        180000,
+        'housing',
+        CalendarDay(2026, 10, 1),
+      ),
     ];
 
     List<int?> ids(String query) =>
@@ -182,8 +226,10 @@ void main() {
       expect(expense[expense.length - 2].name, 'Kutya');
       expect(expense.last.id, 'other_expense');
       expect(catalog.byId('c1')?.custom, isTrue);
-      expect(catalog.forType(EntryType.income).any((c) => c.id == 'c1'),
-          isFalse);
+      expect(
+        catalog.forType(EntryType.income).any((c) => c.id == 'c1'),
+        isFalse,
+      );
     });
   });
 }

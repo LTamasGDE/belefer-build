@@ -9,10 +9,7 @@ import 'text_fold.dart';
 ///
 /// Több szó esetén mindegyiknek illeszkednie kell. Az eredmény a legújabb
 /// tétellel kezdődik.
-List<Transaction> searchTransactions(
-  Iterable<Transaction> all,
-  String query,
-) {
+List<Transaction> searchTransactions(Iterable<Transaction> all, String query) {
   final terms = foldForMatching(
     query,
   ).split(' ').where((term) => term.isNotEmpty).toList();
@@ -25,7 +22,9 @@ List<Transaction> searchTransactions(
     var matches = true;
     for (final term in terms) {
       final termDigits = term.replaceAll(RegExp(r'[^0-9]'), '');
-      final isNumeric = termDigits.isNotEmpty && termDigits == term.replaceAll(RegExp(r'[.,]'), '');
+      final isNumeric =
+          termDigits.isNotEmpty &&
+          termDigits == term.replaceAll(RegExp(r'[.,]'), '');
       if (isNumeric && digits.contains(termDigits)) continue;
       if (haystack.contains(term)) continue;
       // Elírás-tűrés a hosszabb szavaknál.

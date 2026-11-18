@@ -276,7 +276,8 @@ List<AmountCandidate> findAmountCandidates(
           multiplier = 1000000;
         } else if (_currencyWords.contains(suffix) ||
             _amountSuffixes.contains(suffix)) {
-          hasCurrency = _currencyWords.contains(suffix) ||
+          hasCurrency =
+              _currencyWords.contains(suffix) ||
               suffix == 'ert' ||
               suffix == 'ba' ||
               suffix == 'ot' ||

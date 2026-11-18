@@ -170,7 +170,8 @@ class RecurringRule {
   final CalendarDay? handledThrough;
 
   /// Lemondva vagy lejárt a megadott napon.
-  bool isEndedOn(CalendarDay day) => endDate != null && endDate!.compareTo(day) < 0;
+  bool isEndedOn(CalendarDay day) =>
+      endDate != null && endDate!.compareTo(day) < 0;
 
   RecurringRule copyWith({
     int? id,

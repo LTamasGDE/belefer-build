@@ -157,8 +157,9 @@ DateMatch? findDate(
           used.add(i - 1);
         }
         if (i + 2 < tokens.length &&
-            RegExp(r'^(an|en|jen|ika|ike|ikan|iken|a|e|ig)$')
-                .hasMatch(tokens[i + 2].folded)) {
+            RegExp(
+              r'^(an|en|jen|ika|ike|ikan|iken|a|e|ig)$',
+            ).hasMatch(tokens[i + 2].folded)) {
           used.add(i + 2);
         }
         if (_validDate(year, month, day)) {
@@ -189,8 +190,7 @@ DateMatch? findDate(
   for (var i = 0; i < tokens.length; i++) {
     final word = tokens[i].folded;
     for (final entry in _ordinalDays.entries) {
-      if (word.startsWith(entry.key) &&
-          word.length <= entry.key.length + 2) {
+      if (word.startsWith(entry.key) && word.length <= entry.key.length + 2) {
         return DateMatch(
           day: _dayOfMonth(today, entry.value, preferFuture: preferFuture),
           tokenIndexes: {i},
@@ -215,7 +215,9 @@ DateMatch? findDate(
       case 'holnaputan' || 'holnaputani':
         return DateMatch(day: _addDays(today, 2), tokenIndexes: {i});
     }
-    if (word == 'napja' || word == 'nappal' || word == 'hete' ||
+    if (word == 'napja' ||
+        word == 'nappal' ||
+        word == 'hete' ||
         word == 'hettel') {
       if (i == 0) continue;
       final previous = tokens[i - 1].folded;

@@ -130,10 +130,11 @@ class QuickEntryResult {
 
   bool _isRequired(QuickQuestion question) => switch (question) {
     QuickQuestion.amount => intent != QuickIntent.cancelRecurring,
-    QuickQuestion.what => intent == QuickIntent.record ||
-        intent == QuickIntent.createRecurring,
-    QuickQuestion.which => intent == QuickIntent.cancelRecurring ||
-        intent == QuickIntent.changeRecurring,
+    QuickQuestion.what =>
+      intent == QuickIntent.record || intent == QuickIntent.createRecurring,
+    QuickQuestion.which =>
+      intent == QuickIntent.cancelRecurring ||
+          intent == QuickIntent.changeRecurring,
     QuickQuestion.frequency => false,
     QuickQuestion.when => false,
     QuickQuestion.type => false,
@@ -341,7 +342,11 @@ QuickEntryResult interpretQuickEntry(String text, QuickEntryContext context) {
             categoryId == 'utilities' ||
             categoryId == 'salary' ||
             categoryId == 'scholarship' ||
-            _findAny(folded, const {'elofizettem', 'elofizetes', 'elofizetest'}))) {
+            _findAny(folded, const {
+              'elofizettem',
+              'elofizetes',
+              'elofizetest',
+            }))) {
       frequency = Frequency.monthly;
     }
   }
@@ -455,7 +460,8 @@ Set<int>? _matchKey(
         final word = words[i + j];
         final part = parts[j];
         final last = j == parts.length - 1;
-        final matches = word == part ||
+        final matches =
+            word == part ||
             (last && part.length >= 3 && fuzzyWordMatch(word, part));
         if (!matches) {
           ok = false;
@@ -504,7 +510,8 @@ Set<int>? _matchKey(
     for (final key in merchant.keys) {
       final hit = _matchKey(words, key, skip);
       if (hit == null) continue;
-      final exact = hit.length > 1 ||
+      final exact =
+          hit.length > 1 ||
           words[hit.first] == key ||
           words[hit.first].startsWith(key);
       final score = exact ? 12 + key.length ~/ 4 : 9;
@@ -548,10 +555,7 @@ List<_CategoryVote> _matchKeywords(
   return votes;
 }
 
-List<_CategoryVote> _matchCustomCategories(
-  List<String> words,
-  Set<int> used,
-) {
+List<_CategoryVote> _matchCustomCategories(List<String> words, Set<int> used) {
   final votes = <_CategoryVote>[];
   for (final category in currentCatalog.custom) {
     final key = foldForMatching(category.name);
@@ -614,9 +618,9 @@ RecurringRule? _matchRule(
   var bestScore = 0;
   for (final rule in rules) {
     var score = 0;
-    final titleParts = foldForMatching(rule.title)
-        .split(' ')
-        .where((part) => part.length >= 3 && !stopWords.contains(part));
+    final titleParts = foldForMatching(
+      rule.title,
+    ).split(' ').where((part) => part.length >= 3 && !stopWords.contains(part));
     for (final part in titleParts) {
       if (_matchKey(words, part, used) != null) score += 5;
     }
@@ -636,8 +640,13 @@ RecurringRule? _matchRule(
         return (Frequency.weekly, 1);
       case 'kethetente' || 'ketheti' || 'ketheteknt':
         return (Frequency.weekly, 2);
-      case 'havonta' || 'havi' || 'honaponta' || 'havonkent' || 'ho' ||
-          'havidij' || 'havidijas':
+      case 'havonta' ||
+          'havi' ||
+          'honaponta' ||
+          'havonkent' ||
+          'ho' ||
+          'havidij' ||
+          'havidijas':
         return (Frequency.monthly, 1);
       case 'kethavonta' || 'kethavi':
         return (Frequency.monthly, 2);

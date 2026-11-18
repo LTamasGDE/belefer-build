@@ -130,10 +130,7 @@ Forecast? forecastMonth({
       : month.daysInMonth;
   final elapsedDays = isCurrent ? today.day : 0;
 
-  final historyDaily = _historicalDailyVariableExpense(
-    transactions,
-    current,
-  );
+  final historyDaily = _historicalDailyVariableExpense(transactions, current);
   final useHistory = elapsedDays < 7 && historyDaily != null;
   final double daily;
   if (useHistory) {
