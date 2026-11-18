@@ -130,7 +130,8 @@ QuickEntryResult interpretReceipt(String text, QuickEntryContext context) {
   final sellerLine = _sellerLine(lines);
   final searchLines = [?sellerLine, ...lines.take(8), ...lines];
   outer:
-  for (final line in searchLines) {
+  for (final rawLine in searchLines) {
+    final line = _fixOcrLetters(rawLine);
     final words = tokenize(line).map((token) => token.folded).toList();
     for (final entry in merchants) {
       for (final key in entry.keys) {
@@ -344,3 +345,10 @@ CalendarDay? _receiptShortDate(List<String> lines, CalendarDay today) {
   }
   return null;
 }
+
+/// Betűk közé keveredett nulla javítása („TESC0” → „TESCO”) a nevek
+/// felismeréséhez (az összegeknél nem használjuk).
+String _fixOcrLetters(String line) => line.replaceAllMapped(
+  RegExp(r'(?<=[A-Za-zÀ-ž])0|0(?=[A-Za-zÀ-ž]{2})'),
+  (_) => 'O',
+);

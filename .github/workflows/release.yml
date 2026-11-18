@@ -8,9 +8,9 @@ on:
   workflow_dispatch:
     inputs:
       tag:
-        description: "Kiadás címkéje (pl. 26.11.0)"
+        description: "Kiadás címkéje (pl. 26.11.1)"
         required: true
-        default: "26.11.0"
+        default: "26.11.1"
 
 permissions:
   contents: write
@@ -128,6 +128,22 @@ jobs:
           plutil -convert binary1 "$APP/hu.lproj/InfoPlist.strings"
           plutil -lint "$APP/Info.plist" "$APP/hu.lproj/InfoPlist.strings"
           plutil -p "$APP/hu.lproj/InfoPlist.strings"
+          # Ad-hoc aláírás a jogosultságokkal (App Group): a SideStore ebből
+          # tudja, hogy a widgetnek és az appnak közös tároló kell; telepítéskor
+          # a felhasználó saját Apple ID-jával újra aláírja.
+          APPEX="$APP/PlugIns/BeleferWidget.appex"
+          if [[ -d "$APPEX" ]]; then
+            codesign --force --sign - --timestamp=none \
+              --entitlements ios/BeleferWidget/BeleferWidget.entitlements "$APPEX"
+          fi
+          for framework in "$APP"/Frameworks/*; do
+            [[ -e "$framework" ]] && codesign --force --sign - --timestamp=none "$framework"
+          done
+          codesign --force --sign - --timestamp=none \
+            --entitlements ios/Runner/Runner.entitlements "$APP"
+          codesign -d --entitlements - "$APP" || true
+          [[ -d "$APPEX" ]] && codesign -d --entitlements - "$APPEX" || true
+          ls "$APP/PlugIns" || true
           mkdir -p dist/Payload
           cp -R build/ios/iphoneos/Runner.app dist/Payload/
           (cd dist && zip -qry "belefer-${{ inputs.tag }}-unsigned.ipa" Payload)

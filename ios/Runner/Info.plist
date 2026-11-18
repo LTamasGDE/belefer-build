@@ -28,6 +28,21 @@
 	<string>????</string>
 	<key>CFBundleVersion</key>
 	<string>$(FLUTTER_BUILD_NUMBER)</string>
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleURLName</key>
+			<string>com.ventyh1.belefer</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>belefer</string>
+			</array>
+		</dict>
+	</array>
+	<key>NSCameraUsageDescription</key>
+	<string>A kamerával blokkot vagy számlát fotózhatsz, amelyről a Belefér kiolvassa az összeget. A kép nem hagyja el a telefont.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Képet vagy képernyőképet választhatsz egy blokkról vagy e-számláról, amelyről a Belefér kiolvassa az összeget. A kép nem hagyja el a telefont.</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
 	<key>UIApplicationSceneManifest</key>

@@ -51,6 +51,18 @@ void main() {
     await state.clearAllData();
     await tester.pumpWidget(BeleferApp(state: state));
     await tester.pumpAndSettle();
+
+    // Első indításkor a bemutató jön; kihagyható.
+    final skip = find.byKey(const ValueKey('tour-skip'));
+    if (skip.evaluate().isNotEmpty) {
+      expect(find.text('Üdv a Belefér-ben!'), findsOneWidget);
+      await tester.tap(find.byKey(const ValueKey('tour-next')));
+      await tester.pumpAndSettle();
+      await tester.tap(skip);
+      await tester.pumpAndSettle();
+    }
+    expect(find.byKey(const ValueKey('tour-skip')), findsNothing);
+    expect(state.transactions, isEmpty);
     expect(find.text('0% | ${formatForint(0)}'), findsOneWidget);
 
     // Sablon létrehozása.
@@ -90,6 +102,28 @@ void main() {
     await tester.pumpAndSettle();
     expect(_brightness(tester), Brightness.dark);
     expect(find.text('100% | ${formatForint(180000)}'), findsOneWidget);
+
+    // Gyorsrögzítés egy mondatból.
+    await _tapVisible(tester, find.byKey(const ValueKey('quick-entry-bar')));
+    await tester.enterText(
+      find.byKey(const ValueKey('quick-entry-field')),
+      'Lidl 4500',
+    );
+    await tester.pumpAndSettle();
+    expect(find.byKey(const ValueKey('quick-result')), findsOneWidget);
+    await _tapVisible(tester, find.byKey(const ValueKey('quick-entry-submit')));
+    expect(find.textContaining('Kiadás rögzítve: Lidl'), findsOneWidget);
+    expect(state.transactions, hasLength(2));
+
+    // Keresés minden tétel között.
+    await _goToTab(tester, 'Tételek');
+    await tester.tap(find.byTooltip('Keresés'));
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byKey(const ValueKey('search-field')), 'lidl');
+    await tester.pumpAndSettle();
+    expect(find.text('1 találat'), findsOneWidget);
+    await tester.tap(find.byTooltip('Keresés bezárása'));
+    await tester.pumpAndSettle();
 
     // Összes adat törlése.
     await _goToTab(tester, 'Beállítások');

@@ -199,7 +199,12 @@ extension on _TransactionsScreenState {
         Semantics(
           liveRegion: true,
           child: Padding(
-            padding: const EdgeInsets.fromLTRB(Space.sm, Space.md, Space.sm, 0),
+            padding: const EdgeInsets.fromLTRB(
+              Space.sm,
+              Space.md,
+              Space.sm,
+              0,
+            ),
             child: Row(
               children: [
                 Expanded(

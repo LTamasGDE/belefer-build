@@ -5,6 +5,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:sembast/sembast_io.dart';
 
 import 'data/local_store.dart';
+import 'services/platform_services.dart';
 import 'state/app_state.dart';
 
 /// Az alapértelmezett adatbázisfájl neve az alkalmazás saját tárhelyén.
@@ -17,6 +18,8 @@ const String defaultDatabaseName = 'belefer.db';
 /// Application Support mappa).
 Future<AppState> openAppState({
   String databaseName = defaultDatabaseName,
+  ReminderScheduler reminders = const NoopReminderScheduler(),
+  WidgetPublisher widget = const NoopWidgetPublisher(),
 }) async {
   final directory = await getApplicationSupportDirectory();
   await directory.create(recursive: true);
@@ -24,7 +27,12 @@ Future<AppState> openAppState({
     databaseFactoryIo,
     '${directory.path}/$databaseName',
   );
-  final state = AppState(store: store, versionLabel: await _versionLabel());
+  final state = AppState(
+    store: store,
+    versionLabel: await _versionLabel(),
+    reminders: reminders,
+    widget: widget,
+  );
   await state.load();
   return state;
 }

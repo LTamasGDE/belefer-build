@@ -1,0 +1,52 @@
+# Egyszeri iOS-projektbeállítás macOS-en, az eredmény visszacommitolva:
+#  - a szövegfelismerés (ML Kit) erőforráscsomagjának letöltése,
+#  - App Group jogosultság, widget-bővítmény és beágyazás az Xcode-projektben.
+name: iOS-projekt beállítása
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  setup:
+    runs-on: macos-15-intel
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: ML Kit erőforráscsomag (LatinOCRResources.bundle)
+        run: |
+          set -euo pipefail
+          DEST=ios/mlkit_bundles
+          mkdir -p "$DEST"
+          if [[ ! -d "$DEST/LatinOCRResources.bundle" ]]; then
+            TMP=$(mktemp -d)
+            curl -fL -o "$TMP/latin.zip" \
+              https://github.com/d-date/google-mlkit-swiftpm/releases/download/9.0.3/LatinOCRResources.bundle.zip
+            unzip -q -o "$TMP/latin.zip" -d "$TMP/out"
+            rm -rf "$TMP/out/__MACOSX"
+            FOUND=$(find "$TMP/out" -type d -name 'LatinOCRResources.bundle' | head -1)
+            mv "$FOUND" "$DEST/LatinOCRResources.bundle"
+          fi
+          du -sh "$DEST"/*
+          find "$DEST" -maxdepth 2 | head -20
+
+      - name: Xcode-projekt kiegészítése
+        run: |
+          gem list -i xcodeproj >/dev/null || sudo gem install xcodeproj --no-document
+          ruby tool/ios_project_setup.rb
+          git diff --stat
+
+      - name: Visszacommitolás
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A ios
+          if git diff --cached --quiet; then
+            echo "Nincs változás."
+          else
+            git commit -m "iOS: widget-bővítmény, App Group, ML Kit erőforrás (ios-setup)"
+            git push
+          fi
