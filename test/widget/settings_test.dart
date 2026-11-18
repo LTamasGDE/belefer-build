@@ -20,7 +20,7 @@ void main() {
     expect(_brightness(tester), Brightness.light);
 
     await goToTab(tester, 'Beállítások');
-    expect(find.text('Verzió 0.1.0 (1)'), findsOneWidget);
+    expect(find.text('Verzió 0.2.0 (2)'), findsOneWidget);
     await tapVisible(tester, find.byKey(const ValueKey('dark-mode-switch')));
     expect(_brightness(tester), Brightness.dark);
 

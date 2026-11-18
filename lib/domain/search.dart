@@ -29,6 +29,7 @@ List<Transaction> searchTransactions(Iterable<Transaction> all, String query) {
       if (haystack.contains(term)) continue;
       // Elírás-tűrés a hosszabb szavaknál.
       if (term.length >= 5 &&
+          !term.contains(RegExp(r'\d')) &&
           haystack.split(' ').any((word) => fuzzyWordMatch(word, term))) {
         continue;
       }

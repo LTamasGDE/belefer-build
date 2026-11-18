@@ -253,7 +253,7 @@ QuickEntryResult interpretQuickEntry(String text, QuickEntryContext context) {
     } else if (incomeWords.contains(word)) {
       incomeScore += 3;
       verbTokens.add(i);
-    } else if (word.length >= 7) {
+    } else if (word.length >= 7 && !_lexiconWords.contains(word)) {
       if (_fuzzyIn(word, expenseWords)) {
         expenseScore += 2;
         verbTokens.add(i);
@@ -407,6 +407,16 @@ QuickEntryResult interpretQuickEntry(String text, QuickEntryContext context) {
     notes: notes,
   );
 }
+
+/// A kategória-kulcsszavak és kereskedőnevek (egy szóból állók): ezeket nem
+/// tekintjük elírt igének („fizetés” ≠ „fizetem”).
+final Set<String> _lexiconWords = {
+  for (final keyword in keywords)
+    if (!keyword.key.contains(' ')) keyword.key,
+  for (final merchant in merchants)
+    for (final key in merchant.keys)
+      if (!key.contains(' ')) key,
+};
 
 bool _findAny(List<String> words, Set<String> set) {
   for (final word in words) {

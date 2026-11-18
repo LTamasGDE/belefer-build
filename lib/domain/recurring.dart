@@ -336,6 +336,59 @@ class RecurringRule {
   }
 }
 
+/// Az emlékeztetők általános beállításai: főkapcsoló és az új ismétlődő
+/// tételek alapértelmezett emlékeztetője.
+class ReminderDefaults {
+  const ReminderDefaults({
+    this.enabled = true,
+    this.daysBefore = 1,
+    this.hour = 9,
+    this.minute = 0,
+  });
+
+  factory ReminderDefaults.fromMap(Map<String, Object?> map) =>
+      ReminderDefaults(
+        enabled: map['enabled'] != false,
+        daysBefore: (map['daysBefore'] as num?)?.toInt() ?? 1,
+        hour: (map['hour'] as num?)?.toInt() ?? 9,
+        minute: (map['minute'] as num?)?.toInt() ?? 0,
+      );
+
+  /// Főkapcsoló: kikapcsolva egyetlen emlékeztető sem jelenik meg.
+  final bool enabled;
+  final int daysBefore;
+  final int hour;
+  final int minute;
+
+  ReminderDefaults copyWith({
+    bool? enabled,
+    int? daysBefore,
+    int? hour,
+    int? minute,
+  }) => ReminderDefaults(
+    enabled: enabled ?? this.enabled,
+    daysBefore: daysBefore ?? this.daysBefore,
+    hour: hour ?? this.hour,
+    minute: minute ?? this.minute,
+  );
+
+  /// Egy új ismétlődő tétel emlékeztetője ezekkel az alapértékekkel.
+  ReminderSettings newRuleSettings({required bool enabled}) =>
+      ReminderSettings(
+        enabled: enabled,
+        daysBefore: daysBefore,
+        hour: hour,
+        minute: minute,
+      );
+
+  Map<String, Object?> toMap() => <String, Object?>{
+    'enabled': enabled,
+    'daysBefore': daysBefore,
+    'hour': hour,
+    'minute': minute,
+  };
+}
+
 /// Esedékes, még nem könyvelt tétel egy ismétlődő szabályból.
 class PendingOccurrence {
   const PendingOccurrence({required this.rule, required this.date});

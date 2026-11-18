@@ -3,6 +3,7 @@ import 'package:belefer/data/local_store.dart';
 import 'package:belefer/domain/calendar.dart';
 import 'package:belefer/domain/formatting.dart';
 import 'package:belefer/domain/models.dart';
+import 'package:belefer/services/platform_services.dart';
 import 'package:belefer/state/app_state.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:sembast/sembast_memory.dart' hide Transaction;
@@ -14,9 +15,15 @@ final CalendarDay testToday = CalendarDay(2026, 11, 17);
 String ft(int amount) => formatForint(amount);
 
 /// Új, memóriában tárolt állapot rögzített mai nappal.
+///
+/// A körbevezetést alapból látottnak jelöli; a [showTour] igaz értékével az
+/// első indítás viselkedése próbálható ki.
 Future<AppState> openTestState({
   DatabaseFactory? factory,
   String path = 'belefer_test.db',
+  bool showTour = false,
+  ReminderScheduler reminders = const NoopReminderScheduler(),
+  WidgetPublisher widget = const NoopWidgetPublisher(),
 }) async {
   final store = await LocalStore.open(
     factory ?? newDatabaseFactoryMemory(),
@@ -24,10 +31,14 @@ Future<AppState> openTestState({
   );
   final state = AppState(
     store: store,
-    versionLabel: '0.1.0 (1)',
+    versionLabel: '0.2.0 (2)',
     today: () => testToday,
+    now: () => DateTime(2026, 11, 17, 12),
+    reminders: reminders,
+    widget: widget,
   );
   await state.load();
+  if (!showTour) await state.markTourSeen();
   return state;
 }
 

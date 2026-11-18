@@ -107,3 +107,40 @@ String dayWithSuffix(int day) {
   }
   return '$day-$suffix';
 }
+
+/// Rövid, viszonyított dátum: „ma”, „holnap”, „tegnap”, „nov. 25.”
+/// (más évben az évvel együtt).
+String formatShortDate(CalendarDay day, CalendarDay today) {
+  final difference = DateTime.utc(
+    day.year,
+    day.month,
+    day.day,
+  ).difference(DateTime.utc(today.year, today.month, today.day)).inDays;
+  switch (difference) {
+    case 0:
+      return 'ma';
+    case 1:
+      return 'holnap';
+    case -1:
+      return 'tegnap';
+  }
+  final month = _shortMonthNames[day.month - 1];
+  return day.year == today.year
+      ? '$month ${day.day}.'
+      : '${day.year}. $month ${day.day}.';
+}
+
+const List<String> _shortMonthNames = [
+  'jan.',
+  'febr.',
+  'márc.',
+  'ápr.',
+  'máj.',
+  'jún.',
+  'júl.',
+  'aug.',
+  'szept.',
+  'okt.',
+  'nov.',
+  'dec.',
+];
