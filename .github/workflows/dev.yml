@@ -1,0 +1,68 @@
+# Gyors fejlesztői ellenőrzés a „wip” ágon: formázás (visszacommitolva),
+# pubspec.lock frissítése, flutter analyze és flutter test.
+# A platformbuildeket a CI végzi a main ágon.
+name: Dev
+
+on:
+  push:
+    branches: [wip]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: dev-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  FLUTTER_VERSION: "3.47.9"
+
+jobs:
+  check:
+    name: Formázás, analyze, tesztek
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          cache: true
+
+      - name: Platformmappák és arculat
+        run: bash tool/bootstrap_platforms.sh
+
+      - name: Függőségek
+        run: flutter pub get
+
+      - name: Formázás
+        run: dart format lib test integration_test test_screenshots
+
+      - name: Formázás és lockfájl visszacommitolása
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A lib test integration_test test_screenshots pubspec.lock
+          if ! git diff --cached --quiet; then
+            git commit -m "Formázás és pubspec.lock"
+            git push
+          fi
+
+      - name: flutter analyze
+        id: analyze
+        continue-on-error: true
+        run: flutter analyze
+
+      - name: flutter test
+        id: test
+        continue-on-error: true
+        run: flutter test --reporter failures-only
+
+      - name: Eredmény
+        if: steps.analyze.outcome != 'success' || steps.test.outcome != 'success'
+        run: |
+          echo "analyze: ${{ steps.analyze.outcome }}, test: ${{ steps.test.outcome }}"
+          exit 1

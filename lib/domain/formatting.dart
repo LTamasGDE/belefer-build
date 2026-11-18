@@ -73,3 +73,37 @@ String formatFullDate(CalendarDay day) =>
 /// Rövid dátum listafejlécnek: `november 17., kedd`.
 String formatDayHeading(CalendarDay day) =>
     '${monthName(day.month)} ${day.day}., ${weekdayName(day.weekday)}';
+
+const List<String> _weekdayOnNames = [
+  'hétfőn',
+  'kedden',
+  'szerdán',
+  'csütörtökön',
+  'pénteken',
+  'szombaton',
+  'vasárnap',
+];
+
+/// „kedden”, „vasárnap” – a hét napja határozóként.
+String weekdayOn(int weekday) => _weekdayOnNames[weekday - 1];
+
+/// A hónap napja ragozva: 1-jén, 2-án, 5-én, 20-án, 21-jén.
+String dayWithSuffix(int day) {
+  final String suffix;
+  if (day % 10 == 0) {
+    suffix = day == 10 ? 'én' : 'án';
+  } else {
+    suffix = const {
+      1: 'jén',
+      2: 'án',
+      3: 'án',
+      4: 'én',
+      5: 'én',
+      6: 'án',
+      7: 'én',
+      8: 'án',
+      9: 'én',
+    }[day % 10]!;
+  }
+  return '$day-$suffix';
+}

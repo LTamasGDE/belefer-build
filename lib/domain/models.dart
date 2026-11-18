@@ -31,9 +31,11 @@ class Transaction {
     required this.categoryId,
     required this.date,
     this.note,
+    this.recurringId,
   }) : assert(amount > 0, 'Az összeg pozitív egész forint.');
 
   factory Transaction.fromMap(int id, Map<String, Object?> map) {
+    final recurring = map['recurring'];
     return Transaction(
       id: id,
       type: EntryType.fromStorage(map['type']),
@@ -42,6 +44,7 @@ class Transaction {
       categoryId: map['category']! as String,
       date: CalendarDay.parse(map['date']! as String),
       note: _readOptionalText(map['note']),
+      recurringId: recurring is num ? recurring.toInt() : null,
     );
   }
 
@@ -54,17 +57,21 @@ class Transaction {
   final CalendarDay date;
   final String? note;
 
+  /// Az ismétlődő szabály azonosítója, ha abból jött létre.
+  final int? recurringId;
+
   /// Előjeles összeg: a kiadás negatív, a bevétel pozitív.
   int get signedAmount => type == EntryType.expense ? -amount : amount;
 
-  Transaction copyWith({int? id}) => Transaction(
+  Transaction copyWith({int? id, String? categoryId}) => Transaction(
     id: id ?? this.id,
     type: type,
     title: title,
     amount: amount,
-    categoryId: categoryId,
+    categoryId: categoryId ?? this.categoryId,
     date: date,
     note: note,
+    recurringId: recurringId,
   );
 
   Map<String, Object?> toMap() => <String, Object?>{
@@ -74,6 +81,7 @@ class Transaction {
     'category': categoryId,
     'date': date.toIso(),
     'note': note,
+    'recurring': recurringId,
   };
 }
 
@@ -112,11 +120,11 @@ class EntryTemplate {
   final int? amount;
   final String? note;
 
-  EntryTemplate copyWith({int? id}) => EntryTemplate(
+  EntryTemplate copyWith({int? id, String? categoryId}) => EntryTemplate(
     id: id ?? this.id,
     type: type,
     title: title,
-    categoryId: categoryId,
+    categoryId: categoryId ?? this.categoryId,
     amount: amount,
     note: note,
   );

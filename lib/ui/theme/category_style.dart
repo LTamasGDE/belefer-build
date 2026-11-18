@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../domain/categories.dart';
+
 /// Egy kategória színe és ikonja.
 class CategoryStyle {
   const CategoryStyle(this.color, this.icon);
@@ -8,35 +10,55 @@ class CategoryStyle {
   final IconData icon;
 }
 
+/// Az ikonkulcsokhoz tartozó ikonok (a beépített és a saját kategóriákhoz).
+const Map<String, IconData> categoryIcons = {
+  'home': Icons.home_rounded,
+  'bolt': Icons.electric_bolt_rounded,
+  'basket': Icons.shopping_basket_rounded,
+  'restaurant': Icons.restaurant_rounded,
+  'bus': Icons.directions_bus_rounded,
+  'heart': Icons.favorite_rounded,
+  'checkroom': Icons.checkroom_rounded,
+  'celebration': Icons.celebration_rounded,
+  'subscriptions': Icons.subscriptions_rounded,
+  'school': Icons.school_rounded,
+  'gift': Icons.card_giftcard_rounded,
+  'more': Icons.more_horiz_rounded,
+  'payments': Icons.payments_rounded,
+  'handyman': Icons.handyman_rounded,
+  'redeem': Icons.redeem_rounded,
+  'replay': Icons.replay_rounded,
+  'star': Icons.star_rounded,
+  'pets': Icons.pets_rounded,
+  'fitness': Icons.fitness_center_rounded,
+  'games': Icons.sports_esports_rounded,
+  'travel': Icons.flight_rounded,
+  'car': Icons.directions_car_rounded,
+  'phone': Icons.smartphone_rounded,
+  'wifi': Icons.wifi_rounded,
+  'book': Icons.menu_book_rounded,
+  'music': Icons.music_note_rounded,
+  'coffee': Icons.local_cafe_rounded,
+  'beauty': Icons.spa_rounded,
+  'baby': Icons.child_friendly_rounded,
+  'sports': Icons.sports_soccer_rounded,
+  'savings': Icons.savings_rounded,
+  'work': Icons.work_rounded,
+};
+
 const CategoryStyle _fallback = CategoryStyle(
   Color(0xFF8C93AE),
   Icons.more_horiz_rounded,
 );
 
-const Map<String, CategoryStyle> _styles = {
-  // Kiadások: egymástól jól elkülönülő, mindkét témában olvasható színek.
-  'housing': CategoryStyle(Color(0xFF4C6FFF), Icons.home_rounded),
-  'utilities': CategoryStyle(Color(0xFF9A6BFF), Icons.electric_bolt_rounded),
-  'groceries': CategoryStyle(Color(0xFF14B8A6), Icons.shopping_basket_rounded),
-  'dining': CategoryStyle(Color(0xFFF2A516), Icons.restaurant_rounded),
-  'transport': CategoryStyle(Color(0xFF1EA7E8), Icons.directions_bus_rounded),
-  'health': CategoryStyle(Color(0xFFEF5A5A), Icons.favorite_rounded),
-  'clothing': CategoryStyle(Color(0xFFE85AA6), Icons.checkroom_rounded),
-  'entertainment': CategoryStyle(Color(0xFFFF7A2F), Icons.celebration_rounded),
-  'subscriptions': CategoryStyle(
-    Color(0xFF6E73F0),
-    Icons.subscriptions_rounded,
-  ),
-  'education': CategoryStyle(Color(0xFF7CB82F), Icons.school_rounded),
-  'gifts': CategoryStyle(Color(0xFFC855E0), Icons.card_giftcard_rounded),
-  'other_expense': _fallback,
-  // Bevételek
-  'salary': CategoryStyle(Color(0xFF12A37F), Icons.payments_rounded),
-  'side_income': CategoryStyle(Color(0xFF14B8A6), Icons.handyman_rounded),
-  'scholarship': CategoryStyle(Color(0xFF6E73F0), Icons.school_rounded),
-  'gift_income': CategoryStyle(Color(0xFFC855E0), Icons.redeem_rounded),
-  'refund': CategoryStyle(Color(0xFF1EA7E8), Icons.replay_rounded),
-  'other_income': _fallback,
-};
+IconData categoryIconFor(String iconKey) =>
+    categoryIcons[iconKey] ?? Icons.more_horiz_rounded;
 
-CategoryStyle categoryStyle(String id) => _styles[id] ?? _fallback;
+CategoryStyle categoryStyle(String id) {
+  final category = categoryById(id);
+  if (category == null) return _fallback;
+  return CategoryStyle(
+    Color(category.colorValue),
+    categoryIconFor(category.iconKey),
+  );
+}
