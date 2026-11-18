@@ -247,7 +247,11 @@ final List<_Case> _cases = [
   ),
   const _Case('5 ezer forint mozi', amount: 5000, category: 'entertainment'),
   const _Case('mozijegy kétezer', amount: 2000, category: 'entertainment'),
-  const _Case('kifizettem a villanyt 12 400', amount: 12400, category: 'utilities'),
+  const _Case(
+    'kifizettem a villanyt 12 400',
+    amount: 12400,
+    category: 'utilities',
+  ),
   const _Case('fizettem 3500 benzin', amount: 3500, category: 'transport'),
   const _Case('3500 fizettem benzinre', amount: 3500, category: 'transport'),
   const _Case('ebédre 2500', amount: 2500, category: 'dining'),
