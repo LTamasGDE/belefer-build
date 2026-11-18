@@ -1,5 +1,7 @@
-# Telepíthető Android teszt-APK kiadása GitHub Release-ként.
-# A kiadás .apk fájlja telefonról közvetlenül letölthető (nem zip).
+# Telepíthető csomagok kiadása GitHub Release-ként:
+# - Android APK (telefonról közvetlenül letölthető, nem zip),
+# - aláíratlan iOS IPA saját telepítéshez (SideStore/AltStore írja alá
+#   a felhasználó saját Apple ID-jával).
 name: Release APK
 
 on:
@@ -71,6 +73,10 @@ jobs:
           engedélyezd az ismeretlen forrásból történő telepítést a böngészőnek
           vagy a fájlkezelőnek.
 
+          iPhone: a „belefer-${TAG}-unsigned.ipa” aláíratlan csomag. SideStore-ba
+          (vagy AltStore-ba) töltve a saját Apple ID-d írja alá; ingyenes Apple
+          ID-val 7 naponta frissíteni kell az aláírást.
+
           Commit: ${GITHUB_SHA}
           EOF
           if gh release view "$TAG" >/dev/null 2>&1; then
@@ -86,3 +92,38 @@ jobs:
               --notes-file notes.md \
               --prerelease
           fi
+
+  ios-ipa:
+    name: Aláíratlan iOS IPA
+    needs: release
+    runs-on: macos-15-intel
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          cache: true
+
+      - name: Platformmappák és arculat
+        run: bash tool/bootstrap_platforms.sh
+
+      - name: Függőségek
+        run: flutter pub get --enforce-lockfile
+
+      - name: Release build aláírás nélkül
+        run: |
+          flutter build ios --release --no-codesign
+          mkdir -p dist/Payload
+          cp -R build/ios/iphoneos/Runner.app dist/Payload/
+          (cd dist && zip -qry "belefer-${{ inputs.tag }}-unsigned.ipa" Payload)
+          (cd dist && shasum -a 256 *.ipa | tee SHA256SUMS-ios.txt)
+          ls -la dist
+
+      - name: Feltöltés a kiadáshoz
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ inputs.tag }}
+        run: gh release upload "$TAG" dist/*.ipa dist/SHA256SUMS-ios.txt --clobber --repo "$GITHUB_REPOSITORY"

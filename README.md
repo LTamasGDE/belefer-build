@@ -47,6 +47,23 @@ telepítést ismeretlen forrásból. A `-debug.apk` változat hibakereséshez
 való. Minden CI-futás a debug APK-t `belefer-android-debug-apk`
 artifactként is feltölti (GitHub-bejelentkezéssel, zipben tölthető le).
 
+## iPhone-ra telepítés (ingyenes Apple ID-val)
+
+iOS-en linkről nem lehet appot telepíteni, ezért a kiadás egy aláíratlan
+csomagot is tartalmaz: `belefer-26.11.0-unsigned.ipa`. Ezt a
+[SideStore](https://docs.sidestore.io/docs/installation/prerequisites) írja
+alá a saját Apple ID-ddal:
+
+1. Telepítsd a SideStore-t a leírás szerint (iloader, LocalDevVPN).
+2. Töltsd le az `.ipa` fájlt az iPhone-on a kiadás oldaláról (Fájlok app).
+3. Kapcsold be a LocalDevVPN-t, majd a SideStore-ban: **My Apps → +**, és
+   válaszd ki a letöltött fájlt.
+
+Korlátok ingyenes Apple ID-val: legfeljebb 3 saját telepítésű app, és az
+aláírás 7 napig érvényes, ezért ennyi időnként frissíteni kell a SideStore-ban
+(**My Apps → Refresh All**, bekapcsolt LocalDevVPN-nel). Az adatok
+frissítéskor megmaradnak.
+
 ## Felhős build és ellenőrzés
 
 A buildek GitHub Actionsben futnak, rögzített Flutter-verzióval (`3.47.9`).
