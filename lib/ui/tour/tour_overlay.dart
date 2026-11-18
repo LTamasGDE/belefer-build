@@ -305,10 +305,13 @@ class _CardLayout extends SingleChildLayoutDelegate {
     final minTop = padding.top + _margin;
     final maxTop = size.height - padding.bottom - _margin - childSize.height;
     if (hole == null) {
-      return Offset(left, ((size.height - childSize.height) / 2).clamp(
-        minTop,
-        maxTop < minTop ? minTop : maxTop,
-      ));
+      return Offset(
+        left,
+        ((size.height - childSize.height) / 2).clamp(
+          minTop,
+          maxTop < minTop ? minTop : maxTop,
+        ),
+      );
     }
     final below = hole.bottom + _gap;
     if (below <= maxTop) return Offset(left, below);
