@@ -55,7 +55,7 @@ void main() {
     await goToTab(tester, 'Beállítások');
     await tapVisible(tester, find.byKey(const ValueKey('clear-all-data')));
     expect(find.text('Minden adat törlése?'), findsOneWidget);
-    expect(find.textContaining('1 tétel és 1 sablon'), findsOneWidget);
+    expect(find.textContaining('1 tétel, 1 sablon'), findsOneWidget);
 
     // A Mégse nem töröl semmit.
     await tapVisible(tester, find.text('Mégse'));

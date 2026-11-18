@@ -9,6 +9,7 @@ import 'package:belefer/app.dart';
 import 'package:belefer/data/local_store.dart';
 import 'package:belefer/domain/calendar.dart';
 import 'package:belefer/domain/models.dart';
+import 'package:belefer/domain/recurring.dart';
 import 'package:belefer/state/app_state.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -48,14 +49,20 @@ Transaction _tx(
   note: note,
 );
 
-Future<AppState> _state({bool withData = true, bool dark = false}) async {
+Future<AppState> _state({
+  bool withData = true,
+  bool dark = false,
+  bool tour = false,
+}) async {
   final store = await LocalStore.open(newDatabaseFactoryMemory(), 'shot.db');
   final state = AppState(
     store: store,
-    versionLabel: '0.1.0 (1)',
+    versionLabel: '0.2.0 (2)',
     today: () => _today,
+    now: () => DateTime(2026, 11, 17, 12),
   );
   await state.load();
+  if (!tour) await state.markTourSeen();
   if (withData) {
     const e = EntryType.expense;
     const i = EntryType.income;
@@ -102,6 +109,41 @@ Future<AppState> _state({bool withData = true, bool dark = false}) async {
         amount: 420000,
       ),
     );
+    for (final rule in [
+      RecurringRule(
+        type: e,
+        title: 'Lakbér',
+        categoryId: 'housing',
+        amount: 180000,
+        startDate: CalendarDay(2026, 1, 1),
+        reminder: const ReminderSettings(enabled: true),
+      ),
+      RecurringRule(
+        type: e,
+        title: 'Netflix',
+        categoryId: 'subscriptions',
+        amount: 4990,
+        startDate: CalendarDay(2026, 1, 25),
+      ),
+      RecurringRule(
+        type: i,
+        title: 'Fizetés',
+        categoryId: 'salary',
+        amount: 420000,
+        startDate: CalendarDay(2026, 1, 5),
+      ),
+      RecurringRule(
+        type: e,
+        title: 'Edzőterem',
+        categoryId: 'health',
+        amount: 15000,
+        startDate: CalendarDay(2026, 11, 17),
+        autoBook: false,
+        reminder: const ReminderSettings(enabled: true, daysBefore: 0),
+      ),
+    ]) {
+      await state.saveRule(rule);
+    }
   }
   await state.setDarkMode(dark);
   return state;
@@ -172,6 +214,40 @@ void main() {
 
       await _tab(tester, 'Beállítások');
       await _shot(tester, '06_settings_$mode');
+
+      await _tab(tester, 'Ismétlődő');
+      await _shot(tester, '13_recurring_$mode');
+      await tester.tap(find.text('Lakbér').first);
+      await tester.pumpAndSettle();
+      await _shot(tester, '14_recurring_form_$mode');
+      await tester.tap(find.byTooltip('Bezárás'));
+      await tester.pumpAndSettle();
+
+      await _tab(tester, 'Áttekintés');
+      await tester.tap(find.byKey(const ValueKey('quick-entry-bar')));
+      await tester.pumpAndSettle();
+      await _shot(tester, '15_quick_entry_empty_$mode');
+      await tester.enterText(
+        find.byKey(const ValueKey('quick-entry-field')),
+        'tegnap lidl 4 590',
+      );
+      await tester.pumpAndSettle();
+      await _shot(tester, '16_quick_entry_$mode');
+      await tester.enterText(
+        find.byKey(const ValueKey('quick-entry-field')),
+        'Spotify havi 1990',
+      );
+      await tester.pumpAndSettle();
+      await _shot(tester, '17_quick_entry_recurring_$mode');
+      await tester.tap(find.byTooltip('Bezárás'));
+      await tester.pumpAndSettle();
+
+      await _tab(tester, 'Tételek');
+      await tester.tap(find.byTooltip('Keresés'));
+      await tester.pumpAndSettle();
+      await tester.enterText(find.byKey(const ValueKey('search-field')), 'bevasarlas');
+      await tester.pumpAndSettle();
+      await _shot(tester, '18_search_$mode');
     });
   }
 
@@ -182,6 +258,27 @@ void main() {
     await _shot(tester, '07_overview_empty');
     await _tab(tester, 'Sablonok');
     await _shot(tester, '08_templates_empty');
+  });
+
+  testWidgets('bemutató (bemutató adatokkal)', (tester) async {
+    _phone(tester);
+    final state =
+        (await tester.runAsync(() => _state(withData: false, tour: true)))!;
+    await _pump(tester, state);
+    await _shot(tester, '19_tour_welcome');
+    await tester.tap(find.byKey(const ValueKey('tour-next')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('tour-next')));
+    await tester.pumpAndSettle();
+    await _shot(tester, '20_tour_quick_entry');
+    await tester.tap(find.byKey(const ValueKey('tour-next')));
+    await tester.pumpAndSettle();
+    await _shot(tester, '21_tour_forecast');
+    for (var step = 0; step < 3; step++) {
+      await tester.tap(find.byKey(const ValueKey('tour-next')));
+      await tester.pumpAndSettle();
+    }
+    await _shot(tester, '22_tour_recurring');
   });
 
   testWidgets('nagy betűméret (1,6×)', (tester) async {

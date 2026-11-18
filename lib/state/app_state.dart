@@ -259,13 +259,15 @@ class AppState extends ChangeNotifier {
     return _rules.firstWhere((r) => r.id == saved.id);
   }
 
-  /// Az ismétlődő tétel lezárása (lemondás): a [day] utáni esedékességek
-  /// már nem jönnek. A korábban rögzített tételek megmaradnak.
+  /// Az ismétlődő tétel lezárása (lemondás): mától (vagy a [day] utántól)
+  /// nincs több esedékesség. A korábban rögzített tételek megmaradnak.
   Future<void> endRule(RecurringRule rule, {CalendarDay? day}) async {
     if (_demo) return;
     final today = _today();
     final saved = await _store.saveRecurring(
-      rule.copyWith(endDate: day ?? today),
+      rule.copyWith(
+        endDate: day ?? CalendarDay(today.year, today.month, today.day - 1),
+      ),
     );
     _rules = _replace(_rules, saved, (r) => r.id);
     _changed();
@@ -555,8 +557,7 @@ class AppState extends ChangeNotifier {
     UpcomingItem? next;
     for (final rule in activeRules) {
       if (rule.type != EntryType.expense) continue;
-      final from =
-          rule.handledThrough != null &&
+      final from = rule.handledThrough != null &&
               rule.handledThrough!.compareTo(today) >= 0
           ? CalendarDay(
               rule.handledThrough!.year,
@@ -567,11 +568,7 @@ class AppState extends ChangeNotifier {
       final date = rule.nextOccurrence(from);
       if (date == null) continue;
       if (next == null || date.compareTo(next.date) < 0) {
-        next = UpcomingItem(
-          rule: rule,
-          date: date,
-          amount: rule.amountOn(date),
-        );
+        next = UpcomingItem(rule: rule, date: date, amount: rule.amountOn(date));
       }
     }
     final nextText = next == null

@@ -112,16 +112,18 @@ QuickEntryResult interpretReceipt(String text, QuickEntryContext context) {
   CalendarDay? date;
   for (final line in lines) {
     final foldedLine = foldForMatching(line);
-    final match = findDate(line, tokenize(line), context.today);
-    if (match == null) continue;
+    // A blokkok rövid „ÉÉ.HH.NN” dátuma elsőbbséget kap („26.11.14”).
+    final found =
+        _receiptShortDate([line], context.today) ??
+        findDate(line, tokenize(line), context.today)?.day;
+    if (found == null) continue;
     final strong =
         foldedLine.contains('kelt') ||
         foldedLine.contains('datum') ||
         foldedLine.contains('teljesites');
-    if (date == null || strong) date = match.day;
+    if (date == null || strong) date = found;
     if (strong) break;
   }
-  date ??= _receiptShortDate(lines, context.today);
   if (date != null && date.compareTo(context.today) > 0) date = context.today;
 
   // Kereskedő és kategória.

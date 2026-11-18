@@ -326,8 +326,7 @@ class _CategoryEditorState extends State<_CategoryEditor> {
                     Semantics(
                       button: true,
                       selected: value == _color,
-                      label:
-                          'Szín: ${_colorLabels[index % _colorLabels.length]}',
+                      label: 'Szín: ${_colorLabels[index % _colorLabels.length]}',
                       child: InkWell(
                         customBorder: const CircleBorder(),
                         onTap: () => setState(() => _color = value),

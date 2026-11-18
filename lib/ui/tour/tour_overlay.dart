@@ -259,13 +259,29 @@ class _TourOverlayState extends State<TourOverlay> {
                 ),
               );
             } else {
+              // A kártya a kiemelt elem alá vagy fölé kerül; ha egyik helyen
+              // sem fér el (nagy elem), a képernyő aljára.
+              const needed = 250.0;
               final spaceBelow = size.height - hole.bottom - padding.bottom;
-              final below = spaceBelow > hole.top - padding.top;
+              final spaceAbove = hole.top - padding.top;
+              final double? top;
+              final double? bottom;
+              if (spaceBelow >= needed ||
+                  (spaceBelow >= spaceAbove && spaceBelow >= needed * 0.8)) {
+                top = hole.bottom + Space.md;
+                bottom = null;
+              } else if (spaceAbove >= needed) {
+                top = null;
+                bottom = size.height - hole.top + Space.md;
+              } else {
+                top = null;
+                bottom = padding.bottom + margin;
+              }
               positioned = Positioned(
                 left: margin,
                 right: margin,
-                top: below ? hole.bottom + Space.md : null,
-                bottom: below ? null : size.height - hole.top + Space.md,
+                top: top,
+                bottom: bottom,
                 child: Align(
                   alignment: Alignment.center,
                   child: ConstrainedBox(
