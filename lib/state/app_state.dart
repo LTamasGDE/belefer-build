@@ -57,6 +57,7 @@ class AppState extends ChangeNotifier {
   /// (ha még nincs adata) a bemutató adatok látszanak. Semmi sem mentődik.
   bool _demo = false;
   _Snapshot? _beforeDemo;
+  bool _tourActive = false;
 
   CalendarDay today() => _today();
 
@@ -68,6 +69,9 @@ class AppState extends ChangeNotifier {
   bool get darkMode => _darkMode;
   bool get tourSeen => _tourSeen;
   bool get isDemo => _demo;
+
+  /// Fut-e éppen a körbevezetés.
+  bool get tourActive => _tourActive;
 
   /// Van-e a felhasználónak saját adata.
   bool get hasUserData =>
@@ -459,7 +463,8 @@ class AppState extends ChangeNotifier {
   /// A körbevezetés kezdete. Ha a felhasználónak nincs adata, bemutató
   /// adatok jelennek meg; a saját adatai sosem törlődnek.
   void startTour() {
-    if (_demo) return;
+    if (_tourActive) return;
+    _tourActive = true;
     _selectedMonth = YearMonth.of(_today());
     if (!hasUserData) {
       _beforeDemo = _Snapshot(_transactions, _templates, _rules);
@@ -474,6 +479,7 @@ class AppState extends ChangeNotifier {
 
   /// A körbevezetés vége: a bemutató adatok eltűnnek.
   Future<void> endTour() async {
+    _tourActive = false;
     if (_demo) {
       final before = _beforeDemo!;
       _transactions = before.transactions;
@@ -549,8 +555,7 @@ class AppState extends ChangeNotifier {
     UpcomingItem? next;
     for (final rule in activeRules) {
       if (rule.type != EntryType.expense) continue;
-      final from =
-          rule.handledThrough != null &&
+      final from = rule.handledThrough != null &&
               rule.handledThrough!.compareTo(today) >= 0
           ? CalendarDay(
               rule.handledThrough!.year,
@@ -561,11 +566,7 @@ class AppState extends ChangeNotifier {
       final date = rule.nextOccurrence(from);
       if (date == null) continue;
       if (next == null || date.compareTo(next.date) < 0) {
-        next = UpcomingItem(
-          rule: rule,
-          date: date,
-          amount: rule.amountOn(date),
-        );
+        next = UpcomingItem(rule: rule, date: date, amount: rule.amountOn(date));
       }
     }
     final nextText = next == null

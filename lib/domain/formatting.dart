@@ -144,3 +144,22 @@ const List<String> _shortMonthNames = [
   'nov.',
   'dec.',
 ];
+
+/// „mától”, „holnaptól”, „december 5-étől”.
+String formatFromDate(CalendarDay day, CalendarDay today) {
+  final difference = DateTime.utc(
+    day.year,
+    day.month,
+    day.day,
+  ).difference(DateTime.utc(today.year, today.month, today.day)).inDays;
+  if (difference == 0) return 'mától';
+  if (difference == 1) return 'holnaptól';
+  final onDay = dayWithSuffix(day.day);
+  final from = onDay.endsWith('jén')
+      ? '${onDay.substring(0, onDay.length - 3)}jétől'
+      : onDay.endsWith('án')
+      ? '${onDay.substring(0, onDay.length - 2)}ától'
+      : '${onDay.substring(0, onDay.length - 2)}étől';
+  final year = day.year == today.year ? '' : '${day.year}. ';
+  return '$year${monthName(day.month)} $from';
+}

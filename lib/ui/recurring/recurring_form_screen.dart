@@ -36,12 +36,20 @@ const List<String> _placeholders = ['{név}', '{összeg}', '{dátum}', '{mikor}'
 
 /// Ismétlődő tétel felvétele, szerkesztése, lemondása és törlése.
 class RecurringFormScreen extends StatefulWidget {
-  const RecurringFormScreen({super.key, this.existing, this.prefill});
+  const RecurringFormScreen({
+    super.key,
+    this.existing,
+    this.prefill,
+    this.prefillHasAmount = true,
+  });
 
   final RecurringRule? existing;
 
   /// Új ismétlődő tétel előre kitöltött adatai.
   final RecurringRule? prefill;
+
+  /// Az előtöltésben szerepel-e már összeg.
+  final bool prefillHasAmount;
 
   @override
   State<RecurringFormScreen> createState() => _RecurringFormScreenState();
@@ -71,7 +79,7 @@ class _RecurringFormScreenState extends State<RecurringFormScreen> {
     _fields = EntryFieldsController(
       type: source?.type ?? EntryType.expense,
       title: source?.title ?? '',
-      amount: source == null
+      amount: source == null || (widget.existing == null && !widget.prefillHasAmount)
           ? null
           : (widget.existing != null
                 ? source.amountOn(state.today())
@@ -498,7 +506,9 @@ class _RecurringFormScreenState extends State<RecurringFormScreen> {
           icon: const Icon(Icons.close_rounded),
           onPressed: () => Navigator.of(context).maybePop(),
         ),
-        title: Text(_isEditing ? 'Ismétlődő tétel' : 'Új ismétlődő tétel'),
+        title: Text(
+          _isEditing ? 'Ismétlődő tétel' : 'Új ismétlődő tétel',
+        ),
         actions: [
           if (_isEditing)
             IconButton(

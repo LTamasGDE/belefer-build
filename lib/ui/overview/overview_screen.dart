@@ -10,7 +10,9 @@ import '../theme/palette.dart';
 import '../transactions/transaction_actions.dart';
 import '../widgets/common.dart';
 import '../widgets/month_switcher.dart';
+import '../tour/tour_keys.dart';
 import 'expense_donut.dart';
+import 'overview_cards.dart';
 
 /// Áttekintés: havi egyenleg, gyorsműveletek és a kiadások megoszlása.
 class OverviewScreen extends StatelessWidget {
@@ -21,9 +23,31 @@ class OverviewScreen extends StatelessWidget {
     final state = AppScope.of(context);
     final summary = state.summary;
 
-    final hero = _BalanceCard(summary: summary);
-    const actions = _QuickActions();
+    final hero = KeyedSubtree(
+      key: TourKeys.balance,
+      child: _BalanceCard(summary: summary),
+    );
+    final actions = Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        KeyedSubtree(key: TourKeys.quickEntry, child: const QuickEntryBar()),
+        const SizedBox(height: Space.md),
+        const _QuickActions(),
+        const PendingSection(),
+      ],
+    );
+    final forecast = state.forecast;
+    final showForecast =
+        forecast != null &&
+        (state.transactions.isNotEmpty || state.rules.isNotEmpty);
+    final forecastCard = showForecast
+        ? KeyedSubtree(
+            key: TourKeys.forecast,
+            child: ForecastCard(forecast: forecast),
+          )
+        : null;
     final breakdown = Panel(
+      key: TourKeys.breakdown,
       padding: const EdgeInsets.fromLTRB(
         Space.lg,
         Space.lg,
@@ -78,7 +102,19 @@ class OverviewScreen extends StatelessWidget {
                         ),
                       ),
                       const SizedBox(width: Space.xl),
-                      Expanded(child: breakdown),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            const SizedBox(height: 56),
+                            if (forecastCard != null) ...[
+                              forecastCard,
+                              const SizedBox(height: Space.lg),
+                            ],
+                            breakdown,
+                          ],
+                        ),
+                      ),
                     ],
                   ),
                 ),
@@ -103,6 +139,10 @@ class OverviewScreen extends StatelessWidget {
                     const SizedBox(height: Space.lg),
                     actions,
                     const SizedBox(height: Space.lg),
+                    if (forecastCard != null) ...[
+                      forecastCard,
+                      const SizedBox(height: Space.lg),
+                    ],
                     breakdown,
                   ],
                 ),

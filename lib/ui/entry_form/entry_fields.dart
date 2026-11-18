@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import '../../domain/categories.dart';
 import '../../domain/models.dart';
 import '../../domain/validation.dart';
+import '../categories/categories_screen.dart';
 import '../theme/app_theme.dart';
 import '../theme/belefer_colors.dart';
 import '../theme/category_style.dart';
@@ -171,6 +172,7 @@ class EntryFields extends StatelessWidget {
               type: controller.type,
               value: controller.categoryId,
               onChanged: (value) => controller.categoryId = value,
+              onCreate: (type) => showCategoryEditor(context, type: type),
             ),
             const SizedBox(height: Space.lg),
             TextFormField(
@@ -231,6 +233,7 @@ class CategoryField extends FormField<String> {
     required EntryType type,
     required String? value,
     required ValueChanged<String> onChanged,
+    Future<String?> Function(EntryType type)? onCreate,
   }) : super(
          initialValue: value,
          validator: (selected) => EntryRules.validateCategory(selected, type),
@@ -264,6 +267,19 @@ class CategoryField extends FormField<String> {
                        onTap: () {
                          field.didChange(category.id);
                          onChanged(category.id);
+                       },
+                     ),
+                   if (onCreate != null)
+                     ActionChip(
+                       key: const ValueKey('new-category-chip'),
+                       avatar: const Icon(Icons.add_rounded, size: 18),
+                       label: const Text('Új kategória'),
+                       shape: const StadiumBorder(),
+                       onPressed: () async {
+                         final id = await onCreate(type);
+                         if (id == null || !field.mounted) return;
+                         field.didChange(id);
+                         onChanged(id);
                        },
                      ),
                  ],

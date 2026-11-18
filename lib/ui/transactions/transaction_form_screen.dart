@@ -11,6 +11,25 @@ import '../widgets/common.dart';
 import '../widgets/confirm_dialog.dart';
 import '../widgets/date_field.dart';
 
+/// Egy még nem mentett tétel részben ismert adatai (előtöltéshez).
+class TransactionDraft {
+  const TransactionDraft({
+    required this.type,
+    required this.date,
+    this.title = '',
+    this.amount,
+    this.categoryId,
+    this.note,
+  });
+
+  final EntryType type;
+  final CalendarDay date;
+  final String title;
+  final int? amount;
+  final String? categoryId;
+  final String? note;
+}
+
 /// Az űrlap eredménye a hívó képernyő számára.
 enum TransactionFormOutcome { saved, deleted }
 
@@ -41,7 +60,7 @@ class TransactionFormScreen extends StatefulWidget {
 
   /// Új tétel előre kitöltött adatai (pl. a gyorsrögzítésből vagy egy
   /// blokkról); mentés előtt minden módosítható.
-  final Transaction? prefill;
+  final TransactionDraft? prefill;
 
   bool get isEditing => existing != null;
 
@@ -66,8 +85,15 @@ class _TransactionFormScreenState extends State<TransactionFormScreen> {
       _fields = EntryFieldsController.fromTransaction(existing);
       _date = existing.date;
     } else if (widget.prefill != null) {
-      _fields = EntryFieldsController.fromTransaction(widget.prefill!);
-      _date = widget.prefill!.date;
+      final draft = widget.prefill!;
+      _fields = EntryFieldsController(
+        type: draft.type,
+        title: draft.title,
+        amount: draft.amount,
+        categoryId: draft.categoryId,
+        note: draft.note,
+      );
+      _date = draft.date;
     } else if (template != null) {
       _fields = EntryFieldsController.fromTemplate(template);
       _appliedTemplateId = template.id;

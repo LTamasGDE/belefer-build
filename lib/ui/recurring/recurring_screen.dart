@@ -12,10 +12,12 @@ import '../widgets/common.dart';
 import 'recurring_form_screen.dart';
 
 /// Megnyitja az ismétlődő tétel űrlapját, és visszajelzést ad.
-Future<void> openRecurringForm(
+/// Igaz, ha mentés történt.
+Future<bool> openRecurringForm(
   BuildContext context, {
   RecurringRule? existing,
   RecurringRule? prefill,
+  bool prefillHasAmount = true,
 }) async {
   final messenger = ScaffoldMessenger.of(context)..hideCurrentSnackBar();
   final state = AppScope.read(context);
@@ -23,10 +25,14 @@ Future<void> openRecurringForm(
   final saved = await Navigator.of(context).push<RecurringRule>(
     MaterialPageRoute(
       fullscreenDialog: existing == null,
-      builder: (_) => RecurringFormScreen(existing: existing, prefill: prefill),
+      builder: (_) => RecurringFormScreen(
+        existing: existing,
+        prefill: prefill,
+        prefillHasAmount: prefillHasAmount,
+      ),
     ),
   );
-  if (saved == null) return;
+  if (saved == null) return false;
   final booked = state.transactions.length - before;
   messenger.showSnackBar(
     SnackBar(
@@ -37,6 +43,7 @@ Future<void> openRecurringForm(
       ),
     ),
   );
+  return true;
 }
 
 /// Az összeg havi átlagban (a fejléc összesítőjéhez).
@@ -122,7 +129,12 @@ class _RecurringScreenState extends State<RecurringScreen> {
       }
       children.add(
         Padding(
-          padding: const EdgeInsets.fromLTRB(Space.sm, Space.md, Space.sm, 0),
+          padding: const EdgeInsets.fromLTRB(
+            Space.sm,
+            Space.md,
+            Space.sm,
+            0,
+          ),
           child: Text(
             'Havonta átlagosan ${formatForint(monthlyIncome)} bevétel és '
             '${formatForint(monthlyExpense)} kiadás ismétlődik.',

@@ -9,6 +9,7 @@ import '../theme/app_theme.dart';
 import '../theme/belefer_colors.dart';
 import '../widgets/common.dart';
 import '../widgets/month_switcher.dart';
+import '../tour/tour_keys.dart';
 import '../widgets/pill_selector.dart';
 import 'transaction_actions.dart';
 
@@ -24,6 +25,27 @@ class TransactionsScreen extends StatefulWidget {
 
 class _TransactionsScreenState extends State<TransactionsScreen> {
   TransactionFilter _filter = TransactionFilter.all;
+  final _searchController = TextEditingController();
+  bool _searching = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _searchController.addListener(() => setState(() {}));
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  void _startSearch() => setState(() => _searching = true);
+
+  void _stopSearch() {
+    _searchController.clear();
+    setState(() => _searching = false);
+  }
 
   EntryType? get _type => switch (_filter) {
     TransactionFilter.all => null,
@@ -33,6 +55,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    if (_searching) return _buildSearch(context);
     final state = AppScope.of(context);
     final colors = context.colors;
     final items = state.transactionsOfSelectedMonth(type: _type);
@@ -106,7 +129,18 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
     }
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Tételek')),
+      appBar: AppBar(
+        title: const Text('Tételek'),
+        actions: [
+          IconButton(
+            key: TourKeys.search,
+            tooltip: 'Keresés',
+            icon: const Icon(Icons.search_rounded),
+            onPressed: _startSearch,
+          ),
+          const SizedBox(width: Space.xs),
+        ],
+      ),
       floatingActionButton: FloatingActionButton.extended(
         heroTag: 'fab-transactions',
         onPressed: () => openTransactionForm(
@@ -126,6 +160,136 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+extension on _TransactionsScreenState {
+  Widget _buildSearch(BuildContext context) {
+    final state = AppScope.of(context);
+    final colors = context.colors;
+    final textTheme = Theme.of(context).textTheme;
+    final query = _searchController.text;
+    final results = state.search(query);
+    final total = results.fold<int>(0, (sum, item) => sum + item.signedAmount);
+    final children = <Widget>[];
+    if (query.trim().isEmpty) {
+      children.add(
+        Padding(
+          padding: const EdgeInsets.all(Space.lg),
+          child: Text(
+            'Kereshetsz megnevezésre, megjegyzésre, kategóriára, összegre '
+            'vagy dátumra – minden hónapban. Pl. „kávé”, „lakbér október”, '
+            '„12450”.',
+            style: textTheme.bodyMedium?.copyWith(color: colors.textMuted),
+          ),
+        ),
+      );
+    } else if (results.isEmpty) {
+      children.add(
+        const EmptyState(
+          icon: Icons.search_off_rounded,
+          title: 'Nincs találat',
+          message: 'Próbáld rövidebb vagy más szóval.',
+        ),
+      );
+    } else {
+      children.add(
+        Semantics(
+          liveRegion: true,
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(
+              Space.sm,
+              Space.md,
+              Space.sm,
+              0,
+            ),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    '${results.length} találat',
+                    key: const ValueKey('search-count'),
+                    style: textTheme.bodyMedium?.copyWith(
+                      color: colors.textMuted,
+                    ),
+                  ),
+                ),
+                Text(
+                  formatForint(total),
+                  style: textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w700,
+                    fontFeatures: tabularFigures,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+      CalendarDay? currentDay;
+      for (final item in results) {
+        if (item.date != currentDay) {
+          currentDay = item.date;
+          children.add(_DayHeading(day: item.date, withYear: true));
+        }
+        children.add(
+          Padding(
+            padding: const EdgeInsets.only(bottom: Space.sm),
+            child: TransactionTile(
+              transaction: item,
+              onTap: () => openTransactionForm(context, existing: item),
+            ),
+          ),
+        );
+      }
+    }
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, _) {
+        if (!didPop) _stopSearch();
+      },
+      child: Scaffold(
+        appBar: AppBar(
+          leading: IconButton(
+            tooltip: 'Keresés bezárása',
+            icon: const Icon(Icons.arrow_back_rounded),
+            onPressed: _stopSearch,
+          ),
+          title: TextField(
+            key: const ValueKey('search-field'),
+            controller: _searchController,
+            autofocus: true,
+            textInputAction: TextInputAction.search,
+            decoration: const InputDecoration(
+              hintText: 'Keresés a tételek között',
+              border: InputBorder.none,
+              enabledBorder: InputBorder.none,
+              focusedBorder: InputBorder.none,
+              filled: false,
+            ),
+          ),
+          actions: [
+            if (query.isNotEmpty)
+              IconButton(
+                tooltip: 'Törlés',
+                icon: const Icon(Icons.close_rounded),
+                onPressed: _searchController.clear,
+              ),
+          ],
+        ),
+        body: ListView(
+          padding: const EdgeInsets.fromLTRB(Space.md, 0, Space.md, Space.xxl),
+          children: [
+            ContentWidth(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: children,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -176,9 +340,10 @@ class _TotalLine extends StatelessWidget {
 }
 
 class _DayHeading extends StatelessWidget {
-  const _DayHeading({required this.day});
+  const _DayHeading({required this.day, this.withYear = false});
 
   final CalendarDay day;
+  final bool withYear;
 
   @override
   Widget build(BuildContext context) {
@@ -190,7 +355,9 @@ class _DayHeading extends StatelessWidget {
     } else if (day == CalendarDay(today.year, today.month, today.day - 1)) {
       label = 'Tegnap · ${formatDayHeading(day)}';
     } else {
-      label = formatDayHeading(day);
+      label = withYear && day.year != today.year
+          ? '${day.year}. ${formatDayHeading(day)}'
+          : formatDayHeading(day);
     }
     return Padding(
       padding: const EdgeInsets.fromLTRB(

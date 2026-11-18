@@ -133,9 +133,11 @@ class LocalStore {
     final filter = Filter.equals('category', category.id);
     await _db.transaction((txn) async {
       for (final store in [_transactions, _templates, _recurring]) {
-        await store.update(txn, <String, Object?>{
-          'category': fallback,
-        }, finder: Finder(filter: filter));
+        await store.update(
+          txn,
+          <String, Object?>{'category': fallback},
+          finder: Finder(filter: filter),
+        );
       }
       await _categories.record(key).delete(txn);
     });

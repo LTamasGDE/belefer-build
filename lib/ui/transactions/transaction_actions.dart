@@ -7,12 +7,13 @@ import '../../state/app_scope.dart';
 import 'transaction_form_screen.dart';
 
 /// Megnyitja a tételűrlapot, és visszajelzést ad a mentésről vagy törlésről.
-Future<void> openTransactionForm(
+/// Igaz, ha mentés vagy törlés történt.
+Future<bool> openTransactionForm(
   BuildContext context, {
   Transaction? existing,
   EntryType initialType = EntryType.expense,
   EntryTemplate? template,
-  Transaction? prefill,
+  TransactionDraft? prefill,
 }) async {
   final state = AppScope.read(context);
   final messenger = ScaffoldMessenger.of(context)..hideCurrentSnackBar();
@@ -27,13 +28,13 @@ Future<void> openTransactionForm(
       ),
     ),
   );
-  if (result == null) return;
+  if (result == null) return false;
 
   final transaction = result.transaction;
   messenger.hideCurrentSnackBar();
   if (result.outcome == TransactionFormOutcome.deleted) {
     messenger.showSnackBar(const SnackBar(content: Text('Tétel törölve')));
-    return;
+    return true;
   }
 
   final kind = transaction.type == EntryType.expense ? 'Kiadás' : 'Bevétel';
@@ -52,4 +53,5 @@ Future<void> openTransactionForm(
           : null,
     ),
   );
+  return true;
 }
