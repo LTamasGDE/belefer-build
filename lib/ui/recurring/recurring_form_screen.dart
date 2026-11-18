@@ -498,9 +498,7 @@ class _RecurringFormScreenState extends State<RecurringFormScreen> {
           icon: const Icon(Icons.close_rounded),
           onPressed: () => Navigator.of(context).maybePop(),
         ),
-        title: Text(
-          _isEditing ? 'Ismétlődő tétel' : 'Új ismétlődő tétel',
-        ),
+        title: Text(_isEditing ? 'Ismétlődő tétel' : 'Új ismétlődő tétel'),
         actions: [
           if (_isEditing)
             IconButton(

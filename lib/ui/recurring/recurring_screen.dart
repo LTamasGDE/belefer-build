@@ -23,8 +23,7 @@ Future<void> openRecurringForm(
   final saved = await Navigator.of(context).push<RecurringRule>(
     MaterialPageRoute(
       fullscreenDialog: existing == null,
-      builder: (_) =>
-          RecurringFormScreen(existing: existing, prefill: prefill),
+      builder: (_) => RecurringFormScreen(existing: existing, prefill: prefill),
     ),
   );
   if (saved == null) return;
@@ -123,12 +122,7 @@ class _RecurringScreenState extends State<RecurringScreen> {
       }
       children.add(
         Padding(
-          padding: const EdgeInsets.fromLTRB(
-            Space.sm,
-            Space.md,
-            Space.sm,
-            0,
-          ),
+          padding: const EdgeInsets.fromLTRB(Space.sm, Space.md, Space.sm, 0),
           child: Text(
             'Havonta átlagosan ${formatForint(monthlyIncome)} bevétel és '
             '${formatForint(monthlyExpense)} kiadás ismétlődik.',
