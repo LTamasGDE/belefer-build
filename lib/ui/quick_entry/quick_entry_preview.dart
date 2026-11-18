@@ -83,10 +83,8 @@ class QuestionHints extends StatelessWidget {
           QuickQuestion.when,
           QuickQuestion.type,
         ];
-    final missing = current?.missing ?? const [
-      QuickQuestion.amount,
-      QuickQuestion.what,
-    ];
+    final missing =
+        current?.missing ?? const [QuickQuestion.amount, QuickQuestion.what];
     return Semantics(
       container: true,
       label: missing.isEmpty
@@ -340,7 +338,11 @@ class QuickResultCard extends StatelessWidget {
               Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Icon(Icons.info_outline_rounded, size: 18, color: colors.text),
+                  Icon(
+                    Icons.info_outline_rounded,
+                    size: 18,
+                    color: colors.text,
+                  ),
                   const SizedBox(width: 6),
                   Expanded(child: Text(note, style: textTheme.bodySmall)),
                 ],

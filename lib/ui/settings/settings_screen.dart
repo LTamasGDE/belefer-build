@@ -112,7 +112,8 @@ class SettingsScreen extends StatelessWidget {
                         key: const ValueKey('replay-tour'),
                         icon: Icons.school_rounded,
                         title: 'Bemutató újraindítása',
-                        subtitle: 'Körbevezetés az alkalmazásban; az adataid '
+                        subtitle:
+                            'Körbevezetés az alkalmazásban; az adataid '
                             'nem változnak.',
                         onTap: state.startTour,
                       ),
@@ -274,7 +275,8 @@ class _ReminderSettings extends StatelessWidget {
               key: const ValueKey('reminder-default-time'),
               icon: Icons.schedule_rounded,
               title: 'Alapértelmezett időpont',
-              subtitle: 'Új ismétlődő tételeknél: $time, '
+              subtitle:
+                  'Új ismétlődő tételeknél: $time, '
                   '${defaults.daysBefore == 0 ? 'aznap' : '${defaults.daysBefore} nappal előtte'}',
               trailing: Text(time),
               onTap: () => _pickTime(context, defaults),

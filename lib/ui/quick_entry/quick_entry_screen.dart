@@ -26,10 +26,7 @@ const List<String> quickEntryExamples = [
 
 /// Megnyitja a gyorsrögzítést, és a könyvelés után visszavonható
 /// visszajelzést ad.
-Future<void> openQuickEntry(
-  BuildContext context, {
-  ReceiptSource? scan,
-}) async {
+Future<void> openQuickEntry(BuildContext context, {ReceiptSource? scan}) async {
   final state = AppScope.read(context);
   final messenger = ScaffoldMessenger.of(context)..hideCurrentSnackBar();
   final done = await Navigator.of(context).push<QuickEntryDone>(
@@ -175,7 +172,9 @@ class _QuickEntryScreenState extends State<QuickEntryScreen> {
       setState(() => _busy = false);
       if (capture == null) return;
       final done = await navigator.push<QuickEntryDone>(
-        MaterialPageRoute(builder: (_) => ReceiptReviewScreen(capture: capture)),
+        MaterialPageRoute(
+          builder: (_) => ReceiptReviewScreen(capture: capture),
+        ),
       );
       if (done != null && mounted) navigator.pop(done);
     } on ReceiptScanException catch (error) {
@@ -283,10 +282,7 @@ class _QuickEntryScreenState extends State<QuickEntryScreen> {
                     ),
                   ],
                   const SizedBox(height: Space.xl),
-                  Text(
-                    'Blokk vagy számla',
-                    style: textTheme.titleMedium,
-                  ),
+                  Text('Blokk vagy számla', style: textTheme.titleMedium),
                   const SizedBox(height: Space.xs),
                   Text(
                     'Lefotózod vagy kiválasztod, a telefon kiolvassa, te '
