@@ -237,6 +237,40 @@ final List<_Case> _cases = [
     date: CalendarDay(2025, 12, 24),
   ),
   _Case('kávé 900', date: CalendarDay(2026, 11, 17)),
+  // --- Toldalékok, szórend, vegyes ---
+  const _Case('Spar-ban 2300', amount: 2300, title: 'Spar'),
+  const _Case(
+    'aldiban vettem 3 kg almát 1200',
+    amount: 1200,
+    title: 'Aldi',
+    category: 'groceries',
+  ),
+  const _Case('5 ezer forint mozi', amount: 5000, category: 'entertainment'),
+  const _Case('mozijegy kétezer', amount: 2000, category: 'entertainment'),
+  const _Case('kifizettem a villanyt 12 400', amount: 12400, category: 'utilities'),
+  const _Case('fizettem 3500 benzin', amount: 3500, category: 'transport'),
+  const _Case('3500 fizettem benzinre', amount: 3500, category: 'transport'),
+  const _Case('ebédre 2500', amount: 2500, category: 'dining'),
+  _Case(
+    'tegnap este pizza a haverokkal 6000',
+    amount: 6000,
+    category: 'dining',
+    date: CalendarDay(2026, 11, 16),
+  ),
+  _Case(
+    'szept 30 lakbér 180e',
+    amount: 180000,
+    category: 'housing',
+    date: CalendarDay(2026, 9, 30),
+  ),
+  const _Case(
+    'Spotify 1990',
+    amount: 1990,
+    category: 'subscriptions',
+    intent: QuickIntent.record,
+  ),
+  const _Case('gyógyszertár 2 890 Ft', amount: 2890, category: 'health'),
+  const _Case('kaptam ajándékba 10000', amount: 10000, type: _in),
   // --- Bevételek ---
   const _Case(
     'megjött a fizetés 420000',

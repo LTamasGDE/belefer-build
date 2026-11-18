@@ -1,26 +1,55 @@
 # Belefér
 
 Magyar nyelvű, személyes pénzügykövető Androidra és iOS-re, Flutterrel.
-Kiadás: **26.11.0**, alkalmazásverzió: `0.1.0+1`.
+Kiadás: **26.11.1**, alkalmazásverzió: `0.2.0+2`.
 
 ## Funkciók
 
 - **Áttekintés:** a kiválasztott hónap bevétele, kiadása és a kettő különbsége
   („Maradt”). Előző és következő hónapra lehet lapozni. Az interaktív
-  gyűrűdiagram kategóriánként mutatja a kiadásokat (`100% | 124 500 Ft`). Egy
-  szeletre vagy jelmagyarázati sorra koppintva megjelenik a kategória neve,
-  százaléka és pontos összege. Gyorsgombok: **Új kiadás**, **Új bevétel**.
-- **Tételek:** kiadás és bevétel felvétele, megtekintése, szerkesztése és
-  megerősítés utáni törlése. Mezők: megnevezés, összeg, típus, kategória,
-  dátum (alapból a mai nap) és megjegyzés. A lista dátum szerint rendezett,
-  hónap és típus szerint szűrhető.
-- **Sablonok:** kiadási és bevételi sablonok (pl. *Lakbér*, *Fizetés*)
-  névvel, kategóriával, opcionális összeggel és megjegyzéssel. Használatkor a
-  kitöltött űrlap nyílik meg a mai dátummal. Mentés előtt minden mező
-  szerkeszthető, a mentett tétel a saját adataival tárolódik.
-- **Beállítások:** világos/sötét mód (újranyitás után is megmarad), az
-  alkalmazás verziója a build metaadataiból, és **Összes adat törlése**
-  megerősítéssel.
+  gyűrűdiagram kategóriánként mutatja a kiadásokat (`100% | 124 500 Ft`).
+  Gyorsgombok: **Új kiadás**, **Új bevétel**.
+- **Gyorsrögzítés (26.11.1):** egy mondatból könyvel, internet nélkül, a
+  telefonon: „Lidl 4500 tegnap”, „megjött a fizetés 420e”, „kávé 890”.
+  Tűri az elírásokat („lild”, „kvae”), a toldalékokat („Tescóban”, „850-ért”),
+  a felcserélt szórendet, a számneveket („kétezer-ötszáz”, „másfél millió”),
+  a `12e`/`2,5k` alakot és a magyar dátumokat („pénteken”, „nov. 3.”,
+  „3 napja”). A korábbi tételeidből tanulja a kategóriákat. Halványan mindig
+  mutatja, mire kell még válasz (*Mennyi? · Mire, hol? · Mikor? · Kiadás vagy
+  bevétel?*); ha minden megvan, egy koppintással könyvel, visszavonhatóan.
+  Ismétlődő tételt is felvesz („Netflix havi 4990”), lemond („lemondtam a
+  Spotifyt”) vagy módosít („mostantól 190 ezer a lakbér”).
+- **Blokk és e-számla (26.11.1):** fotó a kamerával, kép vagy képernyőkép a
+  galériából, illetve PDF-számla. A szövegfelismerés a telefonon fut (ML Kit);
+  a felismert szöveget és az értelmezést (kereskedő, végösszeg, dátum,
+  kategória) átnézed, javítod, majd egy koppintással könyveled.
+- **Ismétlődő tételek (26.11.1):** hetente, kéthetente, havonta,
+  negyedévente, félévente vagy évente; kezdő és opcionális záró dátummal.
+  Esedékességkor maguktól rögzülnek, vagy kérésre jóváhagyásra várnak
+  (az összeg ekkor módosítható). Összegváltozás a következő esedékességtől,
+  lemondás és újraindítás.
+- **Emlékeztetők (26.11.1):** helyi értesítés az esedékesség előtt
+  (aznap, 1–7 nappal), választható időpontban, akár saját szöveggel
+  (`{név}`, `{összeg}`, `{dátum}`, `{mikor}` helyőrzőkkel, előnézettel).
+  Főkapcsoló és próbaértesítés a Beállításokban.
+- **Előrejelzés (26.11.1):** a hónap végére várható egyenleg a még esedékes
+  ismétlődő tételekből és az eddigi napi átlagos költésből (az első napokban
+  az előző hónapok átlagából).
+- **Keresés (26.11.1):** minden hónap tételei között, megnevezésre,
+  megjegyzésre, kategóriára, összegre vagy dátumra; ékezet nélkül és elírva is.
+- **Saját kategóriák (26.11.1):** névvel, színnel és ikonnal, akár közvetlenül
+  az űrlapról. Törléskor a tételeik az „Egyéb” kategóriába kerülnek.
+- **Kezdőképernyő-widget (26.11.1):** a hónap egyenlege, bevétele, kiadása és
+  a következő esedékes tétel; gyorsrögzítés és blokkfotózás egy koppintással
+  (Android és iOS).
+- **Bemutató (26.11.1):** első indításkor körbevezet; kihagyható, és a
+  Beállításokban újraindítható. Ha még nincs adatod, bemutató adatokkal
+  mutatja be (ezek nem mentődnek); ha van, a sajátjaiddal – semmi sem törlődik.
+- **Tételek:** felvétel, szerkesztés, törlés; hónap és típus szerinti szűrés.
+- **Sablonok:** kiadási és bevételi sablonok (pl. *Lakbér*, *Fizetés*);
+  használatkor a kitöltött űrlap nyílik meg a mai dátummal.
+- **Beállítások:** világos/sötét mód, kategóriák, emlékeztetők, bemutató,
+  verzió, **Összes adat törlése** megerősítéssel.
 
 Bejelentkezés nincs, az alkalmazás egyetlen felhasználónak készült. Webes
 változat szándékosan nincs.
@@ -36,12 +65,14 @@ alkalmazás törlésekor az adatok is törlődnek.
   dönti el az irányt.
 - A dátum naptári napként (`ÉÉÉÉ-HH-NN`) tárolódik, így időzónától
   függetlenül mindig a saját hónapjában marad.
+- Tárolók: tételek, sablonok, ismétlődő tételek, saját kategóriák és
+  beállítások. A gyorsrögzítés és a szövegfelismerés sem küld adatot sehova.
 
 ## APK letöltése (Android)
 
 A telepíthető APK a build-repó kiadásai között van, bejelentkezés nélkül
-letölthető: <https://github.com/LTamasGDE/belefer-build/releases/tag/26.11.0>.
-Telefonon a `belefer-26.11.0.apk` fájlt érdemes letölteni (release mód,
+letölthető: <https://github.com/LTamasGDE/belefer-build/releases/tag/26.11.1>.
+Telefonon a `belefer-26.11.1.apk` fájlt érdemes letölteni (release mód,
 debug-kulccsal aláírva). Nyisd meg a letöltött fájlt, és engedélyezd a
 telepítést ismeretlen forrásból. A `-debug.apk` változat hibakereséshez
 való. Minden CI-futás a debug APK-t `belefer-android-debug-apk`
@@ -50,7 +81,7 @@ artifactként is feltölti (GitHub-bejelentkezéssel, zipben tölthető le).
 ## iPhone-ra telepítés (ingyenes Apple ID-val)
 
 iOS-en linkről nem lehet appot telepíteni, ezért a kiadás egy aláíratlan
-csomagot is tartalmaz: `belefer-26.11.0-unsigned.ipa`. Ezt a
+csomagot is tartalmaz: `belefer-26.11.1-unsigned.ipa`. Ezt a
 [SideStore](https://docs.sidestore.io/docs/installation/prerequisites) írja
 alá a saját Apple ID-ddal:
 
@@ -64,6 +95,18 @@ aláírás 7 napig érvényes, ezért ennyi időnként frissíteni kell a SideSt
 (**My Apps → Refresh All**, bekapcsolt LocalDevVPN-nel). Az adatok
 frissítéskor megmaradnak.
 
+Új verzióra (pl. 26.11.0 → 26.11.1) ugyanígy kell betölteni az új `.ipa`-t;
+az adatok megmaradnak. A 26.11.1 kezdőképernyő-widgetje külön bővítmény, ezért
+a SideStore két App ID-t használ hozzá (ingyenes Apple ID-val hetente legfeljebb
+10 új App ID hozható létre).
+
+## Kezdőképernyő-widget
+
+- **Android:** tartsd lenyomva a kezdőképernyőt → **Modulok/Widgetek** →
+  **Belefér – havi egyenleg**.
+- **iPhone:** tartsd lenyomva a kezdőképernyőt → **+** → **Belefér**
+  (kicsi vagy közepes méret).
+
 ## Felhős build és ellenőrzés
 
 A buildek GitHub Actionsben futnak, rögzített Flutter-verzióval (`3.47.9`).
@@ -73,6 +116,8 @@ Helyi fejlesztőeszközre nincs szükség.
 | --- | --- |
 | `CI` (`ci.yml`) | `dart format` ellenőrzés, `flutter analyze`, `flutter test`; Android debug APK és alapfolyamat Android-emulátoron; iOS-szimulátor build és alapfolyamat iOS-szimulátoron |
 | `Release APK` (`release.yml`) | tesztek, debug APK, GitHub Release a megadott címkével |
+| `iOS-projekt beállítása` (`ios-setup.yml`) | ML Kit erőforráscsomag, App Group jogosultság és a widget-bővítmény hozzáadása az Xcode-projekthez, visszacommitolva |
+| `Dev` (`dev.yml`) | a `wip` ágon: formázás, `flutter analyze`, `flutter test`, Android debug APK |
 | `Bootstrap` (`bootstrap.yml`) | hiányzó `android/`/`ios/` generálása, arculat, `pubspec.lock`, formázás, visszacommitolás |
 
 Újrafuttatás: a repó **Actions** fülén válaszd ki a munkafolyamatot, majd a
