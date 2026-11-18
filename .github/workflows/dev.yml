@@ -48,6 +48,7 @@ jobs:
           git add -A lib test integration_test test_screenshots pubspec.lock
           if ! git diff --cached --quiet; then
             git commit -m "Formázás és pubspec.lock"
+            git pull --rebase
             git push
           fi
 

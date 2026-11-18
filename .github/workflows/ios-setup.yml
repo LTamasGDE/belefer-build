@@ -5,6 +5,11 @@ name: iOS-projekt beállítása
 
 on:
   workflow_dispatch:
+  push:
+    branches: [wip]
+    paths:
+      - tool/ios_project_setup.rb
+      - .github/workflows/ios-setup.yml
 
 permissions:
   contents: write
@@ -48,5 +53,6 @@ jobs:
             echo "Nincs változás."
           else
             git commit -m "iOS: widget-bővítmény, App Group, ML Kit erőforrás (ios-setup)"
+            git pull --rebase
             git push
           fi
