@@ -1,4 +1,5 @@
-# Egyszeri iOS-projektbeállítás macOS-en, az eredmény visszacommitolva:
+# Egyszeri iOS-projektbeállítás (az xcodeproj gem Linuxon is fut), az
+# eredmény visszacommitolva:
 #  - a szövegfelismerés (ML Kit) erőforráscsomagjának letöltése,
 #  - App Group jogosultság, widget-bővítmény és beágyazás az Xcode-projektben.
 name: iOS-projekt beállítása
@@ -16,7 +17,7 @@ permissions:
 
 jobs:
   setup:
-    runs-on: macos-15-intel
+    runs-on: ubuntu-24.04
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@v6
@@ -40,7 +41,7 @@ jobs:
 
       - name: Xcode-projekt kiegészítése
         run: |
-          gem list -i xcodeproj >/dev/null || sudo gem install xcodeproj --no-document
+          sudo gem install xcodeproj --no-document
           ruby tool/ios_project_setup.rb
           git diff --stat
 
