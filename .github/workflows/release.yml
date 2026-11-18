@@ -116,6 +116,18 @@ jobs:
       - name: Release build aláírás nélkül
         run: |
           flutter build ios --release --no-codesign
+          APP=build/ios/iphoneos/Runner.app
+          # A SideStore az Apple-nél regisztrált App ID nevét a nyers
+          # CFBundleDisplayName-ből képzi, és ott csak ASCII karakter lehet
+          # („Belefér” → hiba). Ezért az Info.plist-be „Belefer” kerül, a
+          # kezdőképernyőn látható „Belefér” nevet pedig a magyar
+          # lokalizáció adja (hu.lproj/InfoPlist.strings).
+          plutil -replace CFBundleDisplayName -string "Belefer" "$APP/Info.plist"
+          mkdir -p "$APP/hu.lproj"
+          printf '"CFBundleDisplayName" = "Belefér";\n' > "$APP/hu.lproj/InfoPlist.strings"
+          plutil -convert binary1 "$APP/hu.lproj/InfoPlist.strings"
+          plutil -lint "$APP/Info.plist" "$APP/hu.lproj/InfoPlist.strings"
+          plutil -p "$APP/hu.lproj/InfoPlist.strings"
           mkdir -p dist/Payload
           cp -R build/ios/iphoneos/Runner.app dist/Payload/
           (cd dist && zip -qry "belefer-${{ inputs.tag }}-unsigned.ipa" Payload)
