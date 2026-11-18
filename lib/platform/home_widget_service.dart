@@ -14,7 +14,8 @@ import '../services/platform_services.dart';
 /// azonosítót a telepítéskor kapott profilból olvassuk ki.
 class HomeWidgetService implements WidgetPublisher, AppLinks {
   static const String fallbackAppGroup = 'group.com.ventyh1.belefer';
-  static const String androidProvider = 'com.ventyh1.belefer.BeleferWidgetProvider';
+  static const String androidProvider =
+      'com.ventyh1.belefer.BeleferWidgetProvider';
   static const String iosKind = 'BeleferWidget';
 
   Future<void>? _setup;
@@ -29,7 +30,10 @@ class HomeWidgetService implements WidgetPublisher, AppLinks {
   Future<void> publish(HomeWidgetData data) async {
     await _ensureSetup();
     for (final entry in data.toMap().entries) {
-      await HomeWidget.saveWidgetData<String>('belefer_${entry.key}', entry.value);
+      await HomeWidget.saveWidgetData<String>(
+        'belefer_${entry.key}',
+        entry.value,
+      );
     }
     await HomeWidget.updateWidget(
       qualifiedAndroidName: androidProvider,

@@ -557,7 +557,8 @@ class AppState extends ChangeNotifier {
     UpcomingItem? next;
     for (final rule in activeRules) {
       if (rule.type != EntryType.expense) continue;
-      final from = rule.handledThrough != null &&
+      final from =
+          rule.handledThrough != null &&
               rule.handledThrough!.compareTo(today) >= 0
           ? CalendarDay(
               rule.handledThrough!.year,
@@ -568,7 +569,11 @@ class AppState extends ChangeNotifier {
       final date = rule.nextOccurrence(from);
       if (date == null) continue;
       if (next == null || date.compareTo(next.date) < 0) {
-        next = UpcomingItem(rule: rule, date: date, amount: rule.amountOn(date));
+        next = UpcomingItem(
+          rule: rule,
+          date: date,
+          amount: rule.amountOn(date),
+        );
       }
     }
     final nextText = next == null

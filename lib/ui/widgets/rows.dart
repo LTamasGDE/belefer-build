@@ -125,7 +125,10 @@ class LinkRow extends StatelessWidget {
                     ),
                   ),
                   trailing ??
-                      Icon(Icons.chevron_right_rounded, color: colors.textMuted),
+                      Icon(
+                        Icons.chevron_right_rounded,
+                        color: colors.textMuted,
+                      ),
                 ],
               ),
             ),

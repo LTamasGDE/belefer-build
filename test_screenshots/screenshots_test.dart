@@ -245,7 +245,10 @@ void main() {
       await _tab(tester, 'Tételek');
       await tester.tap(find.byTooltip('Keresés'));
       await tester.pumpAndSettle();
-      await tester.enterText(find.byKey(const ValueKey('search-field')), 'bevasarlas');
+      await tester.enterText(
+        find.byKey(const ValueKey('search-field')),
+        'bevasarlas',
+      );
       await tester.pumpAndSettle();
       await _shot(tester, '18_search_$mode');
     });
@@ -262,8 +265,9 @@ void main() {
 
   testWidgets('bemutató (bemutató adatokkal)', (tester) async {
     _phone(tester);
-    final state =
-        (await tester.runAsync(() => _state(withData: false, tour: true)))!;
+    final state = (await tester.runAsync(
+      () => _state(withData: false, tour: true),
+    ))!;
     await _pump(tester, state);
     await _shot(tester, '19_tour_welcome');
     await tester.tap(find.byKey(const ValueKey('tour-next')));

@@ -129,12 +129,7 @@ class _RecurringScreenState extends State<RecurringScreen> {
       }
       children.add(
         Padding(
-          padding: const EdgeInsets.fromLTRB(
-            Space.sm,
-            Space.md,
-            Space.sm,
-            0,
-          ),
+          padding: const EdgeInsets.fromLTRB(Space.sm, Space.md, Space.sm, 0),
           child: Text(
             'Havonta átlagosan ${formatForint(monthlyIncome)} bevétel és '
             '${formatForint(monthlyExpense)} kiadás ismétlődik.',

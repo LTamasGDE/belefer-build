@@ -42,18 +42,21 @@ TESC0 GLOBAL Zrt.
       expect(result.date, CalendarDay(2026, 11, 14));
     });
 
-    test('ismeretlen bolt: az első sor a megnevezés, a tételsorokból kategória', () {
-      const text = '''
+    test(
+      'ismeretlen bolt: az első sor a megnevezés, a tételsorokból kategória',
+      () {
+        const text = '''
 SARKI KÁVÉZÓ KFT
 1 x Cappuccino  890
 1 x Croissant   650
 Fizetendő összeg: 1 540 Ft
 ''';
-      final result = interpretReceipt(text, context);
-      expect(result.amount, 1540);
-      expect(result.title, 'Sarki Kávézó');
-      expect(result.categoryId, 'dining');
-    });
+        final result = interpretReceipt(text, context);
+        expect(result.amount, 1540);
+        expect(result.title, 'Sarki Kávézó');
+        expect(result.categoryId, 'dining');
+      },
+    );
 
     test('elektronikus számla', () {
       const text = '''

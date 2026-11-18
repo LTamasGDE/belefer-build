@@ -37,7 +37,14 @@ class MlKitReceiptScanner implements ReceiptScanner {
       case ReceiptSource.file:
         final file = await FilePicker.pickFile(
           type: FileType.custom,
-          allowedExtensions: const ['pdf', 'jpg', 'jpeg', 'png', 'heic', 'webp'],
+          allowedExtensions: const [
+            'pdf',
+            'jpg',
+            'jpeg',
+            'png',
+            'heic',
+            'webp',
+          ],
           dialogTitle: 'Számla vagy blokk kiválasztása',
         );
         if (file == null) return null;
@@ -49,7 +56,8 @@ class MlKitReceiptScanner implements ReceiptScanner {
             fileName: file.name,
           );
         }
-        final path = file.path ?? await _writeTemp(await file.readAsBytes(), file.name);
+        final path =
+            file.path ?? await _writeTemp(await file.readAsBytes(), file.name);
         return ReceiptCapture(
           text: await _recognizeFile(path),
           imagePath: path,

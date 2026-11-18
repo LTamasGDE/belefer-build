@@ -28,7 +28,10 @@ void main() {
       expect(find.byKey(const ValueKey('quick-result')), findsOneWidget);
       expect(find.text('Elkönyvelés'), findsOneWidget);
 
-      await tapVisible(tester, find.byKey(const ValueKey('quick-entry-submit')));
+      await tapVisible(
+        tester,
+        find.byKey(const ValueKey('quick-entry-submit')),
+      );
       expect(state.transactions, hasLength(1));
       final saved = state.transactions.single;
       expect(saved.title, 'Lidl');
@@ -67,7 +70,10 @@ void main() {
       );
       await tester.pumpAndSettle();
       expect(find.text('Ismétlődő tétel létrehozása'), findsOneWidget);
-      await tapVisible(tester, find.byKey(const ValueKey('quick-entry-submit')));
+      await tapVisible(
+        tester,
+        find.byKey(const ValueKey('quick-entry-submit')),
+      );
       expect(state.rules.single.title, 'Netflix');
       expect(state.rules.single.frequency, Frequency.monthly);
       // A mai esedékesség rögtön rögzül.
@@ -76,7 +82,9 @@ void main() {
   });
 
   group('ismétlődő tételek', () {
-    testWidgets('felvétel űrlapon, a lista és a havi összesítő', (tester) async {
+    testWidgets('felvétel űrlapon, a lista és a havi összesítő', (
+      tester,
+    ) async {
       final state = await pumpBelefer(tester);
       await goToTab(tester, 'Ismétlődő');
       expect(find.text('Még nincs ismétlődő tétel'), findsOneWidget);
@@ -142,7 +150,10 @@ void main() {
     final state = await pumpBelefer(tester);
     await tapVisible(tester, find.byKey(const ValueKey('quick-expense')));
     await tapVisible(tester, find.byKey(const ValueKey('new-category-chip')));
-    await tester.enterText(find.byKey(const ValueKey('category-name')), 'Kutya');
+    await tester.enterText(
+      find.byKey(const ValueKey('category-name')),
+      'Kutya',
+    );
     await tester.pumpAndSettle();
     await tapVisible(tester, find.byKey(const ValueKey('save-category')));
     expect(state.customCategories.single.name, 'Kutya');

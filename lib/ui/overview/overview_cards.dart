@@ -23,7 +23,10 @@ class QuickEntryBar extends StatelessWidget {
       color: colors.raised,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(Radii.card),
-        side: BorderSide(color: colors.accent.withValues(alpha: 0.55), width: 1.4),
+        side: BorderSide(
+          color: colors.accent.withValues(alpha: 0.55),
+          width: 1.4,
+        ),
       ),
       clipBehavior: Clip.antiAlias,
       child: Row(
@@ -47,16 +50,16 @@ class QuickEntryBar extends StatelessWidget {
                   ),
                   child: Row(
                     children: [
-                      Icon(Icons.auto_awesome_rounded, color: colors.accentText),
+                      Icon(
+                        Icons.auto_awesome_rounded,
+                        color: colors.accentText,
+                      ),
                       const SizedBox(width: Space.md),
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(
-                              'Gyorsrögzítés',
-                              style: textTheme.titleMedium,
-                            ),
+                            Text('Gyorsrögzítés', style: textTheme.titleMedium),
                             const SizedBox(height: 2),
                             Text(
                               'Mennyi? · Mire? · Mikor? – pl. „Lidl 4500 tegnap”',

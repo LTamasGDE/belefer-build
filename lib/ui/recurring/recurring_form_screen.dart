@@ -79,7 +79,9 @@ class _RecurringFormScreenState extends State<RecurringFormScreen> {
     _fields = EntryFieldsController(
       type: source?.type ?? EntryType.expense,
       title: source?.title ?? '',
-      amount: source == null || (widget.existing == null && !widget.prefillHasAmount)
+      amount:
+          source == null ||
+              (widget.existing == null && !widget.prefillHasAmount)
           ? null
           : (widget.existing != null
                 ? source.amountOn(state.today())
@@ -506,9 +508,7 @@ class _RecurringFormScreenState extends State<RecurringFormScreen> {
           icon: const Icon(Icons.close_rounded),
           onPressed: () => Navigator.of(context).maybePop(),
         ),
-        title: Text(
-          _isEditing ? 'Ismétlődő tétel' : 'Új ismétlődő tétel',
-        ),
+        title: Text(_isEditing ? 'Ismétlődő tétel' : 'Új ismétlődő tétel'),
         actions: [
           if (_isEditing)
             IconButton(

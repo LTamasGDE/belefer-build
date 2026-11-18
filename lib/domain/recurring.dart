@@ -373,13 +373,12 @@ class ReminderDefaults {
   );
 
   /// Egy új ismétlődő tétel emlékeztetője ezekkel az alapértékekkel.
-  ReminderSettings newRuleSettings({required bool enabled}) =>
-      ReminderSettings(
-        enabled: enabled,
-        daysBefore: daysBefore,
-        hour: hour,
-        minute: minute,
-      );
+  ReminderSettings newRuleSettings({required bool enabled}) => ReminderSettings(
+    enabled: enabled,
+    daysBefore: daysBefore,
+    hour: hour,
+    minute: minute,
+  );
 
   Map<String, Object?> toMap() => <String, Object?>{
     'enabled': enabled,
