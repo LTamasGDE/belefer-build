@@ -5,6 +5,7 @@ import '../../domain/categories.dart';
 import '../../domain/formatting.dart';
 import '../../domain/models.dart';
 import '../../state/app_scope.dart';
+import '../accounts/accounts_screen.dart';
 import '../theme/app_theme.dart';
 import '../theme/belefer_colors.dart';
 import '../widgets/common.dart';
@@ -63,6 +64,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
 
     final children = <Widget>[
       const MonthSwitcher(),
+      const AccountFilterBar(),
       const SizedBox(height: Space.sm),
       PillSelector<TransactionFilter>(
         semanticLabel: 'Szűrés típus szerint',
@@ -385,8 +387,19 @@ class TransactionTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = context.colors;
     final textTheme = Theme.of(context).textTheme;
+    final state = AppScope.of(context);
     final category = categoryName(transaction.categoryId);
+    // Az összes számla nézetben a tétel számláját is mutatjuk.
+    final account = state.accounts.length > 1 && state.selectedAccountId == null
+        ? state.accountById(state.effectiveAccountId(transaction.accountId))
+        : null;
     final note = transaction.note;
+    final auto = transaction.source != null;
+    final details = [
+      category,
+      if (account != null) account.name,
+      if (note != null) note,
+    ].join(' · ');
     final isExpense = transaction.type == EntryType.expense;
     // Nagy betűméretnél az összeg a megnevezés alá kerül.
     final compact = MediaQuery.textScalerOf(context).scale(16) / 16 > 1.3;
@@ -396,8 +409,10 @@ class TransactionTile extends StatelessWidget {
     );
     final semantic =
         '${transaction.title}, $category, '
+        '${account == null ? '' : '${account.name} számla, '}'
         '${isExpense ? 'kiadás' : 'bevétel'} '
         '${formatForint(transaction.amount)}'
+        '${auto ? ', automatikusan rögzítve' : ''}'
         '${note == null ? '' : ', megjegyzés: $note'}';
     return Semantics(
       container: true,
@@ -426,15 +441,29 @@ class TransactionTile extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        transaction.title,
-                        maxLines: compact ? 3 : 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: textTheme.titleMedium,
+                      Row(
+                        children: [
+                          if (auto) ...[
+                            Icon(
+                              Icons.bolt_rounded,
+                              size: 16,
+                              color: colors.accentText,
+                            ),
+                            const SizedBox(width: 2),
+                          ],
+                          Flexible(
+                            child: Text(
+                              transaction.title,
+                              maxLines: compact ? 3 : 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: textTheme.titleMedium,
+                            ),
+                          ),
+                        ],
                       ),
                       const SizedBox(height: 2),
                       Text(
-                        note == null ? category : '$category · $note',
+                        details,
                         maxLines: compact ? 2 : 1,
                         overflow: TextOverflow.ellipsis,
                         style: textTheme.bodySmall?.copyWith(

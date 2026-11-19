@@ -2,4 +2,5 @@
 <resources>
     <string name="widget_label">Belefér – havi egyenleg</string>
     <string name="widget_description">Mennyi maradt a hónapban, és mi a következő esedékes tétel. Gyorsrögzítés egy koppintással.</string>
+    <string name="capture_label">Belefér – Revolut-tételek rögzítése</string>
 </resources>

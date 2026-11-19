@@ -45,6 +45,18 @@
             </intent-filter>
         </receiver>
 
+        <!-- Automatikus rögzítés: csak a Revolut értesítései (a többit a kód
+             azonnal eldobja). -->
+        <service
+            android:name=".BeleferNotificationListener"
+            android:exported="false"
+            android:label="@string/capture_label"
+            android:permission="android.permission.BIND_NOTIFICATION_LISTENER_SERVICE">
+            <intent-filter>
+                <action android:name="android.service.notification.NotificationListenerService" />
+            </intent-filter>
+        </service>
+
         <!-- Kezdőképernyő-widget -->
         <receiver
             android:name=".BeleferWidgetProvider"

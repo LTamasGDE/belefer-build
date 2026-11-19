@@ -8,6 +8,7 @@ import '../theme/app_theme.dart';
 import '../theme/belefer_colors.dart';
 import '../theme/palette.dart';
 import '../transactions/transaction_actions.dart';
+import '../accounts/accounts_screen.dart';
 import '../widgets/common.dart';
 import '../widgets/month_switcher.dart';
 import '../tour/tour_keys.dart';
@@ -94,6 +95,7 @@ class OverviewScreen extends StatelessWidget {
                           crossAxisAlignment: CrossAxisAlignment.stretch,
                           children: [
                             const MonthSwitcher(),
+                            const AccountFilterBar(),
                             const SizedBox(height: Space.sm),
                             hero,
                             const SizedBox(height: Space.lg),
@@ -106,7 +108,9 @@ class OverviewScreen extends StatelessWidget {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.stretch,
                           children: [
-                            const SizedBox(height: 56),
+                            SizedBox(
+                              height: state.accounts.isEmpty ? 56 : 104,
+                            ),
                             if (forecastCard != null) ...[
                               forecastCard,
                               const SizedBox(height: Space.lg),
@@ -134,6 +138,7 @@ class OverviewScreen extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     const MonthSwitcher(),
+                    const AccountFilterBar(),
                     const SizedBox(height: Space.sm),
                     hero,
                     const SizedBox(height: Space.lg),

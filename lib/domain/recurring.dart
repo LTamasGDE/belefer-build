@@ -108,6 +108,7 @@ class RecurringRule {
     this.reminder = const ReminderSettings(),
     this.amountChanges = const [],
     this.handledThrough,
+    this.accountId,
   }) : assert(amount > 0, 'Az összeg pozitív egész forint.'),
        assert(interval >= 1, 'Az ismétlődési köz legalább 1.');
 
@@ -116,6 +117,7 @@ class RecurringRule {
     final handled = map['handled'];
     final changes = map['changes'];
     final note = map['note'];
+    final account = map['account'];
     return RecurringRule(
       id: id,
       type: EntryType.fromStorage(map['type']),
@@ -139,6 +141,7 @@ class RecurringRule {
             ),
       ],
       handledThrough: handled is String ? CalendarDay.parse(handled) : null,
+      accountId: account is num ? account.toInt() : null,
     );
   }
 
@@ -169,6 +172,9 @@ class RecurringRule {
   /// Az utolsó elkönyvelt vagy kihagyott esedékesség napja.
   final CalendarDay? handledThrough;
 
+  /// A számla, amelyről (amelyre) a tétel megy, ha meg van adva.
+  final int? accountId;
+
   /// Lemondva vagy lejárt a megadott napon.
   bool isEndedOn(CalendarDay day) =>
       endDate != null && endDate!.compareTo(day) < 0;
@@ -191,6 +197,8 @@ class RecurringRule {
     List<AmountChange>? amountChanges,
     CalendarDay? handledThrough,
     bool clearHandledThrough = false,
+    int? accountId,
+    bool clearAccount = false,
   }) => RecurringRule(
     id: id ?? this.id,
     type: type ?? this.type,
@@ -208,6 +216,7 @@ class RecurringRule {
     handledThrough: clearHandledThrough
         ? null
         : (handledThrough ?? this.handledThrough),
+    accountId: clearAccount ? null : (accountId ?? this.accountId),
   );
 
   Map<String, Object?> toMap() => <String, Object?>{
@@ -224,6 +233,7 @@ class RecurringRule {
     'reminder': reminder.toMap(),
     'changes': [for (final change in amountChanges) change.toMap()],
     'handled': handledThrough?.toIso(),
+    'account': accountId,
   };
 
   /// Az összeg a megadott napon (a legutóbbi érvényes változás szerint).
@@ -308,6 +318,7 @@ class RecurringRule {
     date: day,
     note: note,
     recurringId: id,
+    accountId: accountId,
   );
 
   /// Rövid, emberi leírás: „havonta 5-én”, „kéthetente”, „évente”.

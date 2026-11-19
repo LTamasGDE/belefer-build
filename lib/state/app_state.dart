@@ -1,8 +1,13 @@
 import 'dart:async';
 
 import 'package:flutter/foundation.dart' hide Category;
+import 'package:http/http.dart' as http;
 
 import '../data/local_store.dart';
+import '../domain/accounts.dart';
+import '../domain/ai/ai_prompt.dart';
+import '../domain/ai/ai_settings.dart';
+import '../domain/capture/captured_event.dart';
 import '../domain/calendar.dart';
 import '../domain/categories.dart';
 import '../domain/demo_data.dart';
@@ -13,6 +18,10 @@ import '../domain/monthly_summary.dart';
 import '../domain/quick_entry/interpreter.dart';
 import '../domain/recurring.dart';
 import '../domain/search.dart';
+import '../services/ai_client.dart';
+import '../services/ai_interpreter.dart';
+import '../services/capture_processor.dart';
+import '../services/exchange_rates.dart';
 import '../services/platform_services.dart';
 
 /// Az alkalmazás egyetlen állapotforrása.
@@ -27,10 +36,16 @@ class AppState extends ChangeNotifier {
     DateTime Function()? now,
     ReminderScheduler reminders = const NoopReminderScheduler(),
     WidgetPublisher widget = const NoopWidgetPublisher(),
+    CaptureBridge capture = const NoCaptureBridge(),
+    ExchangeRates rates = const NoExchangeRates(),
+    http.Client? httpClient,
   }) : _store = store,
        _now = now ?? DateTime.now,
        _reminders = reminders,
-       _widget = widget {
+       _widget = widget,
+       _capture = capture,
+       _rates = rates,
+       _httpClient = httpClient {
     _today = today ?? () => CalendarDay.fromDateTime(_now());
     _selectedMonth = YearMonth.of(_today());
   }
@@ -40,14 +55,32 @@ class AppState extends ChangeNotifier {
   final DateTime Function() _now;
   final ReminderScheduler _reminders;
   final WidgetPublisher _widget;
+  final CaptureBridge _capture;
+  final ExchangeRates _rates;
+  final http.Client? _httpClient;
 
-  /// Az alkalmazás verziója a build metaadataiból, pl. `0.2.0 (2)`.
+  static const String _aiKey = 'ai';
+  static const String _captureKey = 'capture';
+  static const String _captureLogKey = 'captureLog';
+
+  AiSettings _aiSettings = const AiSettings();
+  AiClient? _aiClient;
+  bool _revolutCapture = false;
+  List<CaptureLogEntry> _captureLog = const [];
+  Future<CaptureReport?>? _processing;
+
+  /// Az automatikus rögzítés visszajelzései (a felület mutatja meg).
+  final ValueNotifier<CaptureReport?> captureReports = ValueNotifier(null);
+
+  /// Az alkalmazás verziója a build metaadataiból, pl. `0.3.0 (3)`.
   final String versionLabel;
 
   List<Transaction> _transactions = const [];
   List<EntryTemplate> _templates = const [];
   List<RecurringRule> _rules = const [];
   List<Category> _customCategories = const [];
+  List<Account> _accounts = const [];
+  int? _selectedAccountId;
   ReminderDefaults _reminderDefaults = const ReminderDefaults();
   bool _darkMode = false;
   bool _tourSeen = false;
@@ -65,6 +98,49 @@ class AppState extends ChangeNotifier {
   List<EntryTemplate> get templates => _templates;
   List<RecurringRule> get rules => _rules;
   List<Category> get customCategories => _customCategories;
+  List<Account> get accounts => _accounts;
+
+  /// A kiválasztott számla az Áttekintésen és a Tételeknél (`null` = mind).
+  int? get selectedAccountId => _selectedAccountId;
+
+  Account? get defaultAccount {
+    for (final account in _accounts) {
+      if (account.isDefault) return account;
+    }
+    return null;
+  }
+
+  Account? accountById(int? id) {
+    if (id == null) return null;
+    for (final account in _accounts) {
+      if (account.id == id) return account;
+    }
+    return null;
+  }
+
+  /// A tétel számlája; számla nélkül az alapértelmezett számla.
+  int? effectiveAccountId(int? accountId) =>
+      accountById(accountId)?.id ?? defaultAccount?.id;
+
+  bool _inSelectedAccount(int? accountId) =>
+      _selectedAccountId == null ||
+      effectiveAccountId(accountId) == _selectedAccountId;
+
+  /// A kiválasztott számla tételei (vagy mind).
+  List<Transaction> get _visibleTransactions => _selectedAccountId == null
+      ? _transactions
+      : [
+          for (final transaction in _transactions)
+            if (_inSelectedAccount(transaction.accountId)) transaction,
+        ];
+
+  void selectAccount(int? id) {
+    final next = accountById(id)?.id;
+    if (next == _selectedAccountId) return;
+    _selectedAccountId = next;
+    notifyListeners();
+  }
+
   ReminderDefaults get reminderDefaults => _reminderDefaults;
   bool get darkMode => _darkMode;
   bool get tourSeen => _tourSeen;
@@ -84,18 +160,22 @@ class AppState extends ChangeNotifier {
 
   bool get isCurrentMonth => _selectedMonth == YearMonth.of(_today());
 
-  MonthlySummary get summary => summarizeMonth(_transactions, _selectedMonth);
+  MonthlySummary get summary =>
+      summarizeMonth(_visibleTransactions, _selectedMonth);
 
   /// Előrejelzés a kiválasztott hónapra (múltbeli hónapra `null`).
   Forecast? get forecast => forecastMonth(
-    transactions: _transactions,
-    rules: activeRules,
+    transactions: _visibleTransactions,
+    rules: [
+      for (final rule in activeRules)
+        if (_inSelectedAccount(rule.accountId)) rule,
+    ],
     month: _selectedMonth,
     today: _today(),
   );
 
   List<Transaction> transactionsOfSelectedMonth({EntryType? type}) =>
-      transactionsInMonth(_transactions, _selectedMonth, type: type);
+      transactionsInMonth(_visibleTransactions, _selectedMonth, type: type);
 
   /// Keresés az összes tétel között.
   List<Transaction> search(String query) =>
@@ -158,6 +238,15 @@ class AppState extends ChangeNotifier {
     _templates = await _store.loadTemplates();
     _rules = await _store.loadRecurring();
     _customCategories = await _store.loadCategories();
+    _accounts = await _store.loadAccounts();
+    _aiSettings = AiSettings.fromMap(await _store.readSettingMap(_aiKey));
+    _aiClient = null;
+    _revolutCapture =
+        (await _store.readSettingMap(_captureKey))?['revolut'] == true;
+    _captureLog = [
+      for (final entry in await _store.readSettingList(_captureLogKey))
+        if (entry is Map) CaptureLogEntry.fromMap(entry),
+    ];
     _reminderDefaults = await _store.readReminderDefaults();
     _darkMode = await _store.readDarkMode();
     _tourSeen = await _store.readTourSeen();
@@ -165,6 +254,7 @@ class AppState extends ChangeNotifier {
     await _bookDueRecurring();
     notifyListeners();
     _afterDataChange();
+    unawaited(processCaptures());
   }
 
   /// Az alkalmazás előtérbe kerülésekor: ha közben új nap kezdődött, az
@@ -174,6 +264,7 @@ class AppState extends ChangeNotifier {
     final booked = await _bookDueRecurring();
     if (booked) notifyListeners();
     _afterDataChange();
+    await processCaptures();
   }
 
   void showMonth(YearMonth month) {
@@ -341,6 +432,7 @@ class AppState extends ChangeNotifier {
         date: transaction.date,
         note: transaction.note,
         recurringId: transaction.recurringId,
+        accountId: transaction.accountId,
       );
     }
     final saved = await _store.saveTransaction(transaction);
@@ -424,6 +516,146 @@ class AppState extends ChangeNotifier {
     currentCatalog = CategoryCatalog(_customCategories);
   }
 
+  // --- Számlák ---
+
+  Future<Account> saveAccount(Account account) async {
+    if (_demo) return account;
+    final saved = await _store.saveAccount(account);
+    _accounts = await _store.loadAccounts();
+    _changed();
+    return saved;
+  }
+
+  /// Számla törlése; a tételei számla nélküliek lesznek (az alapértelmezett
+  /// számlánál látszanak, ha van ilyen).
+  Future<void> deleteAccount(int id) async {
+    if (_demo) return;
+    await _store.deleteAccount(id);
+    _accounts = await _store.loadAccounts();
+    _transactions = await _store.loadTransactions();
+    _rules = await _store.loadRecurring();
+    if (_selectedAccountId == id) _selectedAccountId = null;
+    _changed();
+  }
+
+  /// Hány tétel tartozik a számlához (a számla nélküliek az
+  /// alapértelmezetthez számítanak).
+  int usageOfAccount(int id) => _transactions
+      .where((transaction) => effectiveAccountId(transaction.accountId) == id)
+      .length;
+
+  // --- AI ---
+
+  AiSettings get aiSettings => _aiSettings;
+
+  Future<void> setAiSettings(AiSettings value) async {
+    _aiSettings = value;
+    _aiClient = null;
+    notifyListeners();
+    await _store.writeSettingMap(_aiKey, value.toMap());
+  }
+
+  AiClient? get _client =>
+      _aiClient ??= createAiClient(_aiSettings, httpClient: _httpClient);
+
+  /// Az AI-értelmező a jelenlegi beállításokkal (kikapcsolva a beépített
+  /// értelmező dolgozik).
+  AiInterpreter get aiInterpreter =>
+      AiInterpreter(client: _client, rates: _rates, accounts: _accounts);
+
+  /// Próbahívás: `null`, ha működik, különben a hiba szövege.
+  Future<String?> testAi() async {
+    if (!_aiSettings.isActive) return 'Előbb add meg a kulcsot.';
+    final context = quickEntryContext;
+    final outcome = await aiInterpreter.interpret(
+      'tegnap Lidl 4500',
+      AiInputKind.sentence,
+      context,
+      fallback: interpretQuickEntry('tegnap Lidl 4500', context),
+    );
+    if (!outcome.usedAi) return outcome.error ?? 'Az AI nem válaszolt.';
+    if (outcome.result.amount != 4500) {
+      return 'Az AI válaszolt, de furcsán értelmezte a próbamondatot.';
+    }
+    return null;
+  }
+
+  // --- Automatikus rögzítés ---
+
+  CaptureBridge get captureBridge => _capture;
+  bool get revolutCaptureEnabled => _revolutCapture;
+  List<CaptureLogEntry> get captureLog => _captureLog;
+
+  Future<void> setRevolutCaptureEnabled(bool value) async {
+    _revolutCapture = value;
+    notifyListeners();
+    await _store.writeSettingMap(_captureKey, {'revolut': value});
+    await _capture.setRevolutCaptureEnabled(value);
+  }
+
+  /// A beérkezett Revolut-értesítések és Apple Pay-fizetések feldolgozása.
+  Future<CaptureReport?> processCaptures() {
+    if (_demo) return Future.value();
+    return _processing ??= _processCaptures().whenComplete(() {
+      _processing = null;
+    });
+  }
+
+  Future<CaptureReport?> _processCaptures() async {
+    final List<Map<Object?, Object?>> raw;
+    try {
+      raw = await _capture.drain();
+    } on Object catch (error) {
+      debugPrint('Az automatikus rögzítés sora nem olvasható: $error');
+      return null;
+    }
+    if (raw.isEmpty) return null;
+    final events = [for (final map in raw) CapturedEvent.fromMap(map)]
+      ..sort((a, b) => a.receivedAt.compareTo(b.receivedAt));
+    final processor = CaptureProcessor(
+      interpreter: aiInterpreter,
+      accounts: _accounts,
+    );
+    final booked = <Transaction>[];
+    var skipped = 0;
+    final log = [..._captureLog];
+    for (final event in events) {
+      final decision = await processor.decide(
+        event,
+        quickEntryContext,
+        recent: log,
+      );
+      var entry = decision.log;
+      final transaction = decision.transaction;
+      if (transaction != null) {
+        final saved = await _store.saveTransaction(transaction);
+        _transactions = [..._transactions, saved];
+        booked.add(saved);
+        entry = CaptureLogEntry(
+          time: entry.time,
+          source: entry.source,
+          raw: entry.raw,
+          outcome: entry.outcome,
+          detail: entry.detail,
+          amount: entry.amount,
+          merchantKey: entry.merchantKey,
+          transactionId: saved.id,
+        );
+      } else {
+        skipped++;
+      }
+      log.insert(0, entry);
+    }
+    _captureLog = log.take(60).toList();
+    await _store.writeSettingList(_captureLogKey, [
+      for (final entry in _captureLog) entry.toMap(),
+    ]);
+    final report = CaptureReport(booked: booked, skipped: skipped);
+    _changed();
+    captureReports.value = report;
+    return report;
+  }
+
   // --- Beállítások ---
 
   Future<void> setDarkMode(bool value) async {
@@ -504,6 +736,15 @@ class AppState extends ChangeNotifier {
     _templates = const [];
     _rules = const [];
     _customCategories = const [];
+    _accounts = const [];
+    _selectedAccountId = null;
+    _aiSettings = const AiSettings();
+    _aiClient = null;
+    _captureLog = const [];
+    if (_revolutCapture) {
+      _revolutCapture = false;
+      await _capture.setRevolutCaptureEnabled(false);
+    }
     _reminderDefaults = const ReminderDefaults();
     _darkMode = false;
     _selectedMonth = YearMonth.of(_today());
@@ -595,6 +836,28 @@ class AppState extends ChangeNotifier {
       if (key(existing) != key(item)) existing,
     item,
   ];
+}
+
+/// Az automatikus rögzítés egy körének eredménye.
+class CaptureReport {
+  const CaptureReport({required this.booked, required this.skipped});
+
+  final List<Transaction> booked;
+
+  /// Sikertelen fizetés, saját számlák közötti mozgás, ismétlődés stb.
+  final int skipped;
+
+  String get message {
+    if (booked.isEmpty) {
+      return '$skipped értesítést átnéztem, nem volt rögzítendő tétel.';
+    }
+    if (booked.length == 1) {
+      final transaction = booked.single;
+      return 'Automatikusan rögzítve: ${transaction.title}, '
+          '${formatForint(transaction.amount)}';
+    }
+    return '${booked.length} tétel automatikusan rögzítve.';
+  }
 }
 
 class _Snapshot {

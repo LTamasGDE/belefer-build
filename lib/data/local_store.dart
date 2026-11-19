@@ -1,5 +1,6 @@
 import 'package:sembast/sembast.dart' hide Transaction;
 
+import '../domain/accounts.dart';
 import '../domain/categories.dart';
 import '../domain/models.dart';
 import '../domain/recurring.dart';
@@ -31,6 +32,8 @@ class LocalStore {
       .store('recurring');
   final StoreRef<int, Map<String, Object?>> _categories = intMapStoreFactory
       .store('categories');
+  final StoreRef<int, Map<String, Object?>> _accounts = intMapStoreFactory
+      .store('accounts');
   final StoreRef<String, Object?> _settings = StoreRef<String, Object?>(
     'settings',
   );
@@ -141,6 +144,69 @@ class LocalStore {
     });
   }
 
+  Future<List<Account>> loadAccounts() async {
+    final records = await _accounts.find(_db);
+    return [
+      for (final record in records) Account.fromMap(record.key, record.value),
+    ];
+  }
+
+  /// Számla mentése. Ha alapértelmezettként mentjük, a többi számla
+  /// alapértelmezése megszűnik.
+  Future<Account> saveAccount(Account account) async {
+    return _db.transaction((txn) async {
+      if (account.isDefault) {
+        await _accounts.update(
+          txn,
+          <String, Object?>{'default': false},
+          finder: Finder(filter: Filter.equals('default', true)),
+        );
+      }
+      final id = account.id;
+      if (id == null) {
+        final key = await _accounts.add(txn, account.toMap());
+        return account.copyWith(id: key);
+      }
+      await _accounts.record(id).put(txn, account.toMap());
+      return account;
+    });
+  }
+
+  /// Számla törlése; a hozzá tartozó tételek számla nélküliek lesznek.
+  Future<void> deleteAccount(int id) async {
+    await _db.transaction((txn) async {
+      final filter = Filter.equals('account', id);
+      for (final store in [_transactions, _recurring]) {
+        await store.update(
+          txn,
+          <String, Object?>{'account': null},
+          finder: Finder(filter: filter),
+        );
+      }
+      await _accounts.record(id).delete(txn);
+    });
+  }
+
+  /// Tetszőleges beállítás (térkép) olvasása.
+  Future<Map<String, Object?>?> readSettingMap(String key) async {
+    final value = await _settings.record(key).get(_db);
+    return value is Map ? value.cast<String, Object?>() : null;
+  }
+
+  Future<void> writeSettingMap(String key, Map<String, Object?> value) async {
+    await _settings.record(key).put(_db, value);
+  }
+
+  /// Tetszőleges beállítás (lista) olvasása.
+  Future<List<Object?>> readSettingList(String key) async {
+    final value = await _settings.record(key).get(_db);
+    return value is List ? value.cast<Object?>() : const [];
+  }
+
+  Future<void> writeSettingList(String key, List<Object?> value) async {
+    await _settings.record(key).put(_db, value);
+  }
+
   Future<bool> readTourSeen() async =>
       await _settings.record(_tourKey).get(_db) == true;
 
@@ -178,6 +244,7 @@ class LocalStore {
       await _templates.delete(txn);
       await _recurring.delete(txn);
       await _categories.delete(txn);
+      await _accounts.delete(txn);
       await _settings.delete(txn);
       if (tourSeen != null) await _settings.record(_tourKey).put(txn, tourSeen);
     });

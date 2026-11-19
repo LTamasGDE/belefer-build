@@ -32,10 +32,13 @@ class Transaction {
     required this.date,
     this.note,
     this.recurringId,
+    this.accountId,
+    this.source,
   }) : assert(amount > 0, 'Az összeg pozitív egész forint.');
 
   factory Transaction.fromMap(int id, Map<String, Object?> map) {
     final recurring = map['recurring'];
+    final account = map['account'];
     return Transaction(
       id: id,
       type: EntryType.fromStorage(map['type']),
@@ -45,6 +48,8 @@ class Transaction {
       date: CalendarDay.parse(map['date']! as String),
       note: _readOptionalText(map['note']),
       recurringId: recurring is num ? recurring.toInt() : null,
+      accountId: account is num ? account.toInt() : null,
+      source: _readOptionalText(map['source']),
     );
   }
 
@@ -60,10 +65,21 @@ class Transaction {
   /// Az ismétlődő szabály azonosítója, ha abból jött létre.
   final int? recurringId;
 
+  /// A számla (pl. Saját Revolut, Közös), ha meg van adva.
+  final int? accountId;
+
+  /// Honnan jött automatikusan (pl. `revolut`, `applepay`), vagy `null`.
+  final String? source;
+
   /// Előjeles összeg: a kiadás negatív, a bevétel pozitív.
   int get signedAmount => type == EntryType.expense ? -amount : amount;
 
-  Transaction copyWith({int? id, String? categoryId}) => Transaction(
+  Transaction copyWith({
+    int? id,
+    String? categoryId,
+    int? accountId,
+    bool clearAccount = false,
+  }) => Transaction(
     id: id ?? this.id,
     type: type,
     title: title,
@@ -72,6 +88,8 @@ class Transaction {
     date: date,
     note: note,
     recurringId: recurringId,
+    accountId: clearAccount ? null : (accountId ?? this.accountId),
+    source: source,
   );
 
   Map<String, Object?> toMap() => <String, Object?>{
@@ -82,6 +100,8 @@ class Transaction {
     'date': date.toIso(),
     'note': note,
     'recurring': recurringId,
+    'account': accountId,
+    'source': source,
   };
 }
 

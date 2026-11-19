@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../domain/calendar.dart';
+import '../../domain/capture/captured_event.dart';
 import '../../domain/formatting.dart';
 import '../../domain/models.dart';
 import '../../state/app_scope.dart';
@@ -10,6 +11,7 @@ import '../theme/belefer_colors.dart';
 import '../widgets/common.dart';
 import '../widgets/confirm_dialog.dart';
 import '../widgets/date_field.dart';
+import '../widgets/rows.dart';
 
 /// Egy még nem mentett tétel részben ismert adatai (előtöltéshez).
 class TransactionDraft {
@@ -72,6 +74,7 @@ class _TransactionFormScreenState extends State<TransactionFormScreen> {
   final _formKey = GlobalKey<FormState>();
   late final EntryFieldsController _fields;
   late CalendarDay _date;
+  int? _accountId;
   int? _appliedTemplateId;
   bool _saving = false;
   AutovalidateMode _autovalidate = AutovalidateMode.disabled;
@@ -102,6 +105,10 @@ class _TransactionFormScreenState extends State<TransactionFormScreen> {
       _fields = EntryFieldsController(type: widget.initialType);
       _date = AppScope.read(context).today();
     }
+    final state = AppScope.read(context);
+    _accountId = existing != null
+        ? state.effectiveAccountId(existing.accountId)
+        : state.selectedAccountId ?? state.defaultAccount?.id;
     _fields.addListener(_onFieldsChanged);
   }
 
@@ -157,6 +164,9 @@ class _TransactionFormScreenState extends State<TransactionFormScreen> {
       categoryId: _fields.categoryId!,
       date: _date,
       note: _fields.normalizedNote,
+      recurringId: widget.existing?.recurringId,
+      accountId: _accountId,
+      source: widget.existing?.source,
     );
     try {
       final saved = await AppScope.read(context).saveTransaction(transaction);
@@ -252,6 +262,35 @@ class _TransactionFormScreenState extends State<TransactionFormScreen> {
                       amountRequired: true,
                       afterTitle: DateField(date: _date, onTap: _pickDate),
                     ),
+                    if (state.accounts.isNotEmpty) ...[
+                      const SizedBox(height: Space.lg),
+                      Text(
+                        'Számla',
+                        style: Theme.of(context).textTheme.labelLarge,
+                      ),
+                      const SizedBox(height: Space.sm),
+                      ChoiceWrap<int>(
+                        key: const ValueKey('transaction-account'),
+                        semanticLabel: 'Számla',
+                        options: [
+                          for (final account in state.accounts)
+                            (account.id!, account.name),
+                        ],
+                        selected: _accountId,
+                        onSelected: (value) =>
+                            setState(() => _accountId = value),
+                      ),
+                    ],
+                    if (widget.existing?.source != null) ...[
+                      const SizedBox(height: Space.md),
+                      Text(
+                        'Automatikusan rögzítve: '
+                        '${CaptureSource.fromStorage(widget.existing!.source).label}.',
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: colors.textMuted,
+                        ),
+                      ),
+                    ],
                     const SizedBox(height: Space.xl),
                     FilledButton.icon(
                       key: const ValueKey('save-transaction'),

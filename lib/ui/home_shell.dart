@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 
+import '../domain/calendar.dart';
 import '../services/platform_services.dart';
 import '../state/app_scope.dart';
 import '../state/app_state.dart';
@@ -25,6 +26,7 @@ class HomeShell extends StatefulWidget {
 class _HomeShellState extends State<HomeShell> with WidgetsBindingObserver {
   int _index = 0;
   StreamSubscription<Uri>? _links;
+  AppState? _state;
 
   static const _screens = <Widget>[
     OverviewScreen(),
@@ -43,6 +45,9 @@ class _HomeShellState extends State<HomeShell> with WidgetsBindingObserver {
       final state = AppScope.read(context);
       if (!state.tourSeen && !state.tourActive) state.startTour();
       _listenToLinks();
+      _state = state..captureReports.addListener(_onCaptureReport);
+      // Az indításkor már feldolgozott tételek jelzése.
+      _onCaptureReport();
     });
   }
 
@@ -50,7 +55,34 @@ class _HomeShellState extends State<HomeShell> with WidgetsBindingObserver {
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
     _links?.cancel();
+    _state?.captureReports.removeListener(_onCaptureReport);
     super.dispose();
+  }
+
+  /// Az automatikusan rögzített tételek rövid jelzése.
+  void _onCaptureReport() {
+    final state = _state;
+    final report = state?.captureReports.value;
+    if (state == null || report == null || !mounted) return;
+    state.captureReports.value = null;
+    if (report.booked.isEmpty || state.tourActive) return;
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(
+        SnackBar(
+          content: Text(report.message),
+          duration: const Duration(seconds: 6),
+          action: SnackBarAction(
+            label: 'Megnézem',
+            onPressed: () {
+              if (!mounted) return;
+              Navigator.of(context).popUntil((route) => route.isFirst);
+              state.showMonth(YearMonth.of(report.booked.last.date));
+              setState(() => _index = 1);
+            },
+          ),
+        ),
+      );
   }
 
   @override

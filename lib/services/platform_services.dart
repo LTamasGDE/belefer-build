@@ -140,6 +140,50 @@ class NoAppLinks implements AppLinks {
   Stream<Uri> get links => const Stream.empty();
 }
 
+/// Az automatikus rögzítés platformoldala: Androidon a Revolut-értesítések,
+/// iOS-en az Apple Pay-fizetések (Parancsok-automatizmus) sora.
+abstract class CaptureBridge {
+  /// Androidon: értesítés-olvasás lehetséges.
+  bool get supportsNotifications;
+
+  /// iOS-en: Apple Pay-automatizmus lehetséges.
+  bool get supportsApplePay;
+
+  /// A sorban váró események (és a sor ürítése).
+  Future<List<Map<Object?, Object?>>> drain();
+
+  /// Megadta-e a felhasználó az értesítés-hozzáférést (Android).
+  Future<bool> isNotificationAccessGranted();
+
+  /// A rendszer értesítés-hozzáférési beállításainak megnyitása (Android).
+  Future<void> openNotificationAccessSettings();
+
+  /// A Revolut-értesítések gyűjtésének be- és kikapcsolása (Android).
+  Future<void> setRevolutCaptureEnabled(bool enabled);
+}
+
+class NoCaptureBridge implements CaptureBridge {
+  const NoCaptureBridge();
+
+  @override
+  bool get supportsNotifications => false;
+
+  @override
+  bool get supportsApplePay => false;
+
+  @override
+  Future<List<Map<Object?, Object?>>> drain() async => const [];
+
+  @override
+  Future<bool> isNotificationAccessGranted() async => false;
+
+  @override
+  Future<void> openNotificationAccessSettings() async {}
+
+  @override
+  Future<void> setRevolutCaptureEnabled(bool enabled) async {}
+}
+
 /// A platformszolgáltatások (a `main` állítja be; tesztben cserélhető).
 abstract final class Services {
   static ReceiptScanner receiptScanner = const UnavailableReceiptScanner();

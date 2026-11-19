@@ -24,6 +24,13 @@ if runner_group && runner_group.files.none? { |f| f.path == 'Runner.entitlements
   runner_group.new_reference('Runner.entitlements')
 end
 
+# 1/b. Az Apple Pay-rögzítés App Intentje a Runner forrásai közé.
+if runner_group && runner.source_build_phase.files_references.compact.none? { |f| f.path.to_s.end_with?('CaptureIntent.swift') }
+  ref = runner_group.files.find { |f| f.path == 'CaptureIntent.swift' } || runner_group.new_reference('CaptureIntent.swift')
+  runner.source_build_phase.add_file_reference(ref, true)
+  puts 'CaptureIntent.swift hozzáadva.'
+end
+
 # 2. ML Kit erőforráscsomag.
 bundles = group_for(project, 'mlkit_bundles')
 unless runner.resources_build_phase.files_references.compact.any? { |f| f.path.to_s.end_with?('LatinOCRResources.bundle') }

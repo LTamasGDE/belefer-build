@@ -5,6 +5,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:sembast/sembast_io.dart';
 
 import 'data/local_store.dart';
+import 'services/exchange_rates.dart';
 import 'services/platform_services.dart';
 import 'state/app_state.dart';
 
@@ -20,6 +21,8 @@ Future<AppState> openAppState({
   String databaseName = defaultDatabaseName,
   ReminderScheduler reminders = const NoopReminderScheduler(),
   WidgetPublisher widget = const NoopWidgetPublisher(),
+  CaptureBridge capture = const NoCaptureBridge(),
+  ExchangeRates rates = const NoExchangeRates(),
 }) async {
   final directory = await getApplicationSupportDirectory();
   await directory.create(recursive: true);
@@ -32,6 +35,8 @@ Future<AppState> openAppState({
     versionLabel: await _versionLabel(),
     reminders: reminders,
     widget: widget,
+    capture: capture,
+    rates: rates,
   );
   await state.load();
   return state;

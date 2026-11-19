@@ -2,12 +2,15 @@ import 'package:flutter/material.dart';
 
 import '../../domain/recurring.dart';
 import '../../state/app_scope.dart';
+import '../accounts/accounts_screen.dart';
 import '../categories/categories_screen.dart';
 import '../theme/app_theme.dart';
 import '../theme/belefer_colors.dart';
 import '../widgets/common.dart';
 import '../widgets/confirm_dialog.dart';
 import '../widgets/rows.dart';
+import 'ai_settings_screen.dart';
+import 'capture_screen.dart';
 
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key});
@@ -89,11 +92,64 @@ class SettingsScreen extends StatelessWidget {
                     ),
                   ),
                 ),
+                const SectionTitle('AI és automatikus rögzítés'),
+                Panel(
+                  padding: EdgeInsets.zero,
+                  child: Column(
+                    children: [
+                      LinkRow(
+                        key: const ValueKey('open-ai'),
+                        icon: Icons.auto_awesome_rounded,
+                        title: 'AI',
+                        subtitle: state.aiSettings.isActive
+                            ? '${state.aiSettings.provider.label} értelmez'
+                            : 'Kikapcsolva: a beépített értelmező dolgozik',
+                        onTap: () => Navigator.of(context).push(
+                          MaterialPageRoute<void>(
+                            builder: (_) => const AiSettingsScreen(),
+                          ),
+                        ),
+                      ),
+                      const RowDivider(),
+                      LinkRow(
+                        key: const ValueKey('open-capture'),
+                        icon: Icons.bolt_rounded,
+                        title: 'Automatikus rögzítés',
+                        subtitle: state.captureBridge.supportsApplePay
+                            ? 'Apple Pay-fizetések a Parancsokkal'
+                            : state.revolutCaptureEnabled
+                            ? 'Revolut-értesítésekből: bekapcsolva'
+                            : 'Revolut-értesítésekből vagy Apple Pay-ből',
+                        onTap: () => Navigator.of(context).push(
+                          MaterialPageRoute<void>(
+                            builder: (_) => const CaptureScreen(),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
                 const SectionTitle('Testreszabás'),
                 Panel(
                   padding: EdgeInsets.zero,
                   child: Column(
                     children: [
+                      LinkRow(
+                        key: const ValueKey('open-accounts'),
+                        icon: Icons.account_balance_wallet_rounded,
+                        title: 'Számlák',
+                        subtitle: state.accounts.isEmpty
+                            ? 'Pl. Saját, Megtakarítás, Közös'
+                            : state.accounts
+                                  .map((account) => account.name)
+                                  .join(', '),
+                        onTap: () => Navigator.of(context).push(
+                          MaterialPageRoute<void>(
+                            builder: (_) => const AccountsScreen(),
+                          ),
+                        ),
+                      ),
+                      const RowDivider(),
                       LinkRow(
                         key: const ValueKey('open-categories'),
                         icon: Icons.category_rounded,

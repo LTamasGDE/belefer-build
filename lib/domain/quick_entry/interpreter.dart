@@ -62,6 +62,7 @@ class QuickEntryResult {
     this.interval = 1,
     this.targetRule,
     this.notes = const [],
+    this.fromAi = false,
   });
 
   final QuickIntent intent;
@@ -86,6 +87,9 @@ class QuickEntryResult {
 
   /// Figyelmeztetések, pl. több szám is szerepelt.
   final List<String> notes;
+
+  /// Az AI értelmezte (nem csak a beépített értelmező).
+  final bool fromAi;
 
   bool get hasAmount => amount != null && amount! > 0;
   bool get hasWhat => title != null && title!.trim().isNotEmpty;

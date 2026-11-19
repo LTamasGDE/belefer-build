@@ -63,6 +63,7 @@ class _RecurringFormScreenState extends State<RecurringFormScreen> {
   late int _interval;
   late CalendarDay _start;
   CalendarDay? _end;
+  int? _accountId;
   late bool _autoBook;
   late ReminderSettings _reminder;
   bool _bookPast = false;
@@ -93,6 +94,11 @@ class _RecurringFormScreenState extends State<RecurringFormScreen> {
     _interval = source?.interval ?? 1;
     _start = source?.startDate ?? state.today();
     _end = source?.endDate;
+    _accountId = widget.existing != null
+        ? state.effectiveAccountId(widget.existing!.accountId)
+        : widget.prefill?.accountId ??
+              state.selectedAccountId ??
+              state.defaultAccount?.id;
     _autoBook = source?.autoBook ?? true;
     _reminder =
         source?.reminder ??
@@ -134,6 +140,7 @@ class _RecurringFormScreenState extends State<RecurringFormScreen> {
       ),
       amountChanges: base?.amountChanges ?? const [],
       handledThrough: base?.handledThrough,
+      accountId: _accountId,
     );
     return rule;
   }
@@ -538,6 +545,25 @@ class _RecurringFormScreenState extends State<RecurringFormScreen> {
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     EntryFields(controller: _fields, amountRequired: true),
+                    if (state.accounts.isNotEmpty) ...[
+                      const SizedBox(height: Space.lg),
+                      Text(
+                        'Számla',
+                        style: Theme.of(context).textTheme.labelLarge,
+                      ),
+                      const SizedBox(height: Space.sm),
+                      ChoiceWrap<int>(
+                        key: const ValueKey('rule-account'),
+                        semanticLabel: 'Számla',
+                        options: [
+                          for (final account in state.accounts)
+                            (account.id!, account.name),
+                        ],
+                        selected: _accountId,
+                        onSelected: (value) =>
+                            setState(() => _accountId = value),
+                      ),
+                    ],
                     const SizedBox(height: Space.xl),
                     frequencyPanel,
                     if (pastCount > 0) ...[
