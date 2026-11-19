@@ -200,7 +200,9 @@ bool fuzzyWordMatch(String word, String key) {
   final allowed = allowedTypos(key.length);
   for (final stem in candidateStems(word)) {
     if (stem == key) return true;
+    // Hárombetűs szó nem elírása egy hosszabb kulcsnak („ára” ≠ „Zara”).
     if (allowed > 0 &&
+        stem.length >= 4 &&
         editDistance(stem, key, maxDistance: allowed) <= allowed) {
       return true;
     }

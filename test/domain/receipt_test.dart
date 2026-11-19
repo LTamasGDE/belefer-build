@@ -8,6 +8,52 @@ void main() {
   final context = QuickEntryContext(today: CalendarDay(2026, 11, 17));
 
   group('blokkok', () {
+    test('ferde fotó: összeg a felirat előtt, „ára” nem Zara', () {
+      // A Konzol Game blokk felismert szövege: a jobb oldali „67999 Ft.” a
+      // ferdeség miatt az „Összesen:” elé került, a „Termék ára” külön sorba.
+      const text = '''
+Sorszám: 2/6af488a2dba34/2026
+Dátum: 2026.11.11
+KonzolGAME
+Konzol Game
+Budapest XIX., Üllői út 214/3.
+Tel.: +36 20 257 8581
+Termék neve Termék
+ára
+Sony Playstation 4 (PS4) 67999,-
+Slim 1 TB + 2db
+Dualshock 4 vezeték
+nélküli Controller [93055/]
+9714341
+3 hónap garancia 0,-
+[66890/]
+67999 Ft.
+Összesen:
+Köszönjük a vásárlást!
+P.H.
+''';
+      final result = interpretReceipt(text, context);
+      expect(result.amount, 67999);
+      expect(result.date, CalendarDay(2026, 11, 11));
+      expect(result.title, isNot('Zara'));
+      expect(result.title, startsWith('Konzol'));
+      expect(result.categoryId, isNot('clothing'));
+    });
+
+    test('összeg és felirat egy sorban, sorszám nem összeg', () {
+      const text = '''
+Sorszám: 2/6af488a2dba34/2026
+Dátum: 2026.11.11
+Konzol Game
+Termék neve Termék ára
+3 hónap garancia 0,-
+Összesen: 67999 Ft.
+''';
+      final result = interpretReceipt(text, context);
+      expect(result.amount, 67999);
+      expect(result.title, 'Konzol Game');
+    });
+
     test('Lidl-blokk: kereskedő, végösszeg, dátum', () {
       const text = '''
 LIDL Magyarország Bt.

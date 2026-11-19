@@ -47,6 +47,11 @@ const List<String> _excludedLineWords = [
   'telefon',
   'tel',
   'bankszamla',
+  'sorszam',
+  'datum',
+  'azonosito',
+  'penztar',
+  'vonalkod',
 ];
 
 /// A blokk vagy számla szövegének értelmezése (a szövegfelismerés után,
@@ -72,6 +77,15 @@ QuickEntryResult interpretReceipt(String text, QuickEntryContext context) {
     var amount = _lineAmount(lines[index], excludeQuantities: false);
     if (amount == null && index + 1 < lines.length) {
       amount = _lineAmount(lines[index + 1], excludeQuantities: false);
+    }
+    // Ferde fotón a jobb oldali összeg a felirat elé kerülhet egy sorral
+    // („67999 Ft.” / „Összesen:”): pénznemmel jelölt összeg az előző sorból.
+    if (amount == null && index > 0) {
+      amount = _lineAmount(
+        lines[index - 1],
+        excludeQuantities: true,
+        needsCurrency: true,
+      );
     }
     if (amount == null) continue;
     if (strength > bestStrength || (total != null && amount > total)) {
@@ -145,7 +159,13 @@ QuickEntryResult interpretReceipt(String text, QuickEntryContext context) {
             : words.any(
                 (word) =>
                     word == key ||
-                    (key.length >= 4 && fuzzyWordMatch(word, key)),
+                    (key.length >= 4 &&
+                        word.length >= 4 &&
+                        !stopWords.contains(word) &&
+                        // Négybetűs kulcsnál csak azonos hosszú elírás
+                        // („lild” ≈ „lidl”), toldalék vagy betűkihagyás nem.
+                        (key.length >= 5 || word.length == key.length) &&
+                        fuzzyWordMatch(word, key)),
               );
         if (hit) {
           merchant = entry.name;
@@ -299,10 +319,19 @@ String? _sellerLine(List<String> lines) {
   return null;
 }
 
+const List<String> _labelPrefixes = [
+  'sorszam', 'datum', 'nyugta', 'blokk', 'szamla', 'adoszam', 'tel.', //
+  'tel ', 'cim ', 'penztar', 'ap ', 'nav ', 'termek', 'idopont', 'azonosito',
+];
+
 String _firstNameLine(List<String> lines) {
-  for (final line in lines.take(6)) {
+  for (final line in lines.take(8)) {
     final letters = line.replaceAll(RegExp(r'[^A-Za-zÁÉÍÓÖŐÚÜŰáéíóöőúüű]'), '');
-    if (letters.length >= 3 && !RegExp(r'^\d').hasMatch(line)) return line;
+    if (letters.length < 3 || RegExp(r'^\d').hasMatch(line)) continue;
+    // „Sorszám: …”, „Dátum: …” és hasonló feliratos sorok nem nevek.
+    final folded = foldForMatching(line);
+    if (_labelPrefixes.any(folded.startsWith)) continue;
+    return line;
   }
   return lines.first;
 }
