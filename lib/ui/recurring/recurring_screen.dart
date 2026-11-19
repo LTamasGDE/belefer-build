@@ -406,19 +406,20 @@ class PendingCard extends StatelessWidget {
             ],
           ),
           const SizedBox(height: Space.sm),
-          Row(
+          OverflowBar(
+            alignment: MainAxisAlignment.end,
+            overflowAlignment: OverflowBarAlignment.end,
+            spacing: Space.xs,
             children: [
               TextButton(
                 onPressed: () => state.skipPending(occurrence),
                 child: const Text('Kihagyás'),
               ),
-              const Spacer(),
               IconButton(
                 tooltip: 'Rögzítés más összeggel',
                 icon: const Icon(Icons.edit_rounded),
                 onPressed: () => _book(context, edit: true),
               ),
-              const SizedBox(width: Space.xs),
               FilledButton(
                 key: ValueKey('book-pending-${rule.id}'),
                 onPressed: () => _book(context),
