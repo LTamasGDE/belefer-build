@@ -186,8 +186,7 @@ QuickEntryResult interpretReceipt(String text, QuickEntryContext context) {
     final foldedLine = foldForMatching(line);
     // A blokkok rövid „ÉÉ.HH.NN” dátuma elsőbbséget kap („26.11.14”).
     final found =
-        _receiptShortDate([line], context.today) ??
-        findDate(line, tokenize(line), context.today)?.day;
+        _receiptShortDate([line], context.today) ?? _writtenDate(line, context);
     if (found == null) continue;
     final strong =
         foldedLine.contains('kelt') ||
@@ -471,6 +470,19 @@ String _cleanCompanyName(String raw) {
         .join(' ');
   }
   return name;
+}
+
+/// Számokkal leírt dátum. A blokkon a „vásárlás”, „hétfő” és hasonló szavak
+/// nem dátumok, ezért csak a számjegyet is tartalmazó találat számít.
+CalendarDay? _writtenDate(String line, QuickEntryContext context) {
+  if (!RegExp(r'\d').hasMatch(line)) return null;
+  final tokens = tokenize(line);
+  final match = findDate(line, tokens, context.today);
+  if (match == null || match.dayOfMonthOnly) return null;
+  final hasDigit = match.tokenIndexes.any(
+    (index) => RegExp(r'\d').hasMatch(tokens[index].folded),
+  );
+  return hasDigit ? match.day : null;
 }
 
 /// Blokkokon gyakori rövid dátum: „26.11.17” (év.hó.nap két jeggyel).

@@ -239,7 +239,7 @@ DateMatch? findDate(
     final word = tokens[i].folded;
     int? weekday;
     for (final entry in _weekdays.entries) {
-      if (word == entry.key || fuzzyWordMatch(word, entry.key)) {
+      if (_weekdayWord(word, entry.key)) {
         weekday = entry.value;
         break;
       }
@@ -355,4 +355,27 @@ CalendarDay _dayOfMonth(
   if (day > today.day) month = month.previous;
   final clamped = day > month.daysInMonth ? month.daysInMonth : day;
   return CalendarDay(month.year, month.month, clamped);
+}
+
+/// A hét napjának neve, toldalékkal („pénteken”) vagy legfeljebb egy
+/// elütéssel („pentken”). Két eltérés már túl sok: a „vásárlás” nem vasárnap.
+bool _weekdayWord(String word, String key) {
+  if (word == key) return true;
+  if (word.startsWith(key)) return fuzzyWordMatch(word, key);
+  // Rövid névnél („kedd”) az elütés már más szó lenne („kedv”).
+  if (key.length < 5) return false;
+  for (final stem in candidateStems(word)) {
+    if (stem.length >= 4 && editDistance(stem, key, maxDistance: 1) <= 1) {
+      return true;
+    }
+  }
+  // Elütés és toldalék együtt: „pentken” → „pentek” + „en”.
+  for (final cut in [key.length - 1, key.length, key.length + 1]) {
+    if (cut < 4 || cut >= word.length) continue;
+    if (editDistance(word.substring(0, cut), key, maxDistance: 1) <= 1 &&
+        fuzzyWordMatch(word, word.substring(0, cut))) {
+      return true;
+    }
+  }
+  return false;
 }

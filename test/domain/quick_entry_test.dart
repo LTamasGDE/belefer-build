@@ -217,6 +217,11 @@ final List<_Case> _cases = [
   _Case('múlt pénteken mozi 3000', date: CalendarDay(2026, 11, 13)),
   _Case('hétfőn 4500 bolt', date: CalendarDay(2026, 11, 16)),
   _Case('kedden kávé 800', date: CalendarDay(2026, 11, 17)),
+  _Case('pentken mozi 3000', date: CalendarDay(2026, 11, 13)),
+  _Case('szombaton piac 4000', date: CalendarDay(2026, 11, 14)),
+  _Case('vasárnap ebéd 6000', date: CalendarDay(2026, 11, 15)),
+  _Case('vásárlás tesco 5000', amount: 5000, date: CalendarDay(2026, 11, 17)),
+  _Case('vásároltam 2000-ért', amount: 2000, date: CalendarDay(2026, 11, 17)),
   _Case('nov 3 lidl 4500', amount: 4500, date: CalendarDay(2026, 11, 3)),
   _Case(
     'november 3-án lidl 4500',
