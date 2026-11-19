@@ -26,6 +26,10 @@ Future<void> _scrollToCenter(WidgetTester tester, Finder finder) async {
 }
 
 Future<void> _tapVisible(WidgetTester tester, Finder finder) async {
+  // A billentyűzet bezárása előbb (emulátoron a nyitódó billentyűzet alatt
+  // elcsúszhat a gomb helye).
+  FocusManager.instance.primaryFocus?.unfocus();
+  await tester.pumpAndSettle();
   await _scrollToCenter(tester, finder);
   await tester.tap(finder);
   await tester.pumpAndSettle();
