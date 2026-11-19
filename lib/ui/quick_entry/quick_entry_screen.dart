@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import '../../domain/models.dart';
 import '../../domain/quick_entry/interpreter.dart';
@@ -181,12 +182,22 @@ class _QuickEntryScreenState extends State<QuickEntryScreen> {
       if (!mounted) return;
       setState(() => _busy = false);
       messenger.showSnackBar(SnackBar(content: Text(error.message)));
-    } on Object {
+    } on Object catch (error, stack) {
+      // A valódi okot is megmutatjuk (és a naplóba írjuk), ne csak tippeljünk.
+      debugPrint('Blokkbeolvasási hiba: $error\n$stack');
       if (!mounted) return;
       setState(() => _busy = false);
+      final detail = switch (error) {
+        PlatformException(:final code, :final message) =>
+          '$code${message == null ? '' : ': $message'}',
+        _ => error.toString(),
+      };
       messenger.showSnackBar(
-        const SnackBar(
-          content: Text('Nem sikerült beolvasni. Próbáld újra jobb fényben.'),
+        SnackBar(
+          duration: const Duration(seconds: 8),
+          content: Text(
+            'Nem sikerült beolvasni a szöveget. (${detail.length > 160 ? '${detail.substring(0, 160)}…' : detail})',
+          ),
         ),
       );
     }

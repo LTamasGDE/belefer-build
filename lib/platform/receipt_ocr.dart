@@ -66,6 +66,9 @@ class MlKitReceiptScanner implements ReceiptScanner {
     }
   }
 
+  /// Egy képfájl szövegének felismerése, soronként rendezve.
+  Future<String> recognizeImageFile(String path) => _recognizeFile(path);
+
   Future<String> _recognizeFile(String path) async {
     final recognizer = TextRecognizer();
     try {

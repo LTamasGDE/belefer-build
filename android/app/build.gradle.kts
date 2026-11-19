@@ -38,6 +38,18 @@ android {
             signingConfig = signingConfigs.getByName("debug")
             proguardFiles("proguard-rules.pro")
         }
+        // CI: a kiadási optimalizáló (R8) a debug-buildben is bekapcsolható,
+        // hogy az emulátoros próba a kiadással azonos Java-oldalt teszteljen.
+        if (System.getenv("BELEFER_MINIFY_DEBUG") == "1") {
+            getByName("debug") {
+                isMinifyEnabled = true
+                proguardFiles(
+                    getDefaultProguardFile("proguard-android-optimize.txt"),
+                    "proguard-rules.pro",
+                    "proguard-ci-debug.pro",
+                )
+            }
+        }
     }
 }
 
