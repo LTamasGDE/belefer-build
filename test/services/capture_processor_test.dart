@@ -27,14 +27,13 @@ const _joint = Account(
 CaptureProcessor processor({ExchangeRates rates = const NoExchangeRates()}) =>
     CaptureProcessor(rates: rates, accounts: const [_own, _joint]);
 
-CapturedEvent revolut(String text, {String title = 'Revolut'}) =>
-    CapturedEvent(
-      id: text,
-      source: CaptureSource.revolut,
-      receivedAt: DateTime(2026, 11, 16, 18, 20),
-      title: title,
-      text: text,
-    );
+CapturedEvent revolut(String text, {String title = 'Revolut'}) => CapturedEvent(
+  id: text,
+  source: CaptureSource.revolut,
+  receivedAt: DateTime(2026, 11, 16, 18, 20),
+  title: title,
+  text: text,
+);
 
 CapturedEvent applePay({
   required String amount,

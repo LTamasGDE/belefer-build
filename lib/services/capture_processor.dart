@@ -112,9 +112,10 @@ class CaptureProcessor {
 
     // Apple Pay: elutasított, majd megismételt fizetés ugyanannak számít
     // (az automatizmus az elutasított érintésnél is elindul).
-    for (final previous in event.source == CaptureSource.applePay
-        ? recent
-        : const <CaptureLogEntry>[]) {
+    for (final previous
+        in event.source == CaptureSource.applePay
+            ? recent
+            : const <CaptureLogEntry>[]) {
       if (previous.source == event.source &&
           previous.amount == result.amount &&
           previous.merchantKey == merchantKey &&

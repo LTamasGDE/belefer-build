@@ -98,21 +98,21 @@ void main() {
       final bridge = FakeCaptureBridge();
       final state = await openTestState(capture: bridge);
       bridge.queue.addAll([
-          revolutEvent(
-            'Lidl',
-            'Fizettél 4 590 Ft-ot',
-            DateTime(2026, 11, 16, 18),
-          ),
-          revolutEvent(
-            'Revolut',
-            'Payment declined: insufficient funds',
-            DateTime(2026, 11, 16, 18, 1),
-          ),
-          revolutEvent(
-            'Revolut',
-            '10 000 Ft átkerült a Megtakarítás perselybe',
-            DateTime(2026, 11, 16, 19),
-          ),
+        revolutEvent(
+          'Lidl',
+          'Fizettél 4 590 Ft-ot',
+          DateTime(2026, 11, 16, 18),
+        ),
+        revolutEvent(
+          'Revolut',
+          'Payment declined: insufficient funds',
+          DateTime(2026, 11, 16, 18, 1),
+        ),
+        revolutEvent(
+          'Revolut',
+          '10 000 Ft átkerült a Megtakarítás perselybe',
+          DateTime(2026, 11, 16, 19),
+        ),
       ]);
       final reports = <CaptureReport?>[];
       state.captureReports.addListener(
