@@ -189,37 +189,37 @@ class _HomeShellState extends State<HomeShell> with WidgetsBindingObserver {
         child: MediaQuery.withClampedTextScaling(
           maxScaleFactor: 1,
           child: NavigationBar(
-          selectedIndex: _index,
-          onDestinationSelected: (index) => setState(() => _index = index),
-          labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
-          destinations: const [
-            NavigationDestination(
-              icon: Icon(Icons.donut_large_outlined),
-              selectedIcon: Icon(Icons.donut_large_rounded),
-              label: 'Áttekintés',
-            ),
-            NavigationDestination(
-              icon: Icon(Icons.receipt_long_outlined),
-              selectedIcon: Icon(Icons.receipt_long_rounded),
-              label: 'Tételek',
-            ),
-            NavigationDestination(
-              icon: Icon(Icons.event_repeat_outlined),
-              selectedIcon: Icon(Icons.event_repeat_rounded),
-              label: 'Ismétlődő',
-            ),
-            NavigationDestination(
-              icon: Icon(Icons.bolt_outlined),
-              selectedIcon: Icon(Icons.bolt_rounded),
-              label: 'Sablonok',
-            ),
-            NavigationDestination(
-              icon: Icon(Icons.tune_outlined),
-              selectedIcon: Icon(Icons.tune_rounded),
-              label: 'Beállítások',
-            ),
-          ],
-        ),
+            selectedIndex: _index,
+            onDestinationSelected: (index) => setState(() => _index = index),
+            labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
+            destinations: const [
+              NavigationDestination(
+                icon: Icon(Icons.donut_large_outlined),
+                selectedIcon: Icon(Icons.donut_large_rounded),
+                label: 'Áttekintés',
+              ),
+              NavigationDestination(
+                icon: Icon(Icons.receipt_long_outlined),
+                selectedIcon: Icon(Icons.receipt_long_rounded),
+                label: 'Tételek',
+              ),
+              NavigationDestination(
+                icon: Icon(Icons.event_repeat_outlined),
+                selectedIcon: Icon(Icons.event_repeat_rounded),
+                label: 'Ismétlődő',
+              ),
+              NavigationDestination(
+                icon: Icon(Icons.bolt_outlined),
+                selectedIcon: Icon(Icons.bolt_rounded),
+                label: 'Sablonok',
+              ),
+              NavigationDestination(
+                icon: Icon(Icons.tune_outlined),
+                selectedIcon: Icon(Icons.tune_rounded),
+                label: 'Beállítások',
+              ),
+            ],
+          ),
         ),
       ),
     );

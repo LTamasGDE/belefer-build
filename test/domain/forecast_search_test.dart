@@ -98,10 +98,22 @@ void main() {
       final forecast = forecastMonth(
         transactions: [
           ...transactions,
-          _t(4, EntryType.expense, 'Albérlet', 150000, 'housing',
-              CalendarDay(2026, 11, 2)),
-          _t(5, EntryType.expense, 'lakbér', 20000, 'other_expense',
-              CalendarDay(2026, 11, 3)),
+          _t(
+            4,
+            EntryType.expense,
+            'Albérlet',
+            150000,
+            'housing',
+            CalendarDay(2026, 11, 2),
+          ),
+          _t(
+            5,
+            EntryType.expense,
+            'lakbér',
+            20000,
+            'other_expense',
+            CalendarDay(2026, 11, 3),
+          ),
         ],
         rules: [rent, salary],
         month: YearMonth(2026, 11),
