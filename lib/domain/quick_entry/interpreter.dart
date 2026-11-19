@@ -559,6 +559,8 @@ Set<int>? _matchKey(
     if (skip.contains(i)) continue;
     final word = words[i];
     if (RegExp(r'^\d').hasMatch(word)) continue;
+    // Névelők, kötőszavak nem kulcsszavak („egy” ≠ „jegy”).
+    if (stopWords.contains(word) && word != key) continue;
     if (key.length <= 2) {
       if (word == key) return {i};
       continue;

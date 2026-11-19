@@ -126,7 +126,7 @@ void main() {
 
     test('blokk ismeretlen boltból: kategória a tételsorokból', () {
       final result = interpretReceipt(
-        'KFT ALFA\nALGOFLEX 1290\nC-VITAMIN 990\nÖSSZESEN 2280 Ft',
+        'NOVA BT\nALGOFLEX 1290\nC-VITAMIN 990\nÖSSZESEN 2280 Ft',
         context,
       );
       expect(result.categoryId, 'health');
