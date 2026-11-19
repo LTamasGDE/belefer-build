@@ -193,12 +193,21 @@ class QuickEntryContext {
 }
 
 class _CategoryVote {
-  _CategoryVote(this.categoryId, this.score, this.title, this.tokens);
+  _CategoryVote(
+    this.categoryId,
+    this.score,
+    this.title,
+    this.tokens, {
+    this.fuzzy = false,
+  });
 
   final String categoryId;
   final int score;
   final String? title;
   final Set<int> tokens;
+
+  /// Csak elírástűréssel illeszkedett (pl. „kocsit” ≈ „kocsma”).
+  final bool fuzzy;
 }
 
 /// A gyorsrögzítés értelmezője: a beírt mondatból tételt, ismétlődő tételt,
@@ -319,16 +328,24 @@ QuickEntryResult interpretQuickEntry(String text, QuickEntryContext context) {
       best = null;
     }
   }
-  // A saját modell: ha a szótár és a korábbi tételek nem döntöttek.
+  // A saját modell: ha a szótár és a korábbi tételek nem döntöttek, vagy
+  // csak egy elírástűrő egyezés döntött volna, amivel a modell határozottan
+  // nem ért egyet („elvittem a kocsit” ≠ kocsma).
   final model = currentModel;
   String? modelCategoryId;
-  if (best == null && model != null) {
+  if (model != null && (best == null || best.fuzzy)) {
     final allowed = {
       for (final category in [...expenseCategories, ...incomeCategories])
         if (explicitType == null || category.type == explicitType) category.id,
     };
     final prediction = model.classify('category', text).restrictedTo(allowed);
-    if (prediction.confidence >= 0.45) modelCategoryId = prediction.best;
+    if (best == null) {
+      if (prediction.confidence >= 0.45) modelCategoryId = prediction.best;
+    } else if (prediction.confidence >= 0.6 &&
+        prediction.probabilityOf(best.categoryId) < 0.1) {
+      best = null;
+      modelCategoryId = prediction.best;
+    }
   }
   final type =
       explicitType ??
@@ -628,6 +645,7 @@ List<_CategoryVote> _matchKeywords(
         keyword.weight + (exact ? 2 : 0) + (hit.length > 1 ? 2 : 0),
         keyword.title,
         hit,
+        fuzzy: hit.length == 1 && !words[hit.first].startsWith(keyword.key),
       ),
     );
   }

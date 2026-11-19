@@ -334,6 +334,7 @@ const List<KeywordEntry> keywords = [
   KeywordEntry('repulojegy', 'transport', title: 'Repülőjegy', weight: 6),
   KeywordEntry('repjegy', 'transport', title: 'Repülőjegy', weight: 6),
   KeywordEntry('autoberles', 'transport', title: 'Autóbérlés', weight: 6),
+  KeywordEntry('kocsi', 'transport', title: 'Autó', weight: 6),
   KeywordEntry('roller', 'transport', title: 'Roller', weight: 4),
   // Lakhatás
   KeywordEntry('lakber', 'housing', title: 'Lakbér', weight: 7),
