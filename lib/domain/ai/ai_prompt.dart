@@ -211,7 +211,8 @@ AiReading parseAiReading(String raw) {
     throw const FormatException('Az AI válasza nem JSON.');
   }
   final decoded = jsonDecode(raw.substring(start, end + 1));
-  if (decoded is! Map) throw const FormatException('Az AI válasza nem objektum.');
+  if (decoded is! Map)
+    throw const FormatException('Az AI válasza nem objektum.');
   final map = decoded.cast<String, Object?>();
 
   String? text(String key) {

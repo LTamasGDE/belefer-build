@@ -185,9 +185,7 @@ class _QuickEntryScreenState extends State<QuickEntryScreen> {
     if (_aiActive && _aiText != text) {
       _debounce?.cancel();
       try {
-        final outcome = await _askAi(
-          text,
-        )?.timeout(const Duration(seconds: 8));
+        final outcome = await _askAi(text)?.timeout(const Duration(seconds: 8));
         if (outcome != null && outcome.usedAi && _text.text.trim() == text) {
           result = outcome.result;
         }
