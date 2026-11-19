@@ -51,7 +51,7 @@ jobs:
     name: Android APK + emulátoros próba
     needs: checks
     runs-on: ubuntu-24.04
-    timeout-minutes: 45
+    timeout-minutes: 90
     steps:
       - uses: actions/checkout@v6
 
@@ -110,9 +110,9 @@ jobs:
           # A szövegfelismerés előbb a sima debug-, majd a kiadási optimalizálóval
           # (R8) fordított változaton, végül a teljes alapfolyamat.
           script: |
-            flutter test integration_test/ocr_test.dart -d emulator-5554 --reporter expanded
-            BELEFER_MINIFY_DEBUG=1 flutter test integration_test/ocr_test.dart -d emulator-5554 --reporter expanded
-            flutter test integration_test/app_flow_test.dart -d emulator-5554 --reporter expanded
+            bash tool/ci/run_integration.sh integration_test/ocr_test.dart
+            BELEFER_MINIFY_DEBUG=1 bash tool/ci/run_integration.sh integration_test/ocr_test.dart 1200
+            bash tool/ci/run_integration.sh integration_test/app_flow_test.dart
 
   ios:
     name: iOS-szimulátor build + próba

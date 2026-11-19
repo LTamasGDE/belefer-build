@@ -27,27 +27,36 @@ void main() {
       'Köszönjük a vásárlást!',
     ];
     const size = Size(1000, 760);
-    final recorder = ui.PictureRecorder();
-    final canvas = Canvas(recorder)
-      ..drawRect(Offset.zero & size, Paint()..color = Colors.white);
-    final painter = TextPainter(
-      text: TextSpan(
-        text: lines.join('\n'),
-        style: const TextStyle(color: Colors.black, fontSize: 46, height: 1.45),
-      ),
-      textDirection: TextDirection.ltr,
-    )..layout(maxWidth: size.width - 60);
-    painter.paint(canvas, const Offset(30, 30));
-    final image = await recorder.endRecording().toImage(
-      size.width.toInt(),
-      size.height.toInt(),
-    );
-    final png = await image.toByteData(format: ui.ImageByteFormat.png);
-    final directory = await getTemporaryDirectory();
-    final file = File('${directory.path}/belefer_ocr_proba.png');
-    await file.writeAsBytes(png!.buffer.asUint8List(), flush: true);
+    final path = (await tester.runAsync(() async {
+      final recorder = ui.PictureRecorder();
+      final canvas = Canvas(recorder)
+        ..drawRect(Offset.zero & size, Paint()..color = Colors.white);
+      final painter = TextPainter(
+        text: TextSpan(
+          text: lines.join('\n'),
+          style: const TextStyle(
+            color: Colors.black,
+            fontSize: 46,
+            height: 1.45,
+          ),
+        ),
+        textDirection: TextDirection.ltr,
+      )..layout(maxWidth: size.width - 60);
+      painter.paint(canvas, const Offset(30, 30));
+      final image = await recorder.endRecording().toImage(
+        size.width.toInt(),
+        size.height.toInt(),
+      );
+      final png = await image.toByteData(format: ui.ImageByteFormat.png);
+      final directory = await getTemporaryDirectory();
+      final file = File('${directory.path}/belefer_ocr_proba.png');
+      await file.writeAsBytes(png!.buffer.asUint8List(), flush: true);
+      return file.path;
+    }))!;
 
-    final text = await MlKitReceiptScanner().recognizeImageFile(file.path);
+    final text = (await tester.runAsync(
+      () => MlKitReceiptScanner().recognizeImageFile(path),
+    ))!;
     debugPrint('Felismert szöveg:\n$text');
     expect(text.toUpperCase(), contains('KONZOL'));
     expect(text, contains('67999'));
