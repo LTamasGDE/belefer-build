@@ -170,7 +170,10 @@ class _TourOverlayState extends State<TourOverlay> {
       color: colors.raised,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(Radii.card),
-        side: BorderSide(color: colors.accent.withValues(alpha: 0.6), width: 1.5),
+        side: BorderSide(
+          color: colors.accent.withValues(alpha: 0.6),
+          width: 1.5,
+        ),
       ),
       child: Padding(
         padding: const EdgeInsets.fromLTRB(
