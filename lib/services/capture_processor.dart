@@ -1,10 +1,9 @@
 import '../domain/accounts.dart';
-import '../domain/ai/ai_prompt.dart';
 import '../domain/capture/captured_event.dart';
 import '../domain/models.dart';
 import '../domain/quick_entry/interpreter.dart';
 import '../domain/text_fold.dart';
-import 'ai_interpreter.dart';
+import 'exchange_rates.dart';
 
 /// Döntés egy beérkezett eseményről.
 class CaptureDecision {
@@ -23,14 +22,14 @@ class CaptureDecision {
   final CaptureLogEntry log;
 }
 
-/// A Revolut-értesítések és az Apple Pay-fizetések feldolgozása: AI-val
-/// (ha elérhető), különben a beépített besorolással; a sikertelen fizetések,
-/// a saját számlák közötti mozgások és az ismétlődő értesítések kiszűrésével,
-/// számla-hozzárendeléssel.
+/// A Revolut-értesítések és az Apple Pay-fizetések feldolgozása a telefonon
+/// (a saját modellel és a szabályalapú értelmezővel): a sikertelen
+/// fizetések, a saját számlák közötti mozgások és az ismétlődő értesítések
+/// kiszűrésével, számla-hozzárendeléssel, devizás összeg átváltásával.
 class CaptureProcessor {
-  const CaptureProcessor({required this.interpreter, required this.accounts});
+  const CaptureProcessor({required this.rates, required this.accounts});
 
-  final AiInterpreter interpreter;
+  final ExchangeRates rates;
   final List<Account> accounts;
 
   /// Ennyi időn belül az azonos összegű, azonos kereskedőjű esemény
@@ -42,43 +41,33 @@ class CaptureProcessor {
     QuickEntryContext context, {
     required List<CaptureLogEntry> recent,
   }) async {
-    final offline = classifyOffline(event, context);
-    final kind = event.source == CaptureSource.applePay
-        ? AiInputKind.applePay
-        : AiInputKind.notification;
-
-    var fallback = offline.result;
-    if (event.source == CaptureSource.applePay && event.amountText != null) {
-      final huf = offline.currency == 'HUF'
-          ? parseHufAmount(event.amountText!)
-          : null;
-      if (huf != null) fallback = _withAmount(fallback, huf);
-    }
-    if (offline.currency != 'HUF') fallback = _withAmount(fallback, null);
-
-    final outcome = await interpreter.interpret(
-      event.description,
-      kind,
-      context,
-      fallback: fallback,
-    );
-    var status = outcome.usedAi ? outcome.status : offline.status;
-    var result = outcome.result;
+    final reading = classifyOffline(event, context);
+    var result = reading.result;
     final notes = <String>[...result.notes];
-
-    // Devizás összeg AI nélkül: átváltás a beépített felismerés alapján.
-    if (!outcome.usedAi &&
-        offline.currency != 'HUF' &&
-        offline.foreignAmount != null) {
-      final rate = await interpreter.rates.hufPer(offline.currency);
-      if (rate != null) {
-        final huf = (offline.foreignAmount! * rate).round();
-        result = _withAmount(result, huf);
-        notes.add(currencyNote(offline.foreignAmount!, offline.currency, huf));
-      }
+    if (event.source == CaptureSource.applePay &&
+        event.amountText != null &&
+        reading.currency == 'HUF') {
+      final huf = parseHufAmount(event.amountText!);
+      if (huf != null) result = _withAmount(result, huf);
     }
-    if (event.source == CaptureSource.applePay && status != 'failed') {
-      status = 'ok';
+
+    // Devizás összeg: átváltás a napi árfolyamon.
+    String? conversionProblem;
+    if (reading.currency != 'HUF') {
+      result = _withAmount(result, null);
+      final foreign = reading.foreignAmount;
+      if (foreign != null) {
+        final rate = await rates.hufPer(reading.currency);
+        if (rate != null) {
+          final huf = (foreign * rate).round();
+          result = _withAmount(result, huf);
+          notes.add(currencyNote(foreign, reading.currency, huf));
+        } else {
+          conversionProblem =
+              'Nem sikerült átváltani: ${foreign.toStringAsFixed(2)} '
+              '${reading.currency}. Rögzítsd kézzel forintban.';
+        }
+      }
     }
 
     final merchantKey = foldForMatching(result.title ?? event.merchant ?? '');
@@ -93,7 +82,7 @@ class CaptureProcessor {
           merchantKey: merchantKey,
         );
 
-    switch (status) {
+    switch (reading.status) {
       case 'failed':
         return CaptureDecision(
           outcome: CaptureOutcome.failed,
@@ -116,7 +105,7 @@ class CaptureProcessor {
         outcome: CaptureOutcome.unclear,
         log: log(
           CaptureOutcome.unclear,
-          outcome.error ?? 'Rögzítsd kézzel, ha valódi fizetés volt.',
+          conversionProblem ?? 'Rögzítsd kézzel, ha valódi fizetés volt.',
         ),
       );
     }
@@ -138,11 +127,7 @@ class CaptureProcessor {
       }
     }
 
-    final hint = outcome.reading?.accountHint;
-    final account = matchAccount(
-      accounts,
-      [event.accountText, ?hint].join(' '),
-    );
+    final account = matchAccount(accounts, event.accountText);
     final title = (result.title ?? event.merchant ?? event.source.label).trim();
     final noteParts = [
       event.source.label,
@@ -164,12 +149,16 @@ class CaptureProcessor {
       transaction: transaction,
       log: log(
         CaptureOutcome.booked,
-        '${_detail(result)}${account == null ? '' : ' · ${account.name}'}'
-        '${outcome.usedAi ? ' · AI' : ''}',
+        '${_detail(result)}${account == null ? '' : ' · ${account.name}'}',
       ),
     );
   }
 }
+
+/// Megjegyzés a devizás összeg átváltásáról.
+String currencyNote(double amount, String currency, int huf) =>
+    'Eredetileg ${amount.toStringAsFixed(2).replaceAll('.', ',')} $currency '
+    '(≈ $huf Ft, napi árfolyamon)';
 
 String _detail(QuickEntryResult result) => [
   ?result.title,
@@ -192,5 +181,4 @@ QuickEntryResult _withAmount(QuickEntryResult result, int? amount) =>
       interval: result.interval,
       targetRule: result.targetRule,
       notes: result.notes,
-      fromAi: result.fromAi,
     );

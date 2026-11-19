@@ -9,8 +9,8 @@ import '../theme/belefer_colors.dart';
 import '../widgets/common.dart';
 import '../widgets/confirm_dialog.dart';
 import '../widgets/rows.dart';
-import 'ai_settings_screen.dart';
 import 'capture_screen.dart';
+import 'model_screen.dart';
 
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key});
@@ -92,21 +92,20 @@ class SettingsScreen extends StatelessWidget {
                     ),
                   ),
                 ),
-                const SectionTitle('AI és automatikus rögzítés'),
+                const SectionTitle('Saját modell és automatikus rögzítés'),
                 Panel(
                   padding: EdgeInsets.zero,
                   child: Column(
                     children: [
                       LinkRow(
-                        key: const ValueKey('open-ai'),
+                        key: const ValueKey('open-model'),
                         icon: Icons.auto_awesome_rounded,
-                        title: 'AI',
-                        subtitle: state.aiSettings.isActive
-                            ? '${state.aiSettings.provider.label} értelmez'
-                            : 'Kikapcsolva: a beépített értelmező dolgozik',
+                        title: 'Saját modell',
+                        subtitle:
+                            'A telefonon fut, internet nélkül – kipróbálható',
                         onTap: () => Navigator.of(context).push(
                           MaterialPageRoute<void>(
-                            builder: (_) => const AiSettingsScreen(),
+                            builder: (_) => const ModelScreen(),
                           ),
                         ),
                       ),

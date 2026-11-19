@@ -1,5 +1,7 @@
 import '../calendar.dart';
 import '../categories.dart';
+import '../model/belefer_model.dart';
+import '../model/personal_memory.dart';
 import '../models.dart';
 import '../recurring.dart';
 import '../text_fold.dart';
@@ -62,7 +64,6 @@ class QuickEntryResult {
     this.interval = 1,
     this.targetRule,
     this.notes = const [],
-    this.fromAi = false,
   });
 
   final QuickIntent intent;
@@ -87,9 +88,6 @@ class QuickEntryResult {
 
   /// Figyelmeztetések, pl. több szám is szerepelt.
   final List<String> notes;
-
-  /// Az AI értelmezte (nem csak a beépített értelmező).
-  final bool fromAi;
 
   bool get hasAmount => amount != null && amount! > 0;
   bool get hasWhat => title != null && title!.trim().isNotEmpty;
@@ -279,6 +277,28 @@ QuickEntryResult interpretQuickEntry(String text, QuickEntryContext context) {
   votes.addAll(_matchKeywords(folded, used, verbTokens));
   votes.addAll(_matchCustomCategories(folded, used));
   votes.addAll(_matchHistory(tokens, used, context.history));
+  // A modell személyes része: a korábbi megnevezésekhez hasonló szavak.
+  if (context.history.isNotEmpty) {
+    final leftover = [
+      for (var i = 0; i < folded.length; i++)
+        if (!used.contains(i) && !verbTokens.contains(i))
+          RegExp(r'^\d').hasMatch(folded[i]) ? '#' : folded[i],
+    ];
+    final recalled = PersonalMemory.of(context.history).recall(
+      leftover,
+      threshold: 0.55,
+    );
+    if (recalled != null) {
+      votes.add(
+        _CategoryVote(
+          recalled.categoryId,
+          8 + ((recalled.similarity - 0.55) * 10).round(),
+          recalled.title,
+          const {},
+        ),
+      );
+    }
+  }
 
   // A típushoz illő szavazatok; ha nincs kifejezett típus, a legerősebb dönt.
   _CategoryVote? best;
@@ -300,19 +320,38 @@ QuickEntryResult interpretQuickEntry(String text, QuickEntryContext context) {
       best = null;
     }
   }
+  // A saját modell: ha a szótár és a korábbi tételek nem döntöttek.
+  final model = currentModel;
+  String? modelCategoryId;
+  if (best == null && model != null) {
+    final allowed = {
+      for (final category in [...expenseCategories, ...incomeCategories])
+        if (explicitType == null || category.type == explicitType) category.id,
+    };
+    final prediction = model.classify('category', text).restrictedTo(allowed);
+    if (prediction.confidence >= 0.45) modelCategoryId = prediction.best;
+  }
   final type =
       explicitType ??
-      (best != null ? categoryById(best.categoryId)!.type : EntryType.expense);
-  final categoryId = best?.categoryId ?? CategoryCatalog.fallbackIdFor(type);
+      (best != null
+          ? categoryById(best.categoryId)!.type
+          : modelCategoryId != null
+          ? categoryById(modelCategoryId)!.type
+          : EntryType.expense);
+  final categoryId =
+      best?.categoryId ??
+      modelCategoryId ??
+      CategoryCatalog.fallbackIdFor(type);
+  final categoryKnown = best != null || modelCategoryId != null;
 
   // Szándék véglegesítése és célszabály.
   var intent = QuickIntent.record;
   RecurringRule? target;
   if (cancel) {
     intent = QuickIntent.cancelRecurring;
-    target = _matchRule(folded, used, context.rules, categoryId, best != null);
+    target = _matchRule(folded, used, context.rules, categoryId, categoryKnown);
   } else if (change && amountPick != null) {
-    target = _matchRule(folded, used, context.rules, categoryId, best != null);
+    target = _matchRule(folded, used, context.rules, categoryId, categoryKnown);
     intent = target != null
         ? QuickIntent.changeRecurring
         : QuickIntent.createRecurring;
@@ -333,6 +372,28 @@ QuickEntryResult interpretQuickEntry(String text, QuickEntryContext context) {
     // „Netflix havi 4990”, „havi lakbér 180 000”: rendszeres tétel; a
     // „kifizettem a havi bérletet” viszont egyszeri kiadás.
     intent = QuickIntent.createRecurring;
+  }
+  // A saját modell a szótárban nem szereplő megfogalmazásokat is felismeri
+  // („nem kell már a Disney”, „leiratkoztam a Spotify-ról”).
+  if (model != null && intent == QuickIntent.record) {
+    final prediction = model.classify('intent', text);
+    final confidence = prediction.confidence;
+    switch (prediction.best) {
+      case 'cancel_recurring' when confidence >= 0.7:
+        final candidate = _matchRule(folded, used, context.rules, '', false);
+        if (candidate != null) {
+          intent = QuickIntent.cancelRecurring;
+          target = candidate;
+        }
+      case 'change_recurring' when confidence >= 0.75 && amountPick != null:
+        final candidate = _matchRule(folded, used, context.rules, '', false);
+        if (candidate != null) {
+          intent = QuickIntent.changeRecurring;
+          target = candidate;
+        }
+      case 'create_recurring' when confidence >= 0.8 && amountPick != null:
+        intent = QuickIntent.createRecurring;
+    }
   }
 
   // Gyakoriság.
@@ -376,7 +437,10 @@ QuickEntryResult interpretQuickEntry(String text, QuickEntryContext context) {
   }
   // Megnevezés: kereskedő > kulcsszó (vagy tanult megnevezés) > a mondat
   // maradék szavai > a kategória neve.
-  title ??= best?.title ?? _leftoverPhrase(tokens, consumed);
+  title ??=
+      best?.title ??
+      _modelTitle(model, tokens, consumed) ??
+      _leftoverPhrase(tokens, consumed);
   if (title == null && best != null) title = categoryName(categoryId);
   if (intent == QuickIntent.cancelRecurring ||
       intent == QuickIntent.changeRecurring) {
@@ -400,7 +464,7 @@ QuickEntryResult interpretQuickEntry(String text, QuickEntryContext context) {
     title: title,
     merchant: merchant,
     categoryId: target?.categoryId ?? categoryId,
-    categoryGuessed: best == null && target == null,
+    categoryGuessed: !categoryKnown && target == null,
     date: date,
     dateExplicit: dateMatch != null,
     frequency: intent == QuickIntent.createRecurring
@@ -693,6 +757,74 @@ String? _leftoverPhrase(List<QuickToken> tokens, Set<int> consumed) {
   if (parts.isEmpty) return null;
   final phrase = parts.join(' ');
   return phrase[0].toUpperCase() + phrase.substring(1);
+}
+
+/// A modell által a megnevezéshez sorolt szavak (legfeljebb három).
+String? _modelTitle(
+  BeleferModel? model,
+  List<QuickToken> tokens,
+  Set<int> consumed,
+) {
+  if (model == null || tokens.isEmpty) return null;
+  final probabilities = model.titleProbabilities([
+    for (final token in tokens) token.folded,
+  ]);
+  final parts = <String>[];
+  for (var i = 0; i < tokens.length && parts.length < 3; i++) {
+    if (consumed.contains(i)) continue;
+    final word = tokens[i].folded;
+    if (word.length < 2 || RegExp(r'^\d').hasMatch(word)) continue;
+    if (stopWords.contains(word)) continue;
+    if (probabilities[i] >= 0.5) parts.add(tokens[i].original);
+  }
+  if (parts.isEmpty) return null;
+  final phrase = parts.map(trimCaseSuffix).join(' ');
+  return phrase[0].toUpperCase() + phrase.substring(1);
+}
+
+const List<String> _caseSuffixes = [
+  'ban', 'ben', 'ból', 'ből', 'nál', 'nél', 'tól', 'től', 'ról', 'ről', //
+  'ért', 'hoz', 'hez', 'höz',
+];
+const List<String> _shortCaseSuffixes = ['ra', 're', 'ba', 'be', 'nak', 'nek'];
+final RegExp _shortVowelEnd = RegExp('[aeiouöü]\$');
+
+/// Hosszú „é”-re végződő szavak (ezeknél a rag előtti „é” nem nyúlás).
+const Set<String> _longEndings = {
+  'kávé', 'kanapé', 'tévé', 'püré', 'zselé', 'kávézó', 'bébé', 'filé', //
+  'kupé', 'karaoké', 'paté', 'szufflé', 'tupé',
+};
+
+/// Ragok levágása a megjelenített szóról: „pékségben” → „pékség”,
+/// „pizzára” → „pizza”, „Netflixet” → „Netflix”.
+String trimCaseSuffix(String word) {
+  final lower = word.toLowerCase();
+  String restore(String stem) {
+    if (stem.endsWith('á')) return '${stem.substring(0, stem.length - 1)}a';
+    if (stem.endsWith('é') && !_longEndings.contains(stem.toLowerCase())) {
+      return '${stem.substring(0, stem.length - 1)}e';
+    }
+    return stem;
+  }
+
+  for (final suffix in _caseSuffixes) {
+    if (lower.length - suffix.length >= 3 && lower.endsWith(suffix)) {
+      return restore(word.substring(0, word.length - suffix.length));
+    }
+  }
+  for (final suffix in _shortCaseSuffixes) {
+    if (lower.length - suffix.length >= 4 && lower.endsWith(suffix)) {
+      final stem = word.substring(0, word.length - suffix.length);
+      // „kamera” marad: rövid magánhangzó után ez nem rag.
+      if (_shortVowelEnd.hasMatch(stem.toLowerCase())) continue;
+      return restore(stem);
+    }
+  }
+  // „kanapét” → „kanapé”, „pizzát” → „pizza” (a „kabát” marad).
+  if (lower.length >= 6 && (lower.endsWith('át') || lower.endsWith('ét'))) {
+    return restore(word.substring(0, word.length - 1));
+  }
+  return _trimAccusative(word);
 }
 
 /// Tárgyrag levágása a megjelenített szóról („telefontokot” → „telefontok”).

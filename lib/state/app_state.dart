@@ -1,25 +1,21 @@
 import 'dart:async';
 
 import 'package:flutter/foundation.dart' hide Category;
-import 'package:http/http.dart' as http;
 
 import '../data/local_store.dart';
 import '../domain/accounts.dart';
-import '../domain/ai/ai_prompt.dart';
-import '../domain/ai/ai_settings.dart';
 import '../domain/capture/captured_event.dart';
 import '../domain/calendar.dart';
 import '../domain/categories.dart';
 import '../domain/demo_data.dart';
 import '../domain/forecast.dart';
 import '../domain/formatting.dart';
+import '../domain/model/personal_memory.dart';
 import '../domain/models.dart';
 import '../domain/monthly_summary.dart';
 import '../domain/quick_entry/interpreter.dart';
 import '../domain/recurring.dart';
 import '../domain/search.dart';
-import '../services/ai_client.dart';
-import '../services/ai_interpreter.dart';
 import '../services/capture_processor.dart';
 import '../services/exchange_rates.dart';
 import '../services/platform_services.dart';
@@ -38,14 +34,12 @@ class AppState extends ChangeNotifier {
     WidgetPublisher widget = const NoopWidgetPublisher(),
     CaptureBridge capture = const NoCaptureBridge(),
     ExchangeRates rates = const NoExchangeRates(),
-    http.Client? httpClient,
   }) : _store = store,
        _now = now ?? DateTime.now,
        _reminders = reminders,
        _widget = widget,
        _capture = capture,
-       _rates = rates,
-       _httpClient = httpClient {
+       _rates = rates {
     _today = today ?? () => CalendarDay.fromDateTime(_now());
     _selectedMonth = YearMonth.of(_today());
   }
@@ -57,14 +51,10 @@ class AppState extends ChangeNotifier {
   final WidgetPublisher _widget;
   final CaptureBridge _capture;
   final ExchangeRates _rates;
-  final http.Client? _httpClient;
 
-  static const String _aiKey = 'ai';
   static const String _captureKey = 'capture';
   static const String _captureLogKey = 'captureLog';
 
-  AiSettings _aiSettings = const AiSettings();
-  AiClient? _aiClient;
   bool _revolutCapture = false;
   List<CaptureLogEntry> _captureLog = const [];
   Future<CaptureReport?>? _processing;
@@ -239,8 +229,6 @@ class AppState extends ChangeNotifier {
     _rules = await _store.loadRecurring();
     _customCategories = await _store.loadCategories();
     _accounts = await _store.loadAccounts();
-    _aiSettings = AiSettings.fromMap(await _store.readSettingMap(_aiKey));
-    _aiClient = null;
     _revolutCapture =
         (await _store.readSettingMap(_captureKey))?['revolut'] == true;
     _captureLog = [
@@ -544,41 +532,14 @@ class AppState extends ChangeNotifier {
       .where((transaction) => effectiveAccountId(transaction.accountId) == id)
       .length;
 
-  // --- AI ---
+  // --- Saját modell ---
 
-  AiSettings get aiSettings => _aiSettings;
+  /// Hány korábbi tételből tanult a modell személyes része.
+  int get learnedTitleCount => PersonalMemory.of(_transactions).size;
 
-  Future<void> setAiSettings(AiSettings value) async {
-    _aiSettings = value;
-    _aiClient = null;
-    notifyListeners();
-    await _store.writeSettingMap(_aiKey, value.toMap());
-  }
-
-  AiClient? get _client =>
-      _aiClient ??= createAiClient(_aiSettings, httpClient: _httpClient);
-
-  /// Az AI-értelmező a jelenlegi beállításokkal (kikapcsolva a beépített
-  /// értelmező dolgozik).
-  AiInterpreter get aiInterpreter =>
-      AiInterpreter(client: _client, rates: _rates, accounts: _accounts);
-
-  /// Próbahívás: `null`, ha működik, különben a hiba szövege.
-  Future<String?> testAi() async {
-    if (!_aiSettings.isActive) return 'Előbb add meg a kulcsot.';
-    final context = quickEntryContext;
-    final outcome = await aiInterpreter.interpret(
-      'tegnap Lidl 4500',
-      AiInputKind.sentence,
-      context,
-      fallback: interpretQuickEntry('tegnap Lidl 4500', context),
-    );
-    if (!outcome.usedAi) return outcome.error ?? 'Az AI nem válaszolt.';
-    if (outcome.result.amount != 4500) {
-      return 'Az AI válaszolt, de furcsán értelmezte a próbamondatot.';
-    }
-    return null;
-  }
+  /// Egy mondat értelmezése a saját modellel (a beállítások próbamezőjéhez).
+  QuickEntryResult tryInterpret(String text) =>
+      interpretQuickEntry(text, quickEntryContext);
 
   // --- Automatikus rögzítés ---
 
@@ -613,7 +574,7 @@ class AppState extends ChangeNotifier {
     final events = [for (final map in raw) CapturedEvent.fromMap(map)]
       ..sort((a, b) => a.receivedAt.compareTo(b.receivedAt));
     final processor = CaptureProcessor(
-      interpreter: aiInterpreter,
+      rates: _rates,
       accounts: _accounts,
     );
     final booked = <Transaction>[];
@@ -738,8 +699,6 @@ class AppState extends ChangeNotifier {
     _customCategories = const [];
     _accounts = const [];
     _selectedAccountId = null;
-    _aiSettings = const AiSettings();
-    _aiClient = null;
     _captureLog = const [];
     if (_revolutCapture) {
       _revolutCapture = false;

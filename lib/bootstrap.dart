@@ -5,6 +5,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:sembast/sembast_io.dart';
 
 import 'data/local_store.dart';
+import 'domain/model/belefer_model.dart';
 import 'services/exchange_rates.dart';
 import 'services/platform_services.dart';
 import 'state/app_state.dart';
@@ -24,6 +25,7 @@ Future<AppState> openAppState({
   CaptureBridge capture = const NoCaptureBridge(),
   ExchangeRates rates = const NoExchangeRates(),
 }) async {
+  await loadBeleferModel();
   final directory = await getApplicationSupportDirectory();
   await directory.create(recursive: true);
   final store = await LocalStore.open(
@@ -40,6 +42,19 @@ Future<AppState> openAppState({
   );
   await state.load();
   return state;
+}
+
+/// A saját nyelvi modell betöltése az alkalmazás csomagjából.
+///
+/// Ha valamiért nem sikerül, a szabályalapú értelmező dolgozik tovább.
+Future<void> loadBeleferModel() async {
+  try {
+    final data = await rootBundle.load('assets/model/belefer_model.bin');
+    currentModel = BeleferModel.parse(data.buffer.asUint8List());
+  } on Object catch (error) {
+    debugPrint('A Belefér-modell nem tölthető be: $error');
+    currentModel = null;
+  }
 }
 
 Future<String> _versionLabel() async {

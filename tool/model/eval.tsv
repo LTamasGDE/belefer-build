@@ -1,0 +1,163 @@
+# Kézzel írt, a sablonoktól független ellenőrző mondatok.
+# feladat	elvárt	szöveg
+category	groceries	lidl 8450
+category	groceries	tegnap a spárban hagytam kb 12 ezret
+category	groceries	vettem kenyeret meg tejet 1290
+category	groceries	heti nagybevásárlás az aldiban 23500
+category	groceries	pékségben 1800 kiflire meg kakaós csigára
+category	groceries	macskakaja és alom 6200
+category	groceries	a sarki boltban 990 ásványvízre
+category	groceries	tojás 1500 a piacon
+category	groceries	mosogatószert és wc papírt vettem 3400
+category	groceries	rossmann 5600 sampon fogkrém
+category	dining	meki 2890
+category	dining	ebéd a kollégákkal 4500
+category	dining	pizzát rendeltünk woltról 7900
+category	dining	kávé 990
+category	dining	tegnap este sörözés a haverokkal 9000
+category	dining	gyros 2400
+category	dining	vacsora az olasz étteremben 18 ezer
+category	dining	fagyiztunk a gyerekekkel 3200
+category	dining	lángos a strandon 1600
+category	dining	sushi 6500 kettesben
+category	transport	tankoltam 18 ezret
+category	transport	benzin 21500 a molnál
+category	transport	bkk bérlet 8950
+category	transport	uber a reptérre 12400
+category	transport	parkolás 600
+category	transport	vonatjegy pestre 3800
+category	transport	autópálya matrica 6400
+category	transport	gumicsere 14000
+category	transport	taxival jöttem haza 4200
+category	transport	olajcsere a szervizben 32 ezer
+category	housing	lakbér 180000
+category	housing	közös költség 24500
+category	housing	ikea polc meg lámpa 15990
+category	housing	festéket vettem a praktikerben 12300
+category	housing	villanyszerelő 25 ezer
+category	housing	új matrac 89990
+category	utilities	villanyszámla 11200
+category	utilities	gázszámla 8900
+category	utilities	telekom 6990
+category	utilities	internet 7500
+category	utilities	befizettem a vízdíjat 4300
+category	utilities	feltöltöttem a telefonom 3000
+category	utilities	távfűtés 14500
+category	health	patika 3450
+category	health	gyógyszer 2890
+category	health	fogorvos 25 ezer
+category	health	vitaminokat vettem 4600
+category	health	szemüveg 65000
+category	health	magánrendelés bőrgyógyásznál 22 000
+category	health	vérvétel a synlabban 18900
+category	clothing	vettem egy új cipőt 24990
+category	clothing	h&m 12990
+category	clothing	zara pulcsi 15995
+category	clothing	télikabát 45 ezer
+category	clothing	zoknik 2990
+category	clothing	decathlonban futócipő 19990
+category	entertainment	mozi 5600
+category	entertainment	koncertjegy 18000
+category	entertainment	strandbelépő 3500
+category	entertainment	steam játék 8900
+category	entertainment	szállás a balatonon 64000
+category	entertainment	escape room 16000
+category	entertainment	edzőterem 14900
+category	entertainment	bowling a csapattal 7000
+category	subscriptions	netflix 4490
+category	subscriptions	spotify 1990
+category	subscriptions	icloud 1290
+category	subscriptions	chatgpt 8200
+category	subscriptions	disney plusz 3490
+category	subscriptions	youtube premium 2390
+category	education	tankönyvek 12400
+category	education	nyelvóra 6000
+category	education	udemy kurzus 4990
+category	education	nyelvvizsga díja 36000
+category	education	füzetek tollak a suliba 5400
+category	education	tandíj 350000
+category	gifts	ajándék anyának 8000
+category	gifts	virágot vettem a barátnőmnek 6500
+category	gifts	szülinapi ajándék tominak 12000
+category	gifts	adomány a vöröskeresztnek 5000
+category	gifts	karácsonyi ajándékok 45000
+category	other_expense	fodrász 7000
+category	other_expense	posta csomagfeladás 1890
+category	other_expense	temu rendelés 8700
+category	other_expense	parkolási bírság 10000
+category	other_expense	új telefontok 3990
+category	other_expense	számlavezetési díj 990
+category	other_expense	mediamarkt fülhallgató 19990
+category	salary	megjött a fizetés 420e
+category	salary	fizu 385000
+category	salary	munkabér 512 000
+category	salary	bónusz 150 ezer
+category	salary	jutalom 80000
+category	side_income	eladtam a biciklit 40e
+category	side_income	vintedes eladás 6500
+category	side_income	korrepetálásért kaptam 12000
+category	side_income	megbízási díj 150000
+category	side_income	diákmunka 64 ezer
+category	scholarship	ösztöndíj 45000
+category	scholarship	megjött az erasmus ösztöndíj 320000
+category	gift_income	anyától kaptam 20e
+category	gift_income	nagyi adott 10000 szülinapra
+category	gift_income	zsebpénz 5000
+category	refund	visszakaptam a kauciót 150000
+category	refund	visszatérítés a temutól 4500
+category	refund	adó-visszatérítés 64000
+category	refund	visszautalták a jegy árát 12000
+category	other_income	nyertem a lottón 25000
+category	other_income	családi pótlék 12200
+intent	record	lidl 8450
+intent	record	tegnap tankoltam 20 ezret
+intent	record	megjött a fizetés 420e
+intent	record	kifizettem a havi bérletet 8950
+intent	create_recurring	netflix havi 4490
+intent	create_recurring	előfizettem a spotifyra havi 1990
+intent	create_recurring	minden hónapban 180 ezer a lakbér
+intent	create_recurring	edzőterem bérlet havonta 14900
+intent	create_recurring	icloud 1290 minden hónapban
+intent	create_recurring	heti 5000 zsebpénz a gyereknek
+intent	create_recurring	évente 39 ezer az autópálya matrica
+intent	create_recurring	rendszeres bevétel albérlőtől havi 120e
+intent	cancel_recurring	lemondtam a netflixet
+intent	cancel_recurring	leiratkoztam a spotifyról
+intent	cancel_recurring	nem fizetek többet hbo-ra
+intent	cancel_recurring	felmondtam az edzőtermet
+intent	cancel_recurring	töröld a disney előfizetést
+intent	cancel_recurring	megszűnt a nyelvóra
+intent	cancel_recurring	a youtube premium le van mondva
+intent	cancel_recurring	kiléptem a konditeremből
+intent	change_recurring	mostantól 195 ezer a lakbér
+intent	change_recurring	drágult a netflix 4990 lett
+intent	change_recurring	emelték a közös költséget 28 ezerre
+intent	change_recurring	a spotify ezentúl 2290
+intent	change_recurring	januártól 210000 az albérlet
+intent	change_recurring	csökkent a gázszámla 6500-ra
+status	expense	Lidl\nFizettél 4 590 Ft-ot
+status	expense	Paid €4.50 at Starbucks
+status	expense	Spar\n-3 290 Ft
+status	expense	Anna spent 12 400 HUF at Tesco
+status	expense	You paid 2 990 Ft to Rossmann
+status	expense	MOL\n18 500 Ft
+status	expense	Kártyás fizetés 6 990 Ft Telekom
+status	income	Kovács Anna küldött neked 15 000 Ft-ot
+status	income	You received 20 000 HUF from Bence
+status	income	Refund from Amazon: €12.99
+status	income	Beérkező utalás 420 000 Ft
+status	failed	Payment declined: insufficient funds
+status	failed	A fizetés elutasítva: Lidl 4 590 Ft
+status	failed	Nincs elég fedezet a fizetéshez
+status	failed	Card payment at MOL failed
+status	failed	A tranzakció sikertelen volt
+status	internal	10 000 Ft a Megtakarítás perselybe került
+status	internal	You moved 50 000 HUF to Savings
+status	internal	Exchanged 100 EUR to HUF
+status	internal	Topped up 30 000 Ft with Apple Pay
+status	internal	20 000 Ft átutalva a közös számlára
+status	other	Erősítsd meg a bejelentkezést
+status	other	Your verification code is 482913
+status	other	Próbáld ki a Metal csomagot egy hónapig ingyen
+status	other	Elkészült az októberi kimutatásod
+status	other	Bence 5 000 Ft-ot kért tőled

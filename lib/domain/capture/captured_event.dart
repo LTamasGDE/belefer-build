@@ -1,4 +1,5 @@
 import '../calendar.dart';
+import '../model/belefer_model.dart';
 import '../models.dart';
 import '../quick_entry/amount_parser.dart';
 import '../quick_entry/interpreter.dart';
@@ -75,7 +76,7 @@ class CapturedEvent {
 
   CalendarDay get day => CalendarDay.fromDateTime(receivedAt);
 
-  /// Az AI-nak és a felismerésnek átadott szöveg.
+  /// A modellnek és a felismerésnek átadott szöveg.
   String get description => switch (source) {
     CaptureSource.revolut => [
       title,
@@ -200,8 +201,28 @@ OfflineCaptureReading classifyOffline(
   }
 
   String status;
+  // A saját modell az értesítés egészéből dönt; ha bizonytalan, a
+  // kulcsszavak.
+  final model = currentModel;
+  final modelStatus =
+      model != null && event.source == CaptureSource.revolut
+      ? model.classify('status', event.description)
+      : null;
   if (event.source == CaptureSource.applePay) {
     status = 'ok';
+  } else if (modelStatus != null && modelStatus.confidence >= 0.6) {
+    status = switch (modelStatus.best) {
+      'failed' => 'failed',
+      'internal' => 'internal_transfer',
+      'other' => 'not_a_transaction',
+      _ => 'ok',
+    };
+    if (status == 'ok') {
+      final type = modelStatus.best == 'income'
+          ? EntryType.income
+          : EntryType.expense;
+      if (result.type != type) result = _withType(result, type);
+    }
   } else if (hasAny(_failedWords)) {
     status = 'failed';
   } else if (hasAny(_internalWords)) {
@@ -218,6 +239,12 @@ OfflineCaptureReading classifyOffline(
       // Kártyás fizetésnél a bevételi kategória téves (pl. „Fizetés” szó).
       result = _withType(result, EntryType.expense);
     }
+  }
+  if (event.source == CaptureSource.revolut &&
+      status == 'ok' &&
+      !result.hasAmount &&
+      foreign == null) {
+    status = 'not_a_transaction';
   }
   return OfflineCaptureReading(
     status: status,

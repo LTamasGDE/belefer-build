@@ -69,10 +69,11 @@ class _CaptureScreenState extends State<CaptureScreen>
 
     final children = <Widget>[
       Text(
-        'A fizetéseid maguktól kerülnek a tételek közé: az AI (vagy a '
-        'beépített értelmező) kiszűri a sikertelen fizetéseket és a saját '
-        'számláid közötti mozgást, és a felismerő szavak alapján a jó számlára '
-        'teszi őket. Minden automatikus tétel szerkeszthető és törölhető.',
+        'A fizetéseid maguktól kerülnek a tételek közé: a saját modell a '
+        'telefonon kiszűri a sikertelen fizetéseket és a saját számláid '
+        'közötti mozgást, besorolja őket, és a felismerő szavak alapján a jó '
+        'számlára teszi őket. Minden automatikus tétel szerkeszthető és '
+        'törölhető.',
         style: textTheme.bodyMedium?.copyWith(color: colors.textMuted),
       ),
     ];

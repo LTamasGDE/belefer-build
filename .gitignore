@@ -28,3 +28,4 @@ app.*.map.json
 
 # Helyi kísérletek
 /tmp/
+tool/model/__pycache__/

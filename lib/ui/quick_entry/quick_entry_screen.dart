@@ -1,12 +1,8 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
 
-import '../../domain/ai/ai_prompt.dart';
 import '../../domain/models.dart';
 import '../../domain/quick_entry/interpreter.dart';
 import '../../domain/recurring.dart';
-import '../../services/ai_interpreter.dart';
 import '../../services/platform_services.dart';
 import '../../state/app_scope.dart';
 import '../recurring/recurring_screen.dart';
@@ -77,29 +73,8 @@ class QuickEntryScreen extends StatefulWidget {
 class _QuickEntryScreenState extends State<QuickEntryScreen> {
   late final TextEditingController _text;
   final _focus = FocusNode();
-  QuickEntryResult? _offline;
+  QuickEntryResult? _result;
   bool _busy = false;
-
-  // AI-értelmezés (szünet után, a beírt szövegre).
-  Timer? _debounce;
-  String? _aiText;
-  QuickEntryResult? _aiResult;
-  Future<AiOutcome>? _aiPending;
-  String? _aiPendingText;
-  String? _aiError;
-
-  bool get _aiActive => AppScope.read(context).aiSettings.isActive;
-
-  /// Az érvényes értelmezés: az AI-é, ha a mostani szövegre megvan.
-  QuickEntryResult? get _result {
-    final text = _text.text.trim();
-    if (text.isEmpty) return null;
-    if (_aiResult != null && _aiText == text) return _aiResult;
-    return _offline;
-  }
-
-  bool get _aiWorking =>
-      _aiPending != null && _aiPendingText == _text.text.trim();
 
   @override
   void initState() {
@@ -115,7 +90,6 @@ class _QuickEntryScreenState extends State<QuickEntryScreen> {
 
   @override
   void dispose() {
-    _debounce?.cancel();
     _text.removeListener(_interpret);
     _text.dispose();
     _focus.dispose();
@@ -127,78 +101,17 @@ class _QuickEntryScreenState extends State<QuickEntryScreen> {
     final result = text.isEmpty
         ? null
         : interpretQuickEntry(text, AppScope.read(context).quickEntryContext);
-    setState(() {
-      _offline = result;
-      if (_aiText != text) _aiError = null;
-    });
-    _debounce?.cancel();
-    if (text.length >= 3 && _aiActive && _aiText != text) {
-      _debounce = Timer(const Duration(milliseconds: 900), () {
-        unawaited(_askAi(text));
-      });
-    }
-  }
-
-  /// AI-értelmezés a [text]-re (egyszerre egy kérés szövegenként).
-  Future<AiOutcome?> _askAi(String text) async {
-    if (!mounted || !_aiActive) return null;
-    final offline = _offline;
-    if (offline == null) return null;
-    if (_aiPendingText == text && _aiPending != null) return _aiPending;
-    final state = AppScope.read(context);
-    final future = state.aiInterpreter.interpret(
-      text,
-      AiInputKind.sentence,
-      state.quickEntryContext,
-      fallback: offline,
-    );
-    setState(() {
-      _aiPending = future;
-      _aiPendingText = text;
-    });
-    final outcome = await future;
-    if (!mounted) return outcome;
-    setState(() {
-      if (_aiPendingText == text) {
-        _aiPending = null;
-        _aiPendingText = null;
-      }
-      if (outcome.usedAi) {
-        _aiText = text;
-        _aiResult = outcome.result;
-        _aiError = null;
-      } else {
-        _aiError = outcome.error;
-      }
-    });
-    return outcome;
+    setState(() => _result = result);
   }
 
   Future<void> _submit() async {
-    if (_busy) return;
-    final text = _text.text.trim();
-    var result = _result;
-    if (result == null) return;
-    setState(() => _busy = true);
-    // Ha az AI még dolgozik (vagy el sem indult), megvárjuk – legfeljebb
-    // néhány másodpercig; utána a beépített értelmezés dönt.
-    if (_aiActive && _aiText != text) {
-      _debounce?.cancel();
-      try {
-        final outcome = await _askAi(text).timeout(const Duration(seconds: 8));
-        if (outcome != null && outcome.usedAi && _text.text.trim() == text) {
-          result = outcome.result;
-        }
-      } on TimeoutException {
-        // A beépített értelmezés marad.
-      }
-      if (!mounted) return;
-    }
-    if (!result!.isComplete) {
-      setState(() => _busy = false);
+    final result = _result;
+    if (_busy || result == null) return;
+    if (!result.isComplete) {
       _focus.requestFocus();
       return;
     }
+    setState(() => _busy = true);
     final done = await applyQuickResult(AppScope.read(context), result);
     if (!mounted) return;
     if (done == null) {
@@ -346,14 +259,6 @@ class _QuickEntryScreenState extends State<QuickEntryScreen> {
                   ),
                   const SizedBox(height: Space.md),
                   QuestionHints(result: result, today: today),
-                  const SizedBox(height: Space.sm),
-                  AiStatusLine(
-                    active: state.aiSettings.isActive,
-                    provider: state.aiSettings.provider.label,
-                    working: _aiWorking,
-                    usedAi: result?.fromAi ?? false,
-                    error: _aiError,
-                  ),
                   if (result != null) ...[
                     const SizedBox(height: Space.lg),
                     QuickResultCard(result: result, today: today),
@@ -361,19 +266,11 @@ class _QuickEntryScreenState extends State<QuickEntryScreen> {
                   const SizedBox(height: Space.lg),
                   FilledButton.icon(
                     key: const ValueKey('quick-entry-submit'),
-                    onPressed: (complete || _aiWorking) && !_busy
-                        ? _submit
-                        : null,
+                    onPressed: complete && !_busy ? _submit : null,
                     icon: Icon(
                       complete ? Icons.check_rounded : Icons.help_outline,
                     ),
-                    label: Text(
-                      _busy
-                          ? 'Könyvelés…'
-                          : (!complete && _aiWorking
-                                ? 'Az AI még gondolkodik…'
-                                : quickActionLabel(result)),
-                    ),
+                    label: Text(quickActionLabel(result)),
                   ),
                   if (canOpenDetails) ...[
                     const SizedBox(height: Space.sm),

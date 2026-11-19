@@ -1,13 +1,8 @@
-import 'dart:convert';
-
 import 'package:belefer/domain/accounts.dart';
-import 'package:belefer/domain/ai/ai_settings.dart';
 import 'package:belefer/domain/calendar.dart';
 import 'package:belefer/domain/capture/captured_event.dart';
 import 'package:belefer/state/app_state.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:http/http.dart' as http;
-import 'package:http/testing.dart';
 import 'package:sembast/sembast_memory.dart' hide Transaction;
 
 import '../support/test_app.dart';
@@ -146,45 +141,9 @@ void main() {
       await state.close();
     });
 
-    test('Geminivel értelmez, a számlát a kártyanévből veszi', () async {
+    test('Apple Pay: a számlát a kártyanévből veszi', () async {
       final bridge = FakeCaptureBridge(supportsNotifications: false);
-      final applePayEvent = <Object?, Object?>{
-          'id': 'ap1',
-          'source': 'applepay',
-          'time': DateTime(2026, 11, 17, 8, 15).millisecondsSinceEpoch,
-          'amount': '1 290 Ft',
-          'merchant': 'COSTA COFFEE',
-        'card': 'Közös',
-      };
-      final requests = <http.Request>[];
-      final client = MockClient((request) async {
-        requests.add(request);
-        return http.Response.bytes(
-          utf8.encode(
-            jsonEncode({
-              'candidates': [
-                {
-                  'content': {
-                    'parts': [
-                      {
-                        'text': jsonEncode({
-                          'status': 'ok',
-                          'type': 'expense',
-                          'amount': 1290,
-                          'title': 'Costa Coffee',
-                          'category_id': 'dining',
-                        }),
-                      },
-                    ],
-                  },
-                },
-              ],
-            }),
-          ),
-          200,
-        );
-      });
-      final state = await openTestState(capture: bridge, httpClient: client);
+      final state = await openTestState(capture: bridge);
       await state.saveAccount(
         const Account(
           name: 'Saját',
@@ -199,19 +158,21 @@ void main() {
           matchers: ['Közös'],
         ),
       );
-      await state.setAiSettings(
-        const AiSettings(provider: AiProvider.gemini, geminiKey: 'kulcs'),
-      );
-
-      bridge.queue.add(applePayEvent);
+      bridge.queue.add({
+        'id': 'ap1',
+        'source': 'applepay',
+        'time': DateTime(2026, 11, 17, 8, 15).millisecondsSinceEpoch,
+        'amount': '1 290 Ft',
+        'merchant': 'Costa Coffee',
+        'card': 'Közös',
+      });
       await state.processCaptures();
       final booked = state.transactions.single;
       expect(booked.title, 'Costa Coffee');
       expect(booked.categoryId, 'dining');
+      expect(booked.amount, 1290);
       expect(booked.accountId, joint.id);
       expect(booked.source, 'applepay');
-      expect(requests, hasLength(1));
-      expect(requests.single.body, contains('COSTA COFFEE'));
       await state.close();
     });
 
@@ -235,7 +196,6 @@ void main() {
       await second.clearAllData();
       expect(second.revolutCaptureEnabled, isFalse);
       expect(second.captureLog, isEmpty);
-      expect(second.aiSettings.provider, AiProvider.off);
       await second.close();
     });
   });

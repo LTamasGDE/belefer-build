@@ -1,11 +1,12 @@
 import 'package:belefer/domain/accounts.dart';
-import 'package:belefer/domain/ai/ai_settings.dart';
+import 'package:belefer/domain/model/belefer_model.dart';
 import 'package:belefer/domain/calendar.dart';
 import 'package:belefer/domain/models.dart';
 import 'package:belefer/ui/accounts/accounts_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import '../support/model.dart';
 import '../support/test_app.dart';
 import '../support/ui_helpers.dart';
 
@@ -116,32 +117,28 @@ void main() {
     expect(state.transactions.single.source, 'applepay');
   });
 
-  testWidgets('AI-beállítás: szolgáltató, kulcs, próba hiba esetén', (
-    tester,
-  ) async {
-    final state = await pumpBelefer(tester);
+  testWidgets('saját modell: bemutató és próbamező', (tester) async {
+    currentModel = loadTestModel();
+    addTearDown(() => currentModel = null);
+    final state = (await tester.runAsync(openTestState))!;
+    await tester.runAsync(
+      () => state.saveTransaction(
+        expense('Zongoraóra', 6000, 'education', testToday),
+      ),
+    );
+    await pumpBelefer(tester, state: state);
     await goToTab(tester, 'Beállítások');
-    expect(find.text('Kikapcsolva: a beépített értelmező dolgozik'), findsOneWidget);
-    await tapVisible(tester, find.byKey(const ValueKey('open-ai')));
+    await tapVisible(tester, find.byKey(const ValueKey('open-model')));
+    expect(find.text('Saját modell'), findsWidgets);
+    expect(find.textContaining('1 saját megnevezésedet ismeri'), findsOneWidget);
+    expect(find.textContaining('súly'), findsOneWidget);
 
-    await tapVisible(tester, find.text('Gemini'));
-    expect(find.byKey(const ValueKey('ai-key')), findsOneWidget);
-    expect(find.textContaining('aistudio.google.com'), findsOneWidget);
-    await enterField(tester, 'ai-key', 'tesztkulcs');
-    await tester.binding.handlePopRoute();
+    await enterField(tester, 'model-try', 'tegnap a hentesnél 6700');
     await tester.pumpAndSettle();
-    expect(state.aiSettings.provider, AiProvider.gemini);
-    expect(state.aiSettings.geminiKey, 'tesztkulcs');
-    expect(find.text('Gemini értelmez'), findsOneWidget);
-
-    await tapVisible(tester, find.byKey(const ValueKey('open-ai')));
-    await tapVisible(tester, find.text('Mistral'));
-    expect(find.textContaining('console.mistral.ai'), findsOneWidget);
-    await tapVisible(tester, find.text('Ki'));
-    expect(find.byKey(const ValueKey('ai-key')), findsNothing);
-    expect(state.aiSettings.provider, AiProvider.off);
-    // A Gemini-kulcs megmarad, ha később visszakapcsolja.
-    expect(state.aiSettings.geminiKey, 'tesztkulcs');
+    expect(find.text('Hentes'), findsOneWidget);
+    expect(find.text('Élelmiszer'), findsWidgets);
+    // A próba nem rögzít semmit.
+    expect(state.transactions, hasLength(1));
   });
 
   testWidgets('automatikus rögzítés: Revolut-kapcsoló és engedély', (

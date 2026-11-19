@@ -1,5 +1,6 @@
 import '../calendar.dart';
 import '../categories.dart';
+import '../model/belefer_model.dart';
 import '../models.dart';
 import '../text_fold.dart';
 import 'amount_parser.dart';
@@ -186,6 +187,15 @@ QuickEntryResult interpretReceipt(String text, QuickEntryContext context) {
               .first
               .key;
     }
+  }
+
+  // A saját modell a tételsorokból (pl. „ALGOFLEX”, „95 BENZIN”).
+  final model = currentModel;
+  if (categoryId == null && model != null) {
+    final prediction = model.classify('category', text).restrictedTo({
+      for (final category in expenseCategories) category.id,
+    });
+    if (prediction.confidence >= 0.4) categoryId = prediction.best;
   }
 
   // Tanult kategória a korábbi, azonos nevű tételekből.

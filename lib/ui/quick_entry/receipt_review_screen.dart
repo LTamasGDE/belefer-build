@@ -1,9 +1,7 @@
-import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
 
-import '../../domain/ai/ai_prompt.dart';
 import '../../domain/models.dart';
 import '../../domain/quick_entry/interpreter.dart';
 import '../../domain/quick_entry/receipt_parser.dart';
@@ -32,26 +30,20 @@ class _ReceiptReviewScreenState extends State<ReceiptReviewScreen> {
   late QuickEntryResult _result;
   bool _busy = false;
   bool _showText = false;
-  bool _aiWorking = false;
-  String? _aiError;
-  Timer? _debounce;
-  int _generation = 0;
 
   @override
   void initState() {
     super.initState();
     _text = TextEditingController(text: widget.capture.text);
-    _text.addListener(_onEdited);
+    _text.addListener(_interpret);
     _result = _parse();
     // Ha a felismerés hiányos, a szöveg rögtön látszik a javításhoz.
     _showText = !_result.isComplete;
-    WidgetsBinding.instance.addPostFrameCallback((_) => _askAi());
   }
 
   @override
   void dispose() {
-    _debounce?.cancel();
-    _text.removeListener(_onEdited);
+    _text.removeListener(_interpret);
     _text.dispose();
     super.dispose();
   }
@@ -59,36 +51,7 @@ class _ReceiptReviewScreenState extends State<ReceiptReviewScreen> {
   QuickEntryResult _parse() =>
       interpretReceipt(_text.text, AppScope.read(context).quickEntryContext);
 
-  void _onEdited() {
-    setState(() => _result = _parse());
-    _debounce?.cancel();
-    _debounce = Timer(const Duration(milliseconds: 1200), _askAi);
-  }
-
-  /// A felismert szöveg értelmezése AI-val (ha be van kapcsolva).
-  Future<void> _askAi() async {
-    if (!mounted) return;
-    final state = AppScope.read(context);
-    if (!state.aiSettings.isActive || _text.text.trim().isEmpty) return;
-    final generation = ++_generation;
-    setState(() => _aiWorking = true);
-    final outcome = await state.aiInterpreter.interpret(
-      _text.text,
-      AiInputKind.receipt,
-      state.quickEntryContext,
-      fallback: _parse(),
-    );
-    if (!mounted || generation != _generation) return;
-    setState(() {
-      _aiWorking = false;
-      if (outcome.usedAi) {
-        _result = outcome.result;
-        _aiError = null;
-      } else {
-        _aiError = outcome.error;
-      }
-    });
-  }
+  void _interpret() => setState(() => _result = _parse());
 
   Future<void> _book() async {
     if (_busy || !_result.isComplete) return;
@@ -176,14 +139,6 @@ class _ReceiptReviewScreenState extends State<ReceiptReviewScreen> {
                       style: textTheme.bodyMedium,
                     ),
                   QuestionHints(result: _result, today: today),
-                  const SizedBox(height: Space.sm),
-                  AiStatusLine(
-                    active: state.aiSettings.isActive,
-                    provider: state.aiSettings.provider.label,
-                    working: _aiWorking,
-                    usedAi: _result.fromAi,
-                    error: _aiError,
-                  ),
                   const SizedBox(height: Space.lg),
                   QuickResultCard(result: _result, today: today),
                   const SizedBox(height: Space.lg),

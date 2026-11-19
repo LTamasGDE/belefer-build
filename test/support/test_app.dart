@@ -7,7 +7,6 @@ import 'package:belefer/services/exchange_rates.dart';
 import 'package:belefer/services/platform_services.dart';
 import 'package:belefer/state/app_state.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:http/http.dart' as http;
 import 'package:sembast/sembast_memory.dart' hide Transaction;
 
 /// A tesztek rögzített „mai” napja: 2026. november 17., kedd.
@@ -28,7 +27,6 @@ Future<AppState> openTestState({
   WidgetPublisher widget = const NoopWidgetPublisher(),
   CaptureBridge capture = const NoCaptureBridge(),
   ExchangeRates rates = const NoExchangeRates(),
-  http.Client? httpClient,
 }) async {
   final store = await LocalStore.open(
     factory ?? newDatabaseFactoryMemory(),
@@ -43,7 +41,6 @@ Future<AppState> openTestState({
     widget: widget,
     capture: capture,
     rates: rates,
-    httpClient: httpClient,
   );
   await state.load();
   if (!showTour) await state.markTourSeen();
