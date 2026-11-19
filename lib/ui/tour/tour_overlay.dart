@@ -168,9 +168,9 @@ class _TourOverlayState extends State<TourOverlay> {
 
     final card = Material(
       color: colors.raised,
-      elevation: 8,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(Radii.card),
+        side: BorderSide(color: colors.accent.withValues(alpha: 0.6), width: 1.5),
       ),
       child: Padding(
         padding: const EdgeInsets.fromLTRB(

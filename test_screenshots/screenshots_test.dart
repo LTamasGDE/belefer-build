@@ -224,6 +224,8 @@ void main() {
       await tester.pumpAndSettle();
 
       await _tab(tester, 'Áttekintés');
+      await tester.ensureVisible(find.byKey(const ValueKey('quick-entry-bar')));
+      await tester.pumpAndSettle();
       await tester.tap(find.byKey(const ValueKey('quick-entry-bar')));
       await tester.pumpAndSettle();
       await _shot(tester, '15_quick_entry_empty_$mode');
