@@ -131,8 +131,10 @@ void main() {
         'not_a_transaction',
       );
       expect(
-        classifyOffline(revolut('Revolut', 'Új ajánlat vár rád'), context)
-            .status,
+        classifyOffline(
+          revolut('Revolut', 'Új ajánlat vár rád'),
+          context,
+        ).status,
         'not_a_transaction',
       );
     });

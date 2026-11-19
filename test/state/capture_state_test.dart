@@ -103,21 +103,21 @@ void main() {
       final bridge = FakeCaptureBridge();
       final state = await openTestState(capture: bridge);
       bridge.queue.addAll([
-          revolutEvent(
-            'Lidl',
-            'Fizettél 4 590 Ft-ot',
-            DateTime(2026, 11, 16, 18),
-          ),
-          revolutEvent(
-            'Revolut',
-            'Payment declined: insufficient funds',
-            DateTime(2026, 11, 16, 18, 1),
-          ),
-          revolutEvent(
-            'Revolut',
-            '10 000 Ft átkerült a Megtakarítás perselybe',
-            DateTime(2026, 11, 16, 19),
-          ),
+        revolutEvent(
+          'Lidl',
+          'Fizettél 4 590 Ft-ot',
+          DateTime(2026, 11, 16, 18),
+        ),
+        revolutEvent(
+          'Revolut',
+          'Payment declined: insufficient funds',
+          DateTime(2026, 11, 16, 18, 1),
+        ),
+        revolutEvent(
+          'Revolut',
+          '10 000 Ft átkerült a Megtakarítás perselybe',
+          DateTime(2026, 11, 16, 19),
+        ),
       ]);
       final reports = <CaptureReport?>[];
       state.captureReports.addListener(
@@ -149,11 +149,11 @@ void main() {
     test('Geminivel értelmez, a számlát a kártyanévből veszi', () async {
       final bridge = FakeCaptureBridge(supportsNotifications: false);
       final applePayEvent = <Object?, Object?>{
-          'id': 'ap1',
-          'source': 'applepay',
-          'time': DateTime(2026, 11, 17, 8, 15).millisecondsSinceEpoch,
-          'amount': '1 290 Ft',
-          'merchant': 'COSTA COFFEE',
+        'id': 'ap1',
+        'source': 'applepay',
+        'time': DateTime(2026, 11, 17, 8, 15).millisecondsSinceEpoch,
+        'amount': '1 290 Ft',
+        'merchant': 'COSTA COFFEE',
         'card': 'Közös',
       };
       final requests = <http.Request>[];

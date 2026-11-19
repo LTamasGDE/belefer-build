@@ -121,7 +121,10 @@ void main() {
   ) async {
     final state = await pumpBelefer(tester);
     await goToTab(tester, 'Beállítások');
-    expect(find.text('Kikapcsolva: a beépített értelmező dolgozik'), findsOneWidget);
+    expect(
+      find.text('Kikapcsolva: a beépített értelmező dolgozik'),
+      findsOneWidget,
+    );
     await tapVisible(tester, find.byKey(const ValueKey('open-ai')));
 
     await tapVisible(tester, find.text('Gemini'));
