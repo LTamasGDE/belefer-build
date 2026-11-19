@@ -1,7 +1,7 @@
 # Belefér
 
 Magyar nyelvű, személyes pénzügykövető Androidra és iOS-re, Flutterrel.
-Kiadás: **26.11.3**, alkalmazásverzió: `0.3.1+4`.
+Kiadás: **26.11.4**, alkalmazásverzió: `0.3.2+5`.
 
 ## Funkciók
 
@@ -41,6 +41,10 @@ Kiadás: **26.11.3**, alkalmazásverzió: `0.3.1+4`.
   galériából, illetve PDF-számla. A szövegfelismerés a telefonon fut (ML Kit);
   a felismert szöveget és az értelmezést (kereskedő, végösszeg, dátum,
   kategória) átnézed, javítod, majd egy koppintással könyveled.
+  A 26.11.4-től az oldalra fordított, fejjel lefelé álló vagy ferdén
+  lefotózott blokkot is kiegyenesíti a felismert sorok iránya alapján; a
+  végösszeget az „Összesen/Fizetendő” utáni számból veszi (a forintos
+  összegekkel ellenőrizve), a bolt nevét a cím fölötti sorból.
 - **Ismétlődő tételek (26.11.1):** hetente, kéthetente, havonta,
   negyedévente, félévente vagy évente; kezdő és opcionális záró dátummal.
   Esedékességkor maguktól rögzülnek, vagy kérésre jóváhagyásra várnak
@@ -93,8 +97,8 @@ alkalmazás törlésekor az adatok is törlődnek.
 ## APK letöltése (Android)
 
 A telepíthető APK a build-repó kiadásai között van, bejelentkezés nélkül
-letölthető: <https://github.com/LTamasGDE/belefer-build/releases/tag/26.11.3>.
-Telefonon a `belefer-26.11.3.apk` fájlt érdemes letölteni (release mód). A
+letölthető: <https://github.com/LTamasGDE/belefer-build/releases/tag/26.11.4>.
+Telefonon a `belefer-26.11.4.apk` fájlt érdemes letölteni (release mód). A
 `-debug.apk` változat hibakereséshez való. Minden CI-futás a debug APK-t
 `belefer-android-debug-apk` artifactként is feltölti (GitHub-bejelentkezéssel,
 zipben tölthető le).
@@ -107,7 +111,7 @@ idejére (Play Áruház → profil → Play Protect → fogaskerék), vagy telep
 számítógépről USB-n, amit a Play Protect nem tilt:
 
 ```
-adb install -r belefer-26.11.3.apk
+adb install -r belefer-26.11.4.apk
 ```
 
 **Értesítés-hozzáférés Xiaominál:** a HyperOS-ből hiányzik a „Korlátozott
@@ -128,7 +132,7 @@ eltávolítás kellene.
 ## iPhone-ra telepítés (ingyenes Apple ID-val)
 
 iOS-en linkről nem lehet appot telepíteni, ezért a kiadás egy aláíratlan
-csomagot is tartalmaz: `belefer-26.11.3-unsigned.ipa`. Ezt a
+csomagot is tartalmaz: `belefer-26.11.4-unsigned.ipa`. Ezt a
 [SideStore](https://docs.sidestore.io/docs/installation/prerequisites) írja
 alá a saját Apple ID-ddal:
 
