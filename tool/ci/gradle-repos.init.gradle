@@ -1,0 +1,12 @@
+// A Gradle Plugin Portal időnként nem adja ki a Kotlin-csomagokat (a Flutter
+// saját Gradle-bővítményének fordításához); a Maven Central és a Google
+// tárolója ilyenkor is elérhető, ezért ezeket kérdezzük meg először.
+beforeSettings { settings ->
+    settings.pluginManagement {
+        repositories {
+            mavenCentral()
+            google()
+            gradlePluginPortal()
+        }
+    }
+}

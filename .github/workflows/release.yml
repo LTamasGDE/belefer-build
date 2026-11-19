@@ -30,6 +30,11 @@ jobs:
           distribution: temurin
           java-version: "17"
 
+      - name: Gradle-tárolók (Maven Central elöl)
+        run: |
+          mkdir -p ~/.gradle/init.d
+          cp tool/ci/gradle-repos.init.gradle ~/.gradle/init.d/repos.gradle
+
       - uses: subosito/flutter-action@v2
         with:
           channel: stable
