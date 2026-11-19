@@ -60,6 +60,17 @@ jobs:
           distribution: temurin
           java-version: "17"
 
+      - name: Állandó aláírókulcs
+        env:
+          KEYSTORE_B64: ${{ secrets.ANDROID_KEYSTORE_B64 }}
+        run: |
+          if [ -n "$KEYSTORE_B64" ]; then
+            printf '%s' "$KEYSTORE_B64" | base64 -d > "$RUNNER_TEMP/belefer.jks"
+            echo "BELEFER_KEYSTORE=$RUNNER_TEMP/belefer.jks" >> "$GITHUB_ENV"
+          else
+            echo "::warning::Nincs ANDROID_KEYSTORE_B64 titok: az APK ideiglenes kulccsal készül, és nem frissíthető adatvesztés nélkül."
+                      fi
+
       - name: Gradle-tárolók (Maven Central elöl)
         run: |
           mkdir -p ~/.gradle/init.d

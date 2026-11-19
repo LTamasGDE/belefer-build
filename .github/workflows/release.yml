@@ -30,6 +30,18 @@ jobs:
           distribution: temurin
           java-version: "17"
 
+      - name: Állandó aláírókulcs
+        env:
+          KEYSTORE_B64: ${{ secrets.ANDROID_KEYSTORE_B64 }}
+        run: |
+          if [ -n "$KEYSTORE_B64" ]; then
+            printf '%s' "$KEYSTORE_B64" | base64 -d > "$RUNNER_TEMP/belefer.jks"
+            echo "BELEFER_KEYSTORE=$RUNNER_TEMP/belefer.jks" >> "$GITHUB_ENV"
+          else
+            echo "::error::Nincs ANDROID_KEYSTORE_B64 titok: az APK ideiglenes kulccsal készül, és nem frissíthető adatvesztés nélkül."
+            exit 1
+          fi
+
       - name: Gradle-tárolók (Maven Central elöl)
         run: |
           mkdir -p ~/.gradle/init.d
@@ -55,7 +67,7 @@ jobs:
           VERSION=$(grep '^version:' pubspec.yaml | awk '{print $2}')
           echo "APP_VERSION=${VERSION}" >> "$GITHUB_ENV"
           mkdir -p dist
-          # Ajánlott: release módú (gyors, kicsi) APK, debug-kulccsal aláírva.
+          # Ajánlott: release módú (gyors, kicsi) APK, az állandó kulccsal aláírva.
           flutter build apk --release
           cp build/app/outputs/flutter-apk/app-release.apk "dist/belefer-${{ inputs.tag }}.apk"
           # Hibakereséshez: debug módú APK.
@@ -73,7 +85,8 @@ jobs:
           Belefér ${TAG} – alkalmazásverzió ${APP_VERSION}, Flutter ${FLUTTER_VERSION}.
 
           Android teszt-APK. Telefonra a „belefer-${TAG}.apk” fájlt érdemes
-          letölteni (release mód, debug-kulccsal aláírva); a „-debug.apk”
+          letölteni (release mód, állandó kulccsal aláírva, így a következő
+          verziók adatvesztés nélkül települnek rá); a „-debug.apk”
           hibakereséshez való. Telepítés: nyisd meg a letöltött fájlt, és
           engedélyezd az ismeretlen forrásból történő telepítést a böngészőnek
           vagy a fájlkezelőnek.

@@ -1,7 +1,7 @@
 # Belefér
 
 Magyar nyelvű, személyes pénzügykövető Androidra és iOS-re, Flutterrel.
-Kiadás: **26.11.2**, alkalmazásverzió: `0.3.0+3`.
+Kiadás: **26.11.3**, alkalmazásverzió: `0.3.1+4`.
 
 ## Funkciók
 
@@ -93,17 +93,42 @@ alkalmazás törlésekor az adatok is törlődnek.
 ## APK letöltése (Android)
 
 A telepíthető APK a build-repó kiadásai között van, bejelentkezés nélkül
-letölthető: <https://github.com/LTamasGDE/belefer-build/releases/tag/26.11.2>.
-Telefonon a `belefer-26.11.2.apk` fájlt érdemes letölteni (release mód,
-debug-kulccsal aláírva). Nyisd meg a letöltött fájlt, és engedélyezd a
-telepítést ismeretlen forrásból. A `-debug.apk` változat hibakereséshez
-való. Minden CI-futás a debug APK-t `belefer-android-debug-apk`
-artifactként is feltölti (GitHub-bejelentkezéssel, zipben tölthető le).
+letölthető: <https://github.com/LTamasGDE/belefer-build/releases/tag/26.11.3>.
+Telefonon a `belefer-26.11.3.apk` fájlt érdemes letölteni (release mód). A
+`-debug.apk` változat hibakereséshez való. Minden CI-futás a debug APK-t
+`belefer-android-debug-apk` artifactként is feltölti (GitHub-bejelentkezéssel,
+zipben tölthető le).
+
+**Play Protect:** mivel az app értesítés-hozzáférést kér (Revolut), a Google
+Play Protect a böngészőből vagy fájlkezelőből indított telepítést letiltja
+(„Az alkalmazás le van tiltva az eszköz védelme érdekében”, felülbírálás
+nélkül). Két út van: a Play Protect ideiglenes kikapcsolása a telepítés
+idejére (Play Áruház → profil → Play Protect → fogaskerék), vagy telepítés
+számítógépről USB-n, amit a Play Protect nem tilt:
+
+```
+adb install -r belefer-26.11.3.apk
+```
+
+**Értesítés-hozzáférés Xiaominál:** a HyperOS-ből hiányzik a „Korlátozott
+beállítások engedélyezése” menüpont, ezért ott számítógépről kell megadni:
+
+```
+adb shell cmd notification allow_listener com.ventyh1.belefer/com.ventyh1.belefer.BeleferNotificationListener
+```
+
+**Aláírás és frissítés:** a 26.11.3-tól minden APK ugyanazzal az állandó
+kulccsal készül (a build-fork `ANDROID_KEYSTORE_B64` titkából), így az új
+verzió felülről, az adatok megtartásával települ. A korábbi verziókat minden
+CI-futás más ideiglenes kulccsal írta alá: ezekről a 26.11.3-ra egyszer
+eltávolítással kell váltani (ez törli az adatokat). A kulcs biztonsági
+másolata a tulajdonosnál van; ha elveszne, a következő frissítéshez megint
+eltávolítás kellene.
 
 ## iPhone-ra telepítés (ingyenes Apple ID-val)
 
 iOS-en linkről nem lehet appot telepíteni, ezért a kiadás egy aláíratlan
-csomagot is tartalmaz: `belefer-26.11.2-unsigned.ipa`. Ezt a
+csomagot is tartalmaz: `belefer-26.11.3-unsigned.ipa`. Ezt a
 [SideStore](https://docs.sidestore.io/docs/installation/prerequisites) írja
 alá a saját Apple ID-ddal:
 
@@ -117,7 +142,7 @@ aláírás 7 napig érvényes, ezért ennyi időnként frissíteni kell a SideSt
 (**My Apps → Refresh All**, bekapcsolt LocalDevVPN-nel). Az adatok
 frissítéskor megmaradnak.
 
-Új verzióra (pl. 26.11.1 → 26.11.2) ugyanígy kell betölteni az új `.ipa`-t;
+Új verzióra (pl. 26.11.2 → 26.11.3) ugyanígy kell betölteni az új `.ipa`-t;
 az adatok megmaradnak. A 26.11.1 kezdőképernyő-widgetje külön bővítmény, ezért
 a SideStore két App ID-t használ hozzá (ingyenes Apple ID-val hetente legfeljebb
 10 új App ID hozható létre).

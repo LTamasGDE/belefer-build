@@ -4,6 +4,12 @@ plugins {
     id("dev.flutter.flutter-gradle-plugin")
 }
 
+// Állandó aláírókulcs (a CI a ANDROID_KEYSTORE_B64 titokból írja ki). Nélküle
+// minden build más ideiglenes kulcsot kapna, és a frissítés csak az app
+// eltávolítása (és az adatok elvesztése) után települne.
+val beleferKeystore = System.getenv("BELEFER_KEYSTORE")?.let { file(it) }?.takeIf { it.exists() }
+val beleferKeystorePassword = System.getenv("BELEFER_KEYSTORE_PASSWORD") ?: "belefer-android"
+
 android {
     namespace = "com.ventyh1.belefer"
     // Az értesítések bővítménye legalább 37-es SDK-t kér.
@@ -31,12 +37,25 @@ android {
         versionName = flutter.versionName
     }
 
+    signingConfigs {
+        if (beleferKeystore != null) {
+            create("belefer") {
+                storeFile = beleferKeystore
+                storePassword = beleferKeystorePassword
+                keyAlias = "belefer"
+                keyPassword = beleferKeystorePassword
+            }
+        }
+    }
+
     buildTypes {
+        val signing = signingConfigs.findByName("belefer") ?: signingConfigs.getByName("debug")
         release {
-            // TODO: Add your own signing config for the release build.
-            // Signing with the debug keys for now, so `flutter run --release` works.
-            signingConfig = signingConfigs.getByName("debug")
+            signingConfig = signing
             proguardFiles("proguard-rules.pro")
+        }
+        getByName("debug") {
+            signingConfig = signing
         }
         // CI: a kiadási optimalizáló (R8) a debug-buildben is bekapcsolható,
         // hogy az emulátoros próba a kiadással azonos Java-oldalt teszteljen.
