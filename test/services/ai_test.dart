@@ -65,10 +65,7 @@ void main() {
       final text = await client.completeJson(system: 'rendszer', user: 'Lidl');
       expect(jsonDecode(text), {'amount': 4500, 'title': 'Lidl'});
       expect(sent.headers['x-goog-api-key'], 'kulcs');
-      expect(
-        sent.url.path,
-        endsWith('gemini-flash-lite-latest:generateContent'),
-      );
+      expect(sent.url.path, endsWith('gemini-flash-lite-latest:generateContent'));
       // A kulcs nem kerül az URL-be.
       expect(sent.url.toString(), isNot(contains('kulcs')));
       final body = jsonDecode(sent.body) as Map;
@@ -254,16 +251,15 @@ void main() {
           'date': '2026-11-16',
         }),
       );
-      final outcome =
-          await AiInterpreter(
-            client: ai,
-            rates: const NoExchangeRates(),
-          ).interpret(
-            'tegnap lidl 4500',
-            AiInputKind.sentence,
-            context,
-            fallback: interpretQuickEntry('tegnap lidl 4500', context),
-          );
+      final outcome = await AiInterpreter(
+        client: ai,
+        rates: const NoExchangeRates(),
+      ).interpret(
+        'tegnap lidl 4500',
+        AiInputKind.sentence,
+        context,
+        fallback: interpretQuickEntry('tegnap lidl 4500', context),
+      );
       expect(outcome.usedAi, isTrue);
       expect(outcome.result.amount, 4500);
       expect(outcome.result.categoryId, 'groceries');
@@ -281,16 +277,15 @@ void main() {
           'category_id': 'dining',
         }),
       );
-      final outcome =
-          await AiInterpreter(
-            client: ai,
-            rates: const FixedRates({'EUR': 400}),
-          ).interpret(
-            'Paid €4.50 at Starbucks',
-            AiInputKind.notification,
-            context,
-            fallback: interpretQuickEntry('Paid 4.50 Starbucks', context),
-          );
+      final outcome = await AiInterpreter(
+        client: ai,
+        rates: const FixedRates({'EUR': 400}),
+      ).interpret(
+        'Paid €4.50 at Starbucks',
+        AiInputKind.notification,
+        context,
+        fallback: interpretQuickEntry('Paid 4.50 Starbucks', context),
+      );
       expect(outcome.result.amount, 1800);
       expect(outcome.result.notes.join(), contains('EUR'));
     });
@@ -299,65 +294,46 @@ void main() {
       final ai = FakeAiClient(
         (_) => jsonEncode({'amount': 12, 'currency': 'USD', 'title': 'App'}),
       );
-      final outcome =
-          await AiInterpreter(
-            client: ai,
-            rates: const NoExchangeRates(),
-          ).interpret(
-            'Paid \$12 App',
-            AiInputKind.notification,
-            context,
-            fallback: interpretQuickEntry('Paid 12 App', context),
-          );
+      final outcome = await AiInterpreter(
+        client: ai,
+        rates: const NoExchangeRates(),
+      ).interpret(
+        'Paid \$12 App',
+        AiInputKind.notification,
+        context,
+        fallback: interpretQuickEntry('Paid 12 App', context),
+      );
       expect(outcome.result.amount, isNull);
       expect(outcome.result.notes.join(), contains('forintban'));
     });
 
     test('hiba esetén a beépített értelmező dolgozik', () async {
       final fallback = interpretQuickEntry('lidl 4500', context);
-      final outcome =
-          await const AiInterpreter(
-            client: FailingAiClient(
-              AiException('Elfogyott a keret.', retryable: true),
-            ),
-            rates: NoExchangeRates(),
-          ).interpret(
-            'lidl 4500',
-            AiInputKind.sentence,
-            context,
-            fallback: fallback,
-          );
+      final outcome = await const AiInterpreter(
+        client: FailingAiClient(
+          AiException('Elfogyott a keret.', retryable: true),
+        ),
+        rates: NoExchangeRates(),
+      ).interpret('lidl 4500', AiInputKind.sentence, context, fallback: fallback);
       expect(outcome.usedAi, isFalse);
       expect(outcome.error, 'Elfogyott a keret.');
       expect(outcome.retryable, isTrue);
       expect(outcome.result.amount, 4500);
 
-      final garbage =
-          await AiInterpreter(
-            client: FakeAiClient((_) => 'sajnálom'),
-            rates: const NoExchangeRates(),
-          ).interpret(
-            'lidl 4500',
-            AiInputKind.sentence,
-            context,
-            fallback: fallback,
-          );
+      final garbage = await AiInterpreter(
+        client: FakeAiClient((_) => 'sajnálom'),
+        rates: const NoExchangeRates(),
+      ).interpret('lidl 4500', AiInputKind.sentence, context, fallback: fallback);
       expect(garbage.usedAi, isFalse);
       expect(garbage.result.amount, 4500);
     });
 
     test('AI nélkül a tartalék eredmény', () async {
       final fallback = interpretQuickEntry('lidl 4500', context);
-      final outcome =
-          await const AiInterpreter(
-            client: null,
-            rates: NoExchangeRates(),
-          ).interpret(
-            'lidl 4500',
-            AiInputKind.sentence,
-            context,
-            fallback: fallback,
-          );
+      final outcome = await const AiInterpreter(
+        client: null,
+        rates: NoExchangeRates(),
+      ).interpret('lidl 4500', AiInputKind.sentence, context, fallback: fallback);
       expect(outcome.usedAi, isFalse);
       expect(outcome.error, isNull);
       expect(identical(outcome.result, fallback), isTrue);

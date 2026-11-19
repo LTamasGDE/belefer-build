@@ -168,7 +168,9 @@ class _CaptureScreenState extends State<CaptureScreen>
                           ),
                         ),
                       ),
-                      Expanded(child: Text(step, style: textTheme.bodyMedium)),
+                      Expanded(
+                        child: Text(step, style: textTheme.bodyMedium),
+                      ),
                     ],
                   ),
                 ),
@@ -231,8 +233,7 @@ class _CaptureScreenState extends State<CaptureScreen>
           padding: EdgeInsets.zero,
           child: Column(
             children: [
-              for (final (index, entry)
-                  in state.captureLog.take(30).indexed) ...[
+              for (final (index, entry) in state.captureLog.take(30).indexed) ...[
                 if (index > 0) const RowDivider(),
                 _LogTile(entry: entry),
               ],

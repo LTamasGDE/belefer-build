@@ -397,8 +397,8 @@ class TransactionTile extends StatelessWidget {
     final auto = transaction.source != null;
     final details = [
       category,
-      if (account != null) account.name,
-      if (note != null) note,
+      ?account?.name,
+      ?note,
     ].join(' · ');
     final isExpense = transaction.type == EntryType.expense;
     // Nagy betűméretnél az összeg a megnevezés alá kerül.

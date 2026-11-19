@@ -71,7 +71,7 @@ class GeminiClient implements AiClient {
     required String system,
     required String user,
   }) async {
-    final models = [?_workingModel, model, ...fallbackModels].toSet().toList();
+    final models = {?_workingModel, model, ...fallbackModels}.toList();
     AiException? last;
     for (final candidate in models) {
       try {

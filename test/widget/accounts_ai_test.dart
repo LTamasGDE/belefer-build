@@ -48,7 +48,7 @@ void main() {
     expect(joint.isDefault, isFalse);
     expect(find.textContaining('felismerés: Közös, 7710'), findsOneWidget);
 
-    await tester.pageBack();
+    await tester.binding.handlePopRoute();
     await tester.pumpAndSettle();
     await goToTab(tester, 'Áttekintés');
     expect(_inFilter('Összes számla'), findsOneWidget);
@@ -121,17 +121,14 @@ void main() {
   ) async {
     final state = await pumpBelefer(tester);
     await goToTab(tester, 'Beállítások');
-    expect(
-      find.text('Kikapcsolva: a beépített értelmező dolgozik'),
-      findsOneWidget,
-    );
+    expect(find.text('Kikapcsolva: a beépített értelmező dolgozik'), findsOneWidget);
     await tapVisible(tester, find.byKey(const ValueKey('open-ai')));
 
     await tapVisible(tester, find.text('Gemini'));
     expect(find.byKey(const ValueKey('ai-key')), findsOneWidget);
     expect(find.textContaining('aistudio.google.com'), findsOneWidget);
     await enterField(tester, 'ai-key', 'tesztkulcs');
-    await tester.pageBack();
+    await tester.binding.handlePopRoute();
     await tester.pumpAndSettle();
     expect(state.aiSettings.provider, AiProvider.gemini);
     expect(state.aiSettings.geminiKey, 'tesztkulcs');

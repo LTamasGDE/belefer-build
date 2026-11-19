@@ -108,7 +108,9 @@ class OverviewScreen extends StatelessWidget {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.stretch,
                           children: [
-                            SizedBox(height: state.accounts.isEmpty ? 56 : 104),
+                            SizedBox(
+                              height: state.accounts.isEmpty ? 56 : 104,
+                            ),
                             if (forecastCard != null) ...[
                               forecastCard,
                               const SizedBox(height: Space.lg),

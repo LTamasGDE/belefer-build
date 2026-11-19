@@ -37,13 +37,14 @@ CaptureProcessor processor(AiClient? client, {ExchangeRates? rates}) =>
       accounts: const [_own, _joint],
     );
 
-CapturedEvent revolut(String text, {String title = 'Revolut'}) => CapturedEvent(
-  id: text,
-  source: CaptureSource.revolut,
-  receivedAt: DateTime(2026, 11, 16, 18, 20),
-  title: title,
-  text: text,
-);
+CapturedEvent revolut(String text, {String title = 'Revolut'}) =>
+    CapturedEvent(
+      id: text,
+      source: CaptureSource.revolut,
+      receivedAt: DateTime(2026, 11, 16, 18, 20),
+      title: title,
+      text: text,
+    );
 
 CapturedEvent applePay({
   required String amount,
@@ -66,21 +67,16 @@ void main() {
   final context = QuickEntryContext(today: testToday);
 
   test('AI-val rögzít, az esemény napjára, a felismert számlára', () async {
-    final decision =
-        await processor(
-          replying({
-            'status': 'ok',
-            'type': 'expense',
-            'amount': 4590,
-            'title': 'Lidl',
-            'category_id': 'groceries',
-            'account_hint': 'Közös',
-          }),
-        ).decide(
-          revolut('Fizettél 4 590 Ft-ot', title: 'Lidl'),
-          context,
-          recent: [],
-        );
+    final decision = await processor(
+      replying({
+        'status': 'ok',
+        'type': 'expense',
+        'amount': 4590,
+        'title': 'Lidl',
+        'category_id': 'groceries',
+        'account_hint': 'Közös',
+      }),
+    ).decide(revolut('Fizettél 4 590 Ft-ot', title: 'Lidl'), context, recent: []);
     expect(decision.outcome, CaptureOutcome.booked);
     final transaction = decision.transaction!;
     expect(transaction.amount, 4590);
@@ -108,21 +104,14 @@ void main() {
   });
 
   test('AI nélkül a beépített besorolás szűr', () async {
-    final failed = await processor(null).decide(
-      revolut('Payment declined at Lidl, 4 590 Ft'),
-      context,
-      recent: [],
-    );
+    final failed = await processor(
+      null,
+    ).decide(revolut('Payment declined at Lidl, 4 590 Ft'), context, recent: []);
     expect(failed.outcome, CaptureOutcome.failed);
 
-    final booked =
-        await processor(
-          const FailingAiClient(AiException('Nincs net', retryable: true)),
-        ).decide(
-          revolut('Fizettél 4 590 Ft-ot', title: 'Lidl'),
-          context,
-          recent: [],
-        );
+    final booked = await processor(
+      const FailingAiClient(AiException('Nincs net', retryable: true)),
+    ).decide(revolut('Fizettél 4 590 Ft-ot', title: 'Lidl'), context, recent: []);
     expect(booked.outcome, CaptureOutcome.booked);
     expect(booked.transaction!.amount, 4590);
     // Nincs felismerő szó: az alapértelmezett számla.
@@ -138,12 +127,11 @@ void main() {
   });
 
   test('deviza AI nélkül is átváltva', () async {
-    final decision =
-        await processor(null, rates: const FixedRates({'EUR': 400})).decide(
-          revolut('Paid €4.50 at Starbucks', title: 'Starbucks'),
-          context,
-          recent: [],
-        );
+    final decision = await processor(
+      null,
+      rates: const FixedRates({'EUR': 400}),
+    ).decide(revolut('Paid €4.50 at Starbucks', title: 'Starbucks'), context,
+        recent: []);
     expect(decision.outcome, CaptureOutcome.booked);
     expect(decision.transaction!.amount, 1800);
     expect(decision.transaction!.note, contains('EUR'));

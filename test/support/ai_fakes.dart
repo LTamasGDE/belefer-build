@@ -23,6 +23,8 @@ class FailingAiClient implements AiClient {
   final AiException error;
 
   @override
-  Future<String> completeJson({required String system, required String user}) =>
-      Future.error(error);
+  Future<String> completeJson({
+    required String system,
+    required String user,
+  }) => Future.error(error);
 }

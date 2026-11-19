@@ -230,7 +230,10 @@ class AiStatusLine extends StatelessWidget {
         : usedAi
         ? (Icons.auto_awesome_rounded, '$provider értelmezte')
         : error != null
-        ? (Icons.cloud_off_rounded, '$error A beépített értelmező dolgozik.')
+        ? (
+            Icons.cloud_off_rounded,
+            '$error A beépített értelmező dolgozik.',
+          )
         : (Icons.auto_awesome_outlined, 'A $provider szünet után értelmez.');
     return Semantics(
       liveRegion: true,
@@ -243,7 +246,11 @@ class AiStatusLine extends StatelessWidget {
               child: CircularProgressIndicator(strokeWidth: 2, color: faint),
             )
           else
-            Icon(icon, size: 16, color: usedAi ? colors.accentText : faint),
+            Icon(
+              icon,
+              size: 16,
+              color: usedAi ? colors.accentText : faint,
+            ),
           const SizedBox(width: 6),
           Expanded(
             child: Text(

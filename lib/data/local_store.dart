@@ -156,9 +156,11 @@ class LocalStore {
   Future<Account> saveAccount(Account account) async {
     return _db.transaction((txn) async {
       if (account.isDefault) {
-        await _accounts.update(txn, <String, Object?>{
-          'default': false,
-        }, finder: Finder(filter: Filter.equals('default', true)));
+        await _accounts.update(
+          txn,
+          <String, Object?>{'default': false},
+          finder: Finder(filter: Filter.equals('default', true)),
+        );
       }
       final id = account.id;
       if (id == null) {
@@ -175,9 +177,11 @@ class LocalStore {
     await _db.transaction((txn) async {
       final filter = Filter.equals('account', id);
       for (final store in [_transactions, _recurring]) {
-        await store.update(txn, <String, Object?>{
-          'account': null,
-        }, finder: Finder(filter: filter));
+        await store.update(
+          txn,
+          <String, Object?>{'account': null},
+          finder: Finder(filter: filter),
+        );
       }
       await _accounts.record(id).delete(txn);
     });
