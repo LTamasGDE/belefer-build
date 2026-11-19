@@ -70,13 +70,27 @@ QuickEntryResult interpretReceipt(String text, QuickEntryContext context) {
   // Végösszeg: a legerősebb kulcsszavas sor (vagy az utána következő) összege.
   int? total;
   var bestStrength = 0;
+  // Az „Összesen” utáni sorból jött, pénznem nélküli összeg gyenge jelölt.
+  var totalIsWeak = false;
   for (var index = 0; index < lines.length; index++) {
     final foldedLine = foldForMatching(lines[index]);
     final strength = _keywordStrength(foldedLine);
     if (strength == 0 || strength < bestStrength) continue;
-    var amount = _lineAmount(lines[index], excludeQuantities: false);
+    // Az összeg a felirat után áll („ÖSSZESEN: 12 450”); az előtte lévő
+    // számok a tételsor maradékai lehetnek („Dualshock 4 … Összesen:”).
+    final (before, after) = _splitAtTotalKeyword(lines[index]);
+    var amount = _lineAmount(after, excludeQuantities: false);
+    var weak = false;
     if (amount == null && index + 1 < lines.length) {
-      amount = _lineAmount(lines[index + 1], excludeQuantities: false);
+      amount = _lineAmount(
+        lines[index + 1],
+        excludeQuantities: false,
+        needsCurrency: true,
+      );
+      if (amount == null) {
+        amount = _lineAmount(lines[index + 1], excludeQuantities: false);
+        weak = amount != null;
+      }
     }
     // Ferde fotón a jobb oldali összeg a felirat elé kerülhet egy sorral
     // („67999 Ft.” / „Összesen:”): pénznemmel jelölt összeg az előző sorból.
@@ -87,10 +101,18 @@ QuickEntryResult interpretReceipt(String text, QuickEntryContext context) {
         needsCurrency: true,
       );
     }
+    if (amount == null && before.isNotEmpty) {
+      amount = _lineAmount(
+        before,
+        excludeQuantities: true,
+        needsCurrency: true,
+      );
+    }
     if (amount == null) continue;
     if (strength > bestStrength || (total != null && amount > total)) {
       total = amount;
       bestStrength = strength;
+      totalIsWeak = weak;
     }
   }
   if (total == null) {
@@ -120,6 +142,41 @@ QuickEntryResult interpretReceipt(String text, QuickEntryContext context) {
     }
     if (total != null) {
       notes.add('Nem találtam „Összesen” sort – ellenőrizd az összeget.');
+    }
+  }
+
+  // Valószerűtlenül kicsi (pl. egy tételsor „4”-ese) vagy gyenge forrásból
+  // jött végösszeg (pl. egy cikkszám a következő sorban): ha van forinttal
+  // jelölt összeg, és ez nincs köztük, inkább a legnagyobb forintos.
+  if (total != null && (total < 50 || totalIsWeak)) {
+    final current = total;
+    int? largest;
+    for (final line in lines) {
+      final foldedLine = foldForMatching(line);
+      if (_excludedLineWords.any(foldedLine.contains)) continue;
+      final amount = _lineAmount(
+        line,
+        excludeQuantities: true,
+        needsCurrency: true,
+      );
+      if (amount != null && (largest == null || amount > largest)) {
+        largest = amount;
+      }
+    }
+    if (largest != null && largest >= 50 && largest != current) {
+      final currencyAmounts = <int>{};
+      for (final line in lines) {
+        final amount = _lineAmount(
+          line,
+          excludeQuantities: true,
+          needsCurrency: true,
+        );
+        if (amount != null) currencyAmounts.add(amount);
+      }
+      if (current < 50 || !currencyAmounts.contains(current)) {
+        total = largest;
+        notes.add('A végösszeget a forintos összegekből vettem – ellenőrizd.');
+      }
     }
   }
 
@@ -177,7 +234,11 @@ QuickEntryResult interpretReceipt(String text, QuickEntryContext context) {
   }
   merchant ??= sellerLine != null
       ? _cleanCompanyName(sellerLine)
-      : (lines.isNotEmpty ? _cleanCompanyName(_firstNameLine(lines)) : null);
+      : (lines.isNotEmpty
+            ? _cleanCompanyName(
+                _nameAboveAddress(lines) ?? _firstNameLine(lines),
+              )
+            : null);
 
   // Kategória a tételsorokból, ha a kereskedőből nem derült ki.
   if (categoryId == null) {
@@ -324,16 +385,62 @@ const List<String> _labelPrefixes = [
   'tel ', 'cim ', 'penztar', 'ap ', 'nav ', 'termek', 'idopont', 'azonosito',
 ];
 
+final RegExp _streetWord = RegExp(
+  r'\b(ut|utca|u\.|ter|krt|korut|fasor|rakpart|sor|koz|lakotelep)\b',
+);
+
+/// Névnek látszó sor: betűk, magánhangzó, nem felirat („Sorszám: …”).
+bool _looksLikeName(String line) {
+  final letters = line.replaceAll(RegExp(r'[^A-Za-zÁÉÍÓÖŐÚÜŰáéíóöőúüű]'), '');
+  if (letters.length < 3 || RegExp(r'^\d').hasMatch(line.trim())) return false;
+  if (letters.length < line.replaceAll(' ', '').length * 0.5) return false;
+  if (!RegExp('[aeiouáéíóöőúüűAEIOUÁÉÍÓÖŐÚÜŰ]').hasMatch(letters)) {
+    return false;
+  }
+  final folded = foldForMatching(line);
+  return !_labelPrefixes.any(folded.startsWith);
+}
+
+/// A bolt neve általában közvetlenül a cím fölött áll („Konzol Game” /
+/// „Budapest XIX., Üllői út 214/3.”).
+String? _nameAboveAddress(List<String> lines) {
+  for (var index = 1; index < lines.length && index < 14; index++) {
+    final folded = foldForMatching(lines[index]);
+    if (!RegExp(r'\d').hasMatch(folded) || !_streetWord.hasMatch(folded)) {
+      continue;
+    }
+    for (var above = index - 1; above >= 0 && above >= index - 3; above--) {
+      if (_looksLikeName(lines[above])) return lines[above];
+    }
+    return null;
+  }
+  return null;
+}
+
 String _firstNameLine(List<String> lines) {
   for (final line in lines.take(8)) {
-    final letters = line.replaceAll(RegExp(r'[^A-Za-zÁÉÍÓÖŐÚÜŰáéíóöőúüű]'), '');
-    if (letters.length < 3 || RegExp(r'^\d').hasMatch(line)) continue;
-    // „Sorszám: …”, „Dátum: …” és hasonló feliratos sorok nem nevek.
-    final folded = foldForMatching(line);
-    if (_labelPrefixes.any(folded.startsWith)) continue;
-    return line;
+    if (_looksLikeName(line)) return line;
   }
   return lines.first;
+}
+
+/// A sor szövege a végösszeg felirata előtt és után.
+(String, String) _splitAtTotalKeyword(String line) {
+  for (final token in tokenize(line)) {
+    final word = token.folded.replaceAll('0', 'o');
+    final isKeyword = _totalKeywords.any((entry) {
+      final keyword = entry.$1;
+      if (keyword.contains(' ')) return false;
+      return word == keyword ||
+          word.startsWith(keyword) ||
+          (keyword.length >= 6 &&
+              editDistance(word, keyword, maxDistance: 2) <= 2);
+    });
+    if (isKeyword && token.end <= line.length) {
+      return (line.substring(0, token.start), line.substring(token.end));
+    }
+  }
+  return ('', line);
 }
 
 /// Cégforma és címrészek nélküli név („LIDL Magyarország Bt.” → „Lidl

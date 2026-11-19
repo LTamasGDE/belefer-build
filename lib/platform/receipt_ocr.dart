@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:math' as math;
 import 'dart:typed_data';
 
 import 'package:file_picker/file_picker.dart';
@@ -84,6 +85,13 @@ class MlKitReceiptScanner implements ReceiptScanner {
               line.boundingBox.top,
               line.boundingBox.right,
               line.boundingBox.bottom,
+              // A sarkokból derül ki az elforgatott vagy ferde blokk iránya.
+              corners: line.cornerPoints.length == 4
+                  ? [
+                      for (final point in line.cornerPoints)
+                        math.Point(point.x.toDouble(), point.y.toDouble()),
+                    ]
+                  : null,
             ),
       ]);
     } finally {
