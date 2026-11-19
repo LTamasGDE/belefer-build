@@ -181,9 +181,14 @@ class _HomeShellState extends State<HomeShell> with WidgetsBindingObserver {
             ),
         ],
       ),
+      // Öt fülnél a feliratok nagy betűméretnél szó közben törnének; a
+      // navigáció felirata ezért legfeljebb normál méretű (az ikonok és a
+      // képernyőolvasó felirata változatlan).
       bottomNavigationBar: KeyedSubtree(
         key: TourKeys.navigation,
-        child: NavigationBar(
+        child: MediaQuery.withClampedTextScaling(
+          maxScaleFactor: 1,
+          child: NavigationBar(
           selectedIndex: _index,
           onDestinationSelected: (index) => setState(() => _index = index),
           labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
@@ -214,6 +219,7 @@ class _HomeShellState extends State<HomeShell> with WidgetsBindingObserver {
               label: 'Beállítások',
             ),
           ],
+        ),
         ),
       ),
     );

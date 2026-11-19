@@ -94,6 +94,23 @@ void main() {
       expect(forecast.projectedBalance, 400000 - 34000 - 180000 - 26000);
     });
 
+    test('a kézzel rögzített fix kiadásokat nem vetíti ki napi átlaggal', () {
+      final forecast = forecastMonth(
+        transactions: [
+          ...transactions,
+          _t(4, EntryType.expense, 'Albérlet', 150000, 'housing',
+              CalendarDay(2026, 11, 2)),
+          _t(5, EntryType.expense, 'lakbér', 20000, 'other_expense',
+              CalendarDay(2026, 11, 3)),
+        ],
+        rules: [rent, salary],
+        month: YearMonth(2026, 11),
+        today: today,
+      )!;
+      expect(forecast.actualExpense, 34000 + 170000);
+      expect(forecast.projectedVariableExpense, 26000);
+    });
+
     test('múltbeli hónapra nincs előrejelzés', () {
       expect(
         forecastMonth(

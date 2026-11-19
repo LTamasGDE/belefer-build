@@ -1,6 +1,24 @@
 import 'calendar.dart';
 import 'models.dart';
 import 'recurring.dart';
+import 'text_fold.dart';
+
+/// A jellemzően havonta egyszer fizetett kategóriák: ezeket nem vetítjük
+/// ki napi átlaggal (a lakbér nem ismétlődik minden nap).
+const Set<String> fixedExpenseCategories = {
+  'housing',
+  'utilities',
+  'subscriptions',
+};
+
+/// Változó (napról napra előforduló) kiadás-e a tétel: nem ismétlődő
+/// szabályból jött, nem fix kategóriájú, és a neve sem egyezik egy
+/// ismétlődő tételével (pl. kézzel rögzített lakbér).
+bool isVariableExpense(Transaction transaction, Set<String> ruleTitles) =>
+    transaction.type == EntryType.expense &&
+    transaction.recurringId == null &&
+    !fixedExpenseCategories.contains(transaction.categoryId) &&
+    !ruleTitles.contains(foldForMatching(transaction.title));
 
 /// Egy várható (még nem rögzített) ismétlődő tétel.
 class UpcomingItem {
@@ -83,6 +101,7 @@ Forecast? forecastMonth({
   if (month.compareTo(current) < 0) return null;
   final isCurrent = month == current;
 
+  final ruleTitles = {for (final rule in rules) foldForMatching(rule.title)};
   var actualIncome = 0;
   var actualExpense = 0;
   var variableSoFar = 0;
@@ -92,7 +111,7 @@ Forecast? forecastMonth({
       actualIncome += transaction.amount;
     } else {
       actualExpense += transaction.amount;
-      if (transaction.recurringId == null &&
+      if (isVariableExpense(transaction, ruleTitles) &&
           transaction.date.compareTo(today) <= 0) {
         variableSoFar += transaction.amount;
       }
@@ -130,7 +149,11 @@ Forecast? forecastMonth({
       : month.daysInMonth;
   final elapsedDays = isCurrent ? today.day : 0;
 
-  final historyDaily = _historicalDailyVariableExpense(transactions, current);
+  final historyDaily = _historicalDailyVariableExpense(
+    transactions,
+    current,
+    ruleTitles,
+  );
   final useHistory = elapsedDays < 7 && historyDaily != null;
   final double daily;
   if (useHistory) {
@@ -157,6 +180,7 @@ Forecast? forecastMonth({
 double? _historicalDailyVariableExpense(
   Iterable<Transaction> transactions,
   YearMonth current,
+  Set<String> ruleTitles,
 ) {
   final months = [
     current.previous,
@@ -171,8 +195,7 @@ double? _historicalDailyVariableExpense(
     for (final transaction in transactions) {
       if (!month.contains(transaction.date)) continue;
       any = true;
-      if (transaction.type == EntryType.expense &&
-          transaction.recurringId == null) {
+      if (isVariableExpense(transaction, ruleTitles)) {
         sum += transaction.amount;
       }
     }
