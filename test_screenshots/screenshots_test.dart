@@ -4,12 +4,16 @@
 //   flutter test test_screenshots --update-goldens
 // A képek a test_screenshots/goldens/ mappába kerülnek.
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:belefer/app.dart';
 import 'package:belefer/data/local_store.dart';
+import 'package:belefer/domain/accounts.dart';
 import 'package:belefer/domain/calendar.dart';
+import 'package:belefer/domain/model/belefer_model.dart';
 import 'package:belefer/domain/models.dart';
 import 'package:belefer/domain/recurring.dart';
+import 'package:belefer/services/platform_services.dart';
 import 'package:belefer/state/app_state.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -49,15 +53,32 @@ Transaction _tx(
   note: note,
 );
 
+class _AndroidCapture implements CaptureBridge {
+  @override
+  bool get supportsNotifications => true;
+  @override
+  bool get supportsApplePay => false;
+  @override
+  Future<List<Map<Object?, Object?>>> drain() async => const [];
+  @override
+  Future<bool> isNotificationAccessGranted() async => true;
+  @override
+  Future<void> openNotificationAccessSettings() async {}
+  @override
+  Future<void> setRevolutCaptureEnabled(bool enabled) async {}
+}
+
 Future<AppState> _state({
   bool withData = true,
   bool dark = false,
   bool tour = false,
+  CaptureBridge capture = const NoCaptureBridge(),
 }) async {
   final store = await LocalStore.open(newDatabaseFactoryMemory(), 'shot.db');
   final state = AppState(
     store: store,
-    versionLabel: '0.2.0 (2)',
+    capture: capture,
+    versionLabel: '0.3.0 (3)',
     today: () => _today,
     now: () => DateTime(2026, 11, 17, 12),
   );
@@ -306,6 +327,77 @@ void main() {
     await tester.pumpAndSettle();
     await tester.drag(find.byType(ListView).first, const Offset(0, 3000));
     await _shot(tester, '11_form_errors_large_text');
+  });
+
+  testWidgets('számlák, saját modell, automatikus rögzítés', (tester) async {
+    _phone(tester);
+    currentModel = BeleferModel.parse(
+      File('assets/model/belefer_model.bin').readAsBytesSync(),
+    );
+    addTearDown(() => currentModel = null);
+    final state = (await tester.runAsync(() async {
+      final state = await _state(capture: _AndroidCapture());
+      await state.saveAccount(
+        const Account(
+          name: 'Saját',
+          kind: AccountKind.personal,
+          isDefault: true,
+        ),
+      );
+      final joint = await state.saveAccount(
+        const Account(
+          name: 'Közös',
+          kind: AccountKind.shared,
+          matchers: ['Közös', 'Joint'],
+        ),
+      );
+      await state.saveAccount(
+        const Account(name: 'Megtakarítás', kind: AccountKind.savings),
+      );
+      await state.saveTransaction(
+        Transaction(
+          type: EntryType.expense,
+          title: 'Lidl',
+          amount: 12400,
+          categoryId: 'groceries',
+          date: CalendarDay(2026, 11, 17),
+          note: 'Revolut-értesítés · Joint',
+          accountId: joint.id,
+          source: 'revolut',
+        ),
+      );
+      await state.setRevolutCaptureEnabled(true);
+      return state;
+    }))!;
+    await _pump(tester, state);
+    await _shot(tester, '23_overview_accounts');
+    await _tab(tester, 'Tételek');
+    await _shot(tester, '24_transactions_accounts');
+    await _tab(tester, 'Beállítások');
+    await _shot(tester, '25_settings_model_capture');
+    await tester.tap(find.byKey(const ValueKey('open-capture')));
+    await tester.pumpAndSettle();
+    await _shot(tester, '26_capture');
+    await tester.tap(find.text('Számlák és felismerő szavak'));
+    await tester.pumpAndSettle();
+    await _shot(tester, '27_accounts');
+    await tester.tap(find.text('Közös'));
+    await tester.pumpAndSettle();
+    await _shot(tester, '28_account_editor');
+    Navigator.of(tester.element(find.byType(BottomSheet))).pop();
+    await tester.pumpAndSettle();
+    Navigator.of(tester.element(find.text('Számlák').first)).pop();
+    await tester.pumpAndSettle();
+    Navigator.of(tester.element(find.text('Automatikus rögzítés').first)).pop();
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('open-model')));
+    await tester.pumpAndSettle();
+    await tester.enterText(
+      find.byKey(const ValueKey('model-try')),
+      'tegnap a hentesnél 6700',
+    );
+    await tester.pumpAndSettle();
+    await _shot(tester, '29_model');
   });
 
   testWidgets('széles kijelző (tablet, fekvő)', (tester) async {
