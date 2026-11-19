@@ -204,8 +204,7 @@ OfflineCaptureReading classifyOffline(
   // A saját modell az értesítés egészéből dönt; ha bizonytalan, a
   // kulcsszavak.
   final model = currentModel;
-  final modelStatus =
-      model != null && event.source == CaptureSource.revolut
+  final modelStatus = model != null && event.source == CaptureSource.revolut
       ? model.classify('status', event.description)
       : null;
   if (event.source == CaptureSource.applePay) {

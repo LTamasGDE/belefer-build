@@ -89,8 +89,14 @@ void main() {
       test('sikertelen fizetés, saját számlák közötti mozgás, egyéb', () async {
         for (final (text, expected) in [
           ('Payment declined at Lidl, 4 590 Ft', CaptureOutcome.failed),
-          ('Nincs elég fedezet a 4 590 Ft-os fizetéshez', CaptureOutcome.failed),
-          ('10 000 Ft átkerült a Megtakarítás perselybe', CaptureOutcome.transfer),
+          (
+            'Nincs elég fedezet a 4 590 Ft-os fizetéshez',
+            CaptureOutcome.failed,
+          ),
+          (
+            '10 000 Ft átkerült a Megtakarítás perselybe',
+            CaptureOutcome.transfer,
+          ),
           ('You topped up 20 000 HUF', CaptureOutcome.transfer),
           ('Erősítsd meg a bejelentkezést', CaptureOutcome.ignored),
         ]) {
@@ -105,13 +111,12 @@ void main() {
       });
 
       test('deviza átváltva', () async {
-        final decision = await processor(
-          rates: const FixedRates({'EUR': 400}),
-        ).decide(
-          revolut('Paid €4.50 at Starbucks', title: 'Starbucks'),
-          context,
-          recent: [],
-        );
+        final decision = await processor(rates: const FixedRates({'EUR': 400}))
+            .decide(
+              revolut('Paid €4.50 at Starbucks', title: 'Starbucks'),
+              context,
+              recent: [],
+            );
         expect(decision.outcome, CaptureOutcome.booked);
         expect(decision.transaction!.amount, 1800);
         expect(decision.transaction!.note, contains('EUR'));
@@ -127,42 +132,45 @@ void main() {
         expect(decision.log.detail, contains('forintban'));
       });
 
-      test('Apple Pay: kártyanév szerinti számla, ismétlés kiszűrése', () async {
-        final first = await processor().decide(
-          applePay(amount: '2 990 Ft', merchant: 'Rossmann', card: 'Közös'),
-          context,
-          recent: [],
-        );
-        expect(first.outcome, CaptureOutcome.booked);
-        expect(first.transaction!.accountId, 3);
-        expect(first.transaction!.source, 'applepay');
+      test(
+        'Apple Pay: kártyanév szerinti számla, ismétlés kiszűrése',
+        () async {
+          final first = await processor().decide(
+            applePay(amount: '2 990 Ft', merchant: 'Rossmann', card: 'Közös'),
+            context,
+            recent: [],
+          );
+          expect(first.outcome, CaptureOutcome.booked);
+          expect(first.transaction!.accountId, 3);
+          expect(first.transaction!.source, 'applepay');
 
-        // Elutasított, majd 3 perc múlva megismételt érintés.
-        final retry = await processor().decide(
-          applePay(
-            amount: '2 990 Ft',
-            merchant: 'Rossmann',
-            card: 'Közös',
-            at: DateTime(2026, 11, 17, 9, 3),
-          ),
-          context,
-          recent: [first.log],
-        );
-        expect(retry.outcome, CaptureOutcome.duplicate);
+          // Elutasított, majd 3 perc múlva megismételt érintés.
+          final retry = await processor().decide(
+            applePay(
+              amount: '2 990 Ft',
+              merchant: 'Rossmann',
+              card: 'Közös',
+              at: DateTime(2026, 11, 17, 9, 3),
+            ),
+            context,
+            recent: [first.log],
+          );
+          expect(retry.outcome, CaptureOutcome.duplicate);
 
-        // Fél óra múlva már új vásárlás.
-        final later = await processor().decide(
-          applePay(
-            amount: '2 990 Ft',
-            merchant: 'Rossmann',
-            card: 'Közös',
-            at: DateTime(2026, 11, 17, 9, 40),
-          ),
-          context,
-          recent: [first.log],
-        );
-        expect(later.outcome, CaptureOutcome.booked);
-      });
+          // Fél óra múlva már új vásárlás.
+          final later = await processor().decide(
+            applePay(
+              amount: '2 990 Ft',
+              merchant: 'Rossmann',
+              card: 'Közös',
+              at: DateTime(2026, 11, 17, 9, 40),
+            ),
+            context,
+            recent: [first.log],
+          );
+          expect(later.outcome, CaptureOutcome.booked);
+        },
+      );
 
       test('Apple Pay: összeg és kereskedő a mezőkből', () async {
         final decision = await processor().decide(

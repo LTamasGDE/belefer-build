@@ -106,9 +106,9 @@ int fnv1a(String text) {
   int dimBits,
 ) {
   final mask = (1 << dimBits) - 1;
-  final buckets = {for (final feature in features) fnv1a(feature) & mask}
-      .toList()
-    ..sort();
+  final buckets = {
+    for (final feature in features) fnv1a(feature) & mask,
+  }.toList()..sort();
   return (
     buckets: buckets,
     weight: buckets.isEmpty ? 0.0 : 1 / math.sqrt(buckets.length),

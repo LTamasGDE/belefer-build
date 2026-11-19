@@ -38,7 +38,8 @@ class ModelPrediction {
   }
 
   String get best => labels[_bestIndex];
-  double get confidence => probabilities.isEmpty ? 0 : probabilities[_bestIndex];
+  double get confidence =>
+      probabilities.isEmpty ? 0 : probabilities[_bestIndex];
 
   double probabilityOf(String label) {
     final index = labels.indexOf(label);
@@ -106,14 +107,17 @@ class ModelHead {
   List<double> probabilities(List<int> buckets, double weight) {
     final sums = List<int>.filled(labels.length, 0);
     for (final column in buckets) {
-      for (var k = _firstAtOrAfter(column);
-          k < columns.length && columns[k] == column;
-          k++) {
+      for (
+        var k = _firstAtOrAfter(column);
+        k < columns.length && columns[k] == column;
+        k++
+      ) {
         sums[labelIndexes[k]] += weights[k];
       }
     }
     final logits = [
-      for (var c = 0; c < labels.length; c++) bias[c] + scale * weight * sums[c],
+      for (var c = 0; c < labels.length; c++)
+        bias[c] + scale * weight * sums[c],
     ];
     final top = logits.reduce(math.max);
     final exps = [for (final logit in logits) math.exp(logit - top)];
@@ -154,7 +158,9 @@ class BeleferModel {
       final name = reader.shortString();
       final kind = reader.uint8();
       final labelCount = reader.uint8();
-      final labels = [for (var i = 0; i < labelCount; i++) reader.shortString()];
+      final labels = [
+        for (var i = 0; i < labelCount; i++) reader.shortString(),
+      ];
       final scale = reader.float32();
       final bias = Float64List(labelCount);
       for (var i = 0; i < labelCount; i++) {

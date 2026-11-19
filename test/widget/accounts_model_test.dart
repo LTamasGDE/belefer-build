@@ -130,7 +130,10 @@ void main() {
     await goToTab(tester, 'Beállítások');
     await tapVisible(tester, find.byKey(const ValueKey('open-model')));
     expect(find.text('Saját modell'), findsWidgets);
-    expect(find.textContaining('1 saját megnevezésedet ismeri'), findsOneWidget);
+    expect(
+      find.textContaining('1 saját megnevezésedet ismeri'),
+      findsOneWidget,
+    );
     expect(find.textContaining('súly'), findsOneWidget);
 
     await enterField(tester, 'model-try', 'tegnap a hentesnél 6700');

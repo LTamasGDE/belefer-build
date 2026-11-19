@@ -56,7 +56,10 @@ void main() {
     });
 
     test('a modellfájl fejei', () {
-      expect(model.heads.keys, containsAll(['category', 'intent', 'status', 'title']));
+      expect(
+        model.heads.keys,
+        containsAll(['category', 'intent', 'status', 'title']),
+      );
       expect(model.heads['intent']!.labels, [
         'cancel_recurring',
         'change_recurring',
@@ -145,7 +148,10 @@ void main() {
         ).status,
         'not_a_transaction',
       );
-      final paid = classifyOffline(event('Lidl', 'Fizettél 4 590 Ft-ot'), context);
+      final paid = classifyOffline(
+        event('Lidl', 'Fizettél 4 590 Ft-ot'),
+        context,
+      );
       expect(paid.status, 'ok');
       expect(paid.result.type, EntryType.expense);
       expect(paid.result.amount, 4590);

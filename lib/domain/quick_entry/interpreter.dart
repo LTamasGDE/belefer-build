@@ -284,10 +284,9 @@ QuickEntryResult interpretQuickEntry(String text, QuickEntryContext context) {
         if (!used.contains(i) && !verbTokens.contains(i))
           RegExp(r'^\d').hasMatch(folded[i]) ? '#' : folded[i],
     ];
-    final recalled = PersonalMemory.of(context.history).recall(
-      leftover,
-      threshold: 0.55,
-    );
+    final recalled = PersonalMemory.of(
+      context.history,
+    ).recall(leftover, threshold: 0.55);
     if (recalled != null) {
       votes.add(
         _CategoryVote(

@@ -573,10 +573,7 @@ class AppState extends ChangeNotifier {
     if (raw.isEmpty) return null;
     final events = [for (final map in raw) CapturedEvent.fromMap(map)]
       ..sort((a, b) => a.receivedAt.compareTo(b.receivedAt));
-    final processor = CaptureProcessor(
-      rates: _rates,
-      accounts: _accounts,
-    );
+    final processor = CaptureProcessor(rates: _rates, accounts: _accounts);
     final booked = <Transaction>[];
     var skipped = 0;
     final log = [..._captureLog];
