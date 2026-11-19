@@ -69,17 +69,13 @@ const _receipts = [
     amount: 3102,
     title: 'Bambi Presszó',
   ),
-  _Receipt(
-    'MOL',
-    [
-      ('MOL Nyrt.', ''),
-      ('1117 Budapest, Október 23. utca 6.', ''),
-      ('EVO 95 BENZIN 32,5 l', '20 443'),
-      ('ÖSSZESEN:', '20 443 Ft'),
-      ('Bankkártya', '20 443'),
-    ],
-    amount: 20443,
-  ),
+  _Receipt('MOL', [
+    ('MOL Nyrt.', ''),
+    ('1117 Budapest, Október 23. utca 6.', ''),
+    ('EVO 95 BENZIN 32,5 l', '20 443'),
+    ('ÖSSZESEN:', '20 443 Ft'),
+    ('Bankkártya', '20 443'),
+  ], amount: 20443),
 ];
 
 /// A blokk képe a megadott szögben elforgatva (mint egy ferdén vagy oldalra
