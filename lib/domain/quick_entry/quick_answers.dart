@@ -381,8 +381,7 @@ _Recurring? _findRecurring(List<String> words, QuickEntryContext context) {
 String _answerWhen(List<String> words, QuickEntryContext context) {
   final found = _findRecurring(words, context);
   if (found == null) {
-    return 'Erről még nem tudok eleget. Ha néhányszor rögzíted, megtanulom, '
-        'mikor szokott lenni.';
+    return 'Ezt most még nem tudom megmondani.';
   }
   final next = found.next == null
       ? ''
@@ -507,8 +506,7 @@ String _answerUsual(List<String> words, QuickEntryContext context) {
           ),
         )) {
       final amount = habit.usualAmount ?? habit.medianAmount;
-      return '${habit.title}: általában ${formatForint(amount)} '
-          '(${habit.count} alkalom alapján).';
+      return '${habit.title}: általában ${formatForint(amount)}.';
     }
   }
   // Kategória havi átlaga az előző három teljes hónapból.
@@ -545,13 +543,11 @@ String _answerUsual(List<String> words, QuickEntryContext context) {
     }
   }
   if (monthsWithData == 0) {
-    return 'Ehhez még kevés a korábbi adat – egy-két hónap után már tudni '
-        'fogom.';
+    return 'Ezt most még nem tudom megmondani.';
   }
   final average = (total / monthsWithData).round();
   final what = categories.isEmpty
       ? (income ? 'bevételed' : 'kiadásod')
       : '${categories.map(categoryName).toSet().join(', ')} kiadásod';
-  return 'A havi $what átlagosan ${formatForint(average)} '
-      '(az előző $monthsWithData hónap alapján).';
+  return 'A havi $what átlagosan ${formatForint(average)}.';
 }

@@ -19,24 +19,18 @@ Kiadás: **26.11.6**, alkalmazásverzió: `0.3.4+7`.
   bevétel?*); ha minden megvan, egy koppintással könyvel, visszavonhatóan.
   Ismétlődő tételt is felvesz („Netflix havi 4990”), lemond („lemondtam a
   Spotifyt”) vagy módosít („mostantól 190 ezer a lakbér”).
-- **Tanul rólad, kérdezés nélkül (26.11.6):**
-  - **Szokásos összeg és számla:** a „kávé” beírására a szokásos 950 Ft-ot
-    írja be, a Lidl a szokásos Közös számlára kerül. Ez tipp, felülírhatod.
-  - **Felismert ismétlődések:** pl. a fizetés minden hónap 10-én, a Spotify
-    havonta. Akkor is felismeri, ha nem állítottad be ismétlődőnek, és tudja,
-    mikor várható a következő. Az előrejelzés is számol velük.
-  - **Leckék a javításaidból:** amit beírtál, és ahogy végül elmentetted
-    („pötyi” → Pöttyös kisbolt), legközelebb ugyanígy érti.
-  - **„Mi van, mi lesz” kártya:** az eddigi költés üteme a szokásoshoz képest,
-    a szokatlanul sokat vivő kategória, a következő hét várható tételei.
-  - **Új kérdések:** „mikor jön a fizetés?”, „mi lesz a héten?”, „mennyi marad
-    a hónap végére?”, „mennyibe kerül általában a kávé?”, „mennyit szoktam
-    költeni kajára?”.
-  - **Saját modell › Amit megtanultam rólad:** itt látod, mit tanult.
-    A tanult kifejezéseket egy gombbal elfelejtheti.
-  - **Újratanított modell:** 143 600 példa; az átvezetést és a kérdést is
-    felismeri.
-  - Minden a telefonon marad.
+- **Tanul rólad, kérdezés nélkül (26.11.6):** a háttérben, a tételeidből
+  tanul, de ezt nem mutatja: egyszerűen jól tippel.
+  - A „kávé” beírására a szokásos összeget írja be, a Lidl a szokásos
+    számlára kerül. Mindkettőt felülírhatod.
+  - Felismeri a rendszeres tételeket (pl. mikor jön a fizetés), akkor is, ha
+    nem állítottad be őket ismétlődőnek. Az előrejelzés is számol velük.
+  - A javításaidból is tanul: amit beírtál, és ahogy végül elmentetted
+    („pötyi” → Pöttyös kisbolt).
+  - Kérdezni is lehet: „mikor jön a fizetés?”, „mi lesz a héten?”, „mennyi
+    marad a hónap végére?”, „mennyibe kerül általában a kávé?”.
+  - Újratanított modell (143 600 példa), az átvezetést és a kérdést is
+    felismeri. Minden a telefonon marad.
 - **Gyorsrögzítés bővítése (26.11.5):**
   - **Átvezetés:** saját számlák, bankok és készpénz közötti mozgás
     („átraktam 10 ezret a CIB-ről a Revolut sajátra”, „félretettem 30 ezret”,

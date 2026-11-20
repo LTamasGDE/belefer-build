@@ -954,7 +954,6 @@ QuickEntryResult _interpretSingle(
   final guessed = <QuickQuestion>{
     if (amountPick != null && notes.any((note) => note.startsWith('Több')))
       QuickQuestion.amount,
-    if (amountFromHabit) QuickQuestion.amount,
     if ((intent == QuickIntent.record ||
             intent == QuickIntent.createRecurring) &&
         (!categoryKnown ||

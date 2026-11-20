@@ -43,10 +43,7 @@ String? questionAnswer(
   switch (question) {
     case QuickQuestion.amount:
       if (!answered) return null;
-      if (result.hasAmount) {
-        return '${formatForint(result.amount!)}'
-            '${result.amountFromHabit ? ' (szokásos)' : ''}';
-      }
+      if (result.hasAmount) return formatForint(result.amount!);
       return formatForeign(result.foreignAmount!, result.currency!);
     case QuickQuestion.what:
       if (!answered) return null;
@@ -106,10 +103,6 @@ class QuestionHints extends StatelessWidget {
           : '${current.items.length} tételt találtam – nézd át őket.';
     } else if (missing.isNotEmpty) {
       headline = 'Az automatikus könyveléshez ezekre kell válasz:';
-    } else if (guessed.length == 1 &&
-        guessed.contains(QuickQuestion.amount) &&
-        current!.amountFromHabit) {
-      headline = 'A szokásos összeget írtam be – ha most más volt, írd hozzá.';
     } else if (guessed.isNotEmpty) {
       headline =
           'Ellenőrizd: ${guessed.map(questionLabel).join(' ')} – erre csak '
@@ -219,9 +212,7 @@ class _HintPill extends StatelessWidget {
                   ),
                   if (answer != null)
                     TextSpan(
-                      text:
-                          ' $answer'
-                          '${guess && done && !answer!.endsWith(')') ? ' (tipp)' : ''}',
+                      text: ' $answer${guess && done ? ' (tipp)' : ''}',
                       style: TextStyle(
                         color: done ? colors.text : faint,
                         fontWeight: done ? FontWeight.w600 : FontWeight.w400,
@@ -300,9 +291,7 @@ class QuickResultCard extends StatelessWidget {
             ? null
             : accountName?.call(result.accountId!);
         if (account != null) {
-          details.add(
-            'Számla: $account${result.accountFromHabit ? ' (szokásos)' : ''}',
-          );
+          details.add('Számla: $account');
         }
       case QuickIntent.createRecurring:
         final rule = result.toRecurringRule();

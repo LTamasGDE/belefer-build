@@ -1,6 +1,5 @@
 import 'package:belefer/domain/accounts.dart';
 import 'package:belefer/domain/calendar.dart';
-import 'package:belefer/domain/insights.dart';
 import 'package:belefer/domain/model/personal_knowledge.dart';
 import 'package:belefer/domain/models.dart';
 import 'package:belefer/domain/quick_entry/interpreter.dart';
@@ -104,12 +103,14 @@ void main() {
   });
 
   group('kérdezés nélkül', () {
-    test('a szokásos összeget és számlát beírja tippként', () {
+    test('a szokásos összeget és számlát magától beírja', () {
       final result = interpretQuickEntry('kávé', context);
       expect(result.amount, 950);
       expect(result.amountFromHabit, isTrue);
       expect(result.accountId, 1);
-      expect(result.guessed, contains(QuickQuestion.amount));
+      // Nem jelzi, hogy tipp: egyszerűen a jó összeget írja be.
+      expect(result.guessed, isEmpty);
+      expect(result.isSure, isTrue);
       expect(result.isComplete, isTrue);
     });
 
@@ -201,16 +202,6 @@ void main() {
 
     test('szokásos ár', () {
       expect(answer('mennyibe kerül általában a kávé?'), contains('950'));
-    });
-
-    test('megállapítások a hónapról', () {
-      final insights = buildInsights(
-        transactions: history,
-        rules: const [],
-        knowledge: context.knowledge,
-        today: today,
-      );
-      expect(insights.any((i) => i.kind == InsightKind.pace), isTrue);
     });
   });
 }

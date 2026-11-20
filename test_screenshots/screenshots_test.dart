@@ -229,9 +229,6 @@ void main() {
       await tester.pumpAndSettle();
       await tester.tap(legend);
       await _shot(tester, '02_overview_selected_$mode');
-      await tester.ensureVisible(find.byKey(const ValueKey('insights-card')));
-      await tester.pumpAndSettle();
-      await _shot(tester, '02b_overview_insights_$mode');
 
       await _tab(tester, 'Tételek');
       await _shot(tester, '03_transactions_$mode');
@@ -428,9 +425,6 @@ void main() {
     );
     await tester.pumpAndSettle();
     await _shot(tester, '29_model');
-    await tester.ensureVisible(find.byKey(const ValueKey('learned-panel')));
-    await tester.pumpAndSettle();
-    await _shot(tester, '29b_model_learned');
   });
 
   testWidgets('széles kijelző (tablet, fekvő)', (tester) async {

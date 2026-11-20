@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 
 import '../../domain/forecast.dart';
 import '../../domain/formatting.dart';
-import '../../domain/insights.dart';
 import '../../services/platform_services.dart';
 import '../../state/app_scope.dart';
 import '../quick_entry/quick_entry_screen.dart';
@@ -220,9 +219,7 @@ class ForecastCard extends StatelessWidget {
                     ),
                     Expanded(
                       child: Text(
-                        item.learned
-                            ? '${item.rule.title} (szokás szerint)'
-                            : item.rule.title,
+                        item.rule.title,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: textTheme.bodyMedium,
@@ -368,65 +365,6 @@ class PendingSection extends StatelessWidget {
             child: PendingCard(occurrence: occurrence),
           ),
       ],
-    );
-  }
-}
-
-/// „Mi van, mi lesz”: az eddigi költés üteme, a szokatlan kategória és a
-/// következő napok várható tételei – a tanult szokásokból.
-class InsightsCard extends StatelessWidget {
-  const InsightsCard({super.key, required this.insights});
-
-  final List<Insight> insights;
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = context.colors;
-    final textTheme = Theme.of(context).textTheme;
-    return Panel(
-      key: const ValueKey('insights-card'),
-      child: Semantics(
-        container: true,
-        label: 'Mi van, mi lesz: ${insights.map((i) => i.text).join(' ')}',
-        excludeSemantics: true,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Row(
-              children: [
-                Icon(
-                  Icons.lightbulb_outline_rounded,
-                  size: 20,
-                  color: colors.accentText,
-                ),
-                const SizedBox(width: Space.sm),
-                Text('Mi van, mi lesz', style: textTheme.titleMedium),
-              ],
-            ),
-            for (final insight in insights) ...[
-              const SizedBox(height: Space.md),
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Icon(
-                    switch (insight.kind) {
-                      InsightKind.pace => Icons.speed_rounded,
-                      InsightKind.unusual => Icons.trending_up_rounded,
-                      InsightKind.upcoming => Icons.event_rounded,
-                    },
-                    size: 18,
-                    color: colors.textMuted,
-                  ),
-                  const SizedBox(width: Space.sm),
-                  Expanded(
-                    child: Text(insight.text, style: textTheme.bodyMedium),
-                  ),
-                ],
-              ),
-            ],
-          ],
-        ),
-      ),
     );
   }
 }

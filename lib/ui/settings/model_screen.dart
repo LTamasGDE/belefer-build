@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 
-import '../../domain/formatting.dart';
 import '../../domain/model/belefer_model.dart';
 import '../../domain/quick_entry/interpreter.dart';
 import '../../state/app_scope.dart';
@@ -82,14 +81,11 @@ class _ModelScreenState extends State<ModelScreen> {
                                   '(${_thousands(model.weightCount)} súly).',
                       ),
                       const SizedBox(height: Space.md),
-                      _Fact(
+                      const _Fact(
                         icon: Icons.school_rounded,
-                        text: state.learnedTitleCount == 0
-                            ? 'A tételeidből is tanul: amit rögzítesz vagy '
-                                  'javítasz, azt legközelebb így sorolja be.'
-                            : 'A tételeidből is tanul: '
-                                  '${state.learnedTitleCount} saját '
-                                  'megnevezésedet ismeri.',
+                        text:
+                            'A tételeidből is tanul: amit rögzítesz vagy '
+                            'javítasz, azt legközelebb így érti.',
                       ),
                       const SizedBox(height: Space.md),
                       const _Fact(
@@ -102,8 +98,6 @@ class _ModelScreenState extends State<ModelScreen> {
                     ],
                   ),
                 ),
-                const SectionTitle('Amit megtanultam rólad'),
-                const _LearnedPanel(),
                 const SectionTitle('Próbáld ki'),
                 TextField(
                   key: const ValueKey('model-try'),
@@ -160,147 +154,6 @@ class _Fact extends StatelessWidget {
           child: Text(text, style: Theme.of(context).textTheme.bodyMedium),
         ),
       ],
-    );
-  }
-}
-
-/// A tételekből és a javításaidból tanult tudás, kérdezés nélkül.
-class _LearnedPanel extends StatelessWidget {
-  const _LearnedPanel();
-
-  @override
-  Widget build(BuildContext context) {
-    final state = AppScope.of(context);
-    final colors = context.colors;
-    final textTheme = Theme.of(context).textTheme;
-    final today = state.today();
-    final knowledge = state.knowledge;
-    final habits =
-        knowledge.habits.values
-            .where((habit) => habit.count >= 2 && habit.usualAmount != null)
-            .toList()
-          ..sort((a, b) => b.count.compareTo(a.count));
-    final accounts = {
-      for (final account in state.accounts)
-        if (account.id != null) account.id!: account.name,
-    };
-    final accountHabits =
-        knowledge.habits.values
-            .where(
-              (habit) =>
-                  habit.usualAccountId != null &&
-                  accounts.containsKey(habit.usualAccountId),
-            )
-            .toList()
-          ..sort((a, b) => b.count.compareTo(a.count));
-    final muted = textTheme.bodySmall?.copyWith(color: colors.textMuted);
-    final empty =
-        knowledge.patterns.isEmpty &&
-        habits.isEmpty &&
-        accountHabits.isEmpty &&
-        state.lessons.isEmpty;
-    return Panel(
-      key: const ValueKey('learned-panel'),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          if (empty)
-            Text(
-              'Még nem ismerlek eléggé. Ahogy rögzítesz, megtanulom a szokásos '
-              'összegeidet, számláidat, a rendszeres tételeidet (pl. mikor jön '
-              'a fizetés), és a javításaidból a saját szavaidat is – kérdezés '
-              'nélkül.',
-              style: textTheme.bodyMedium,
-            ),
-          if (knowledge.patterns.isNotEmpty) ...[
-            Text('Rendszeres tételek', style: textTheme.labelLarge),
-            const SizedBox(height: Space.xs),
-            for (final pattern in knowledge.patterns.take(8))
-              Padding(
-                padding: const EdgeInsets.symmetric(vertical: 2),
-                child: Text(
-                  '${pattern.title}: ${pattern.rhythm}, '
-                  '${formatForint(pattern.amount)} – következő: '
-                  '${formatShortDate(pattern.next, today)}',
-                  style: textTheme.bodyMedium,
-                ),
-              ),
-            const SizedBox(height: Space.md),
-          ],
-          if (habits.isNotEmpty) ...[
-            Text('Szokásos összegek', style: textTheme.labelLarge),
-            const SizedBox(height: Space.xs),
-            for (final habit in habits.take(8))
-              Padding(
-                padding: const EdgeInsets.symmetric(vertical: 2),
-                child: Text(
-                  '${habit.title}: ${formatForint(habit.usualAmount!)} '
-                  '(${habit.count}×)',
-                  style: textTheme.bodyMedium,
-                ),
-              ),
-            const SizedBox(height: Space.md),
-          ],
-          if (accountHabits.isNotEmpty) ...[
-            Text('Szokásos számlák', style: textTheme.labelLarge),
-            const SizedBox(height: Space.xs),
-            for (final habit in accountHabits.take(6))
-              Padding(
-                padding: const EdgeInsets.symmetric(vertical: 2),
-                child: Text(
-                  '${habit.title} → ${accounts[habit.usualAccountId]}',
-                  style: textTheme.bodyMedium,
-                ),
-              ),
-            const SizedBox(height: Space.md),
-          ],
-          if (state.lessons.isNotEmpty) ...[
-            Text(
-              '${state.lessons.length} kifejezésedet tanultam meg a '
-              'gyorsrögzítésből (amit beírtál, és ahogy elmentetted).',
-              style: muted,
-            ),
-            Align(
-              alignment: Alignment.centerLeft,
-              child: TextButton(
-                key: const ValueKey('forget-lessons'),
-                onPressed: () async {
-                  final ok = await showDialog<bool>(
-                    context: context,
-                    builder: (dialogContext) => AlertDialog(
-                      title: const Text('Elfelejtsem a tanult kifejezéseket?'),
-                      content: const Text(
-                        'A tételeid megmaradnak, és a szokásaidat továbbra is '
-                        'látom belőlük; csak a gyorsrögzítésből tanult '
-                        'kifejezések törlődnek.',
-                      ),
-                      actions: [
-                        TextButton(
-                          onPressed: () =>
-                              Navigator.of(dialogContext).pop(false),
-                          child: const Text('Mégse'),
-                        ),
-                        TextButton(
-                          onPressed: () =>
-                              Navigator.of(dialogContext).pop(true),
-                          child: const Text('Elfelejtés'),
-                        ),
-                      ],
-                    ),
-                  );
-                  if (ok ?? false) await state.forgetLessons();
-                },
-                child: const Text('Tanult kifejezések elfelejtése'),
-              ),
-            ),
-          ],
-          if (!empty)
-            Text(
-              'Mindez csak a telefonodon van, a tételeidből számolom.',
-              style: muted,
-            ),
-        ],
-      ),
     );
   }
 }

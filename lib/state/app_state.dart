@@ -10,7 +10,6 @@ import '../domain/categories.dart';
 import '../domain/demo_data.dart';
 import '../domain/forecast.dart';
 import '../domain/formatting.dart';
-import '../domain/insights.dart';
 import '../domain/model/personal_knowledge.dart';
 import '../domain/model/personal_memory.dart';
 import '../domain/models.dart';
@@ -171,19 +170,6 @@ class AppState extends ChangeNotifier {
     month: _selectedMonth,
     today: _today(),
   );
-
-  /// „Mi van, mi lesz”: az aktuális hónap megállapításai.
-  List<Insight> get insights => isCurrentMonth
-      ? buildInsights(
-          transactions: _visibleTransactions,
-          rules: [
-            for (final rule in activeRules)
-              if (_inSelectedAccount(rule.accountId)) rule,
-          ],
-          knowledge: knowledge,
-          today: _today(),
-        )
-      : const [];
 
   // --- Tanult tudás ---
 
