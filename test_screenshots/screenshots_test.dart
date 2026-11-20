@@ -262,6 +262,19 @@ void main() {
       );
       await tester.pumpAndSettle();
       await _shot(tester, '17_quick_entry_recurring_$mode');
+      for (final (name, text) in const [
+        ('17a_quick_entry_transfer', 'Átraktam 10000 forintot CIB számláról a revolut sajátra'),
+        ('17b_quick_entry_multi', 'kávé 900, ebéd 2800, mozi 3000'),
+        ('17c_quick_entry_question', 'mennyit költöttem ebben a hónapban?'),
+        ('17d_quick_entry_guess', 'xyz 5000'),
+      ]) {
+        await tester.enterText(
+          find.byKey(const ValueKey('quick-entry-field')),
+          text,
+        );
+        await tester.pumpAndSettle();
+        await _shot(tester, '${name}_$mode');
+      }
       await tester.tap(find.byTooltip('Bezárás'));
       await tester.pumpAndSettle();
 
