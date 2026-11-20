@@ -130,7 +130,7 @@ String answerQuestion(
   // Időszak.
   var start = YearMonth.of(today).firstDay;
   var end = today;
-  var label = '${monthName(today.month)}ban eddig';
+  var label = '${_inMonth(today.month)} eddig';
   final previousMonth =
       words.any((w) => w == 'mult' || w == 'elozo') &&
       words.any((w) => w.startsWith('honap'));
@@ -138,7 +138,7 @@ String answerQuestion(
     final month = YearMonth.of(today).previous;
     start = month.firstDay;
     end = _addDays(month.next.firstDay, -1);
-    label = '${monthName(month.month)}ban';
+    label = _inMonth(month.month);
   } else if (words.any((w) => w == 'ma' || w == 'mai')) {
     start = today;
     label = 'ma';
@@ -154,7 +154,7 @@ String answerQuestion(
     label = lastWeek ? 'a múlt héten' : 'ezen a héten';
   } else if (words.any((w) => w == 'iden' || w == 'evben')) {
     start = CalendarDay(today.year, 1, 1);
-    label = '${today.year}-ben eddig';
+    label = 'idén eddig';
   } else {
     for (var m = 0; m < 12; m++) {
       if (!words.any((w) => w.startsWith(_monthStems[m]))) continue;
@@ -166,8 +166,10 @@ String answerQuestion(
       final last = _addDays(month.next.firstDay, -1);
       end = last.compareTo(today) > 0 ? today : last;
       label = month == YearMonth.of(today)
-          ? '${monthName(month.month)}ban eddig'
-          : '${month.year}. ${monthName(month.month)}ban';
+          ? '${_inMonth(month.month)} eddig'
+          : month.year == today.year
+          ? _inMonth(month.month)
+          : '${month.year}. ${_inMonth(month.month)}';
       break;
     }
   }
@@ -176,6 +178,11 @@ String answerQuestion(
   final categories = <String>{};
   for (final word in words) {
     if (word.length < 3 || stopWords.contains(word)) continue;
+    // A kérdés mértéke nem kategória („bevételem”, „kiadásom”).
+    if (const ['bevetel', 'kiadas', 'koltes', 'penz', 'egyenleg', 'marad']
+        .any(word.startsWith)) {
+      continue;
+    }
     for (final keyword in keywords) {
       if (keyword.key.contains(' ')) continue;
       if (word == keyword.key ||
@@ -243,3 +250,7 @@ String _help(List<String> words) {
 
 CalendarDay _addDays(CalendarDay day, int days) =>
     CalendarDay(day.year, day.month, day.day + days);
+
+/// „novemberben”, „októberben”, „januárban” (hangrendi illeszkedéssel).
+String _inMonth(int month) =>
+    '${monthName(month)}${month >= 9 ? 'ben' : 'ban'}';
