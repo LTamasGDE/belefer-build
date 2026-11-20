@@ -89,7 +89,9 @@ List<Insight> buildInsights({
     final ratio = (spentSoFar - usual) / usual;
     final percent = (ratio.abs() * 100).round();
     if (percent >= 10) {
-      final multiple = (spentSoFar / usual).toStringAsFixed(1).replaceAll('.', ',');
+      final multiple = (spentSoFar / usual)
+          .toStringAsFixed(1)
+          .replaceAll('.', ',');
       final how = ratio >= 1
           ? 'ez kb. a szokásos $multiple-szerese'
           : '$percent%-kal ${ratio > 0 ? 'több' : 'kevesebb'}';
