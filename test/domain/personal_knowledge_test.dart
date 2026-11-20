@@ -60,6 +60,14 @@ void main() {
         CalendarDay(2026, 10, d),
         account: 3,
       ),
+    for (var d = 4; d <= 28; d += 8)
+      _t(
+        'Lidl',
+        5200 + d * 100,
+        'groceries',
+        CalendarDay(2026, 9, d),
+        account: 3,
+      ),
   ];
   final context = QuickEntryContext(
     today: today,

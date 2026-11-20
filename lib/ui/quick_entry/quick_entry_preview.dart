@@ -106,6 +106,11 @@ class QuestionHints extends StatelessWidget {
           : '${current.items.length} tételt találtam – nézd át őket.';
     } else if (missing.isNotEmpty) {
       headline = 'Az automatikus könyveléshez ezekre kell válasz:';
+    } else if (guessed.length == 1 &&
+        guessed.contains(QuickQuestion.amount) &&
+        current!.amountFromHabit) {
+      headline =
+          'A szokásos összeget írtam be – ha most más volt, írd hozzá.';
     } else if (guessed.isNotEmpty) {
       headline =
           'Ellenőrizd: ${guessed.map(questionLabel).join(' ')} – erre csak '

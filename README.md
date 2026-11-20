@@ -1,7 +1,7 @@
 # Belefér
 
 Magyar nyelvű, személyes pénzügykövető Androidra és iOS-re, Flutterrel.
-Kiadás: **26.11.5**, alkalmazásverzió: `0.3.3+6`.
+Kiadás: **26.11.6**, alkalmazásverzió: `0.3.4+7`.
 
 ## Funkciók
 
@@ -19,6 +19,24 @@ Kiadás: **26.11.5**, alkalmazásverzió: `0.3.3+6`.
   bevétel?*); ha minden megvan, egy koppintással könyvel, visszavonhatóan.
   Ismétlődő tételt is felvesz („Netflix havi 4990”), lemond („lemondtam a
   Spotifyt”) vagy módosít („mostantól 190 ezer a lakbér”).
+- **Tanul rólad, kérdezés nélkül (26.11.6):**
+  - **Szokásos összeg és számla:** a „kávé” beírására a szokásos 950 Ft-ot
+    írja be, a Lidl a szokásos Közös számlára kerül. Ez tipp, felülírhatod.
+  - **Felismert ismétlődések:** pl. a fizetés minden hónap 10-én, a Spotify
+    havonta. Akkor is felismeri, ha nem állítottad be ismétlődőnek, és tudja,
+    mikor várható a következő. Az előrejelzés is számol velük.
+  - **Leckék a javításaidból:** amit beírtál, és ahogy végül elmentetted
+    („pötyi” → Pöttyös kisbolt), legközelebb ugyanígy érti.
+  - **„Mi van, mi lesz” kártya:** az eddigi költés üteme a szokásoshoz képest,
+    a szokatlanul sokat vivő kategória, a következő hét várható tételei.
+  - **Új kérdések:** „mikor jön a fizetés?”, „mi lesz a héten?”, „mennyi marad
+    a hónap végére?”, „mennyibe kerül általában a kávé?”, „mennyit szoktam
+    költeni kajára?”.
+  - **Saját modell › Amit megtanultam rólad:** itt látod, mit tanult.
+    A tanult kifejezéseket egy gombbal elfelejtheti.
+  - **Újratanított modell:** 143 600 példa; az átvezetést és a kérdést is
+    felismeri.
+  - Minden a telefonon marad.
 - **Gyorsrögzítés bővítése (26.11.5):**
   - **Átvezetés:** saját számlák, bankok és készpénz közötti mozgás
     („átraktam 10 ezret a CIB-ről a Revolut sajátra”, „félretettem 30 ezret”,
@@ -121,8 +139,8 @@ alkalmazás törlésekor az adatok is törlődnek.
 ## APK letöltése (Android)
 
 A telepíthető APK a build-repó kiadásai között van, bejelentkezés nélkül
-letölthető: <https://github.com/LTamasGDE/belefer-build/releases/tag/26.11.5>.
-Telefonon a `belefer-26.11.5.apk` fájlt érdemes letölteni (release mód). A
+letölthető: <https://github.com/LTamasGDE/belefer-build/releases/tag/26.11.6>.
+Telefonon a `belefer-26.11.6.apk` fájlt érdemes letölteni (release mód). A
 `-debug.apk` változat hibakereséshez való. Minden CI-futás a debug APK-t
 `belefer-android-debug-apk` artifactként is feltölti (GitHub-bejelentkezéssel,
 zipben tölthető le).
@@ -135,7 +153,7 @@ idejére (Play Áruház → profil → Play Protect → fogaskerék), vagy telep
 számítógépről USB-n, amit a Play Protect nem tilt:
 
 ```
-adb install -r belefer-26.11.5.apk
+adb install -r belefer-26.11.6.apk
 ```
 
 **Értesítés-hozzáférés Xiaominál:** a HyperOS-ből hiányzik a „Korlátozott
@@ -156,7 +174,7 @@ eltávolítás kellene.
 ## iPhone-ra telepítés (ingyenes Apple ID-val)
 
 iOS-en linkről nem lehet appot telepíteni, ezért a kiadás egy aláíratlan
-csomagot is tartalmaz: `belefer-26.11.5-unsigned.ipa`. Ezt a
+csomagot is tartalmaz: `belefer-26.11.6-unsigned.ipa`. Ezt a
 [SideStore](https://docs.sidestore.io/docs/installation/prerequisites) írja
 alá a saját Apple ID-ddal:
 

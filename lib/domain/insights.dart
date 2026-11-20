@@ -4,6 +4,7 @@ library;
 
 import 'calendar.dart';
 import 'categories.dart';
+import 'forecast.dart';
 import 'formatting.dart';
 import 'model/personal_knowledge.dart';
 import 'models.dart';
@@ -43,13 +44,19 @@ List<Insight> buildInsights({
     month.previous.previous.previous,
   ];
 
-  // Az eddigi költés a hónap ugyanazon napjáig, az előző hónapok átlagához.
+  // Az eddigi (változó) költés a hónap ugyanazon napjáig, az előző hónapok
+  // átlagához. A fix tételek (lakbér, rezsi, előfizetések, ismétlődők) nem
+  // számítanak: azok minden hónapban ugyanannyiak, csak torzítanák az ütemet.
+  final fixedTitles = {
+    for (final rule in rules) foldForMatching(rule.title),
+    for (final pattern in knowledge.patterns) pattern.key,
+  };
   var spentSoFar = 0;
   final byCategoryNow = <String, int>{};
   for (final t in transactions) {
     if (t.type != EntryType.expense || !month.contains(t.date)) continue;
     if (t.date.compareTo(today) > 0) continue;
-    spentSoFar += t.amount;
+    if (isVariableExpense(t, fixedTitles)) spentSoFar += t.amount;
     byCategoryNow.update(
       t.categoryId,
       (v) => v + t.amount,
@@ -60,13 +67,16 @@ List<Insight> buildInsights({
   var monthsWithData = 0;
   final byCategoryUsual = <String, int>{};
   for (final m in previous) {
-    final hasData = transactions.any((t) => m.contains(t.date));
-    if (!hasData) continue;
+    // Csak a rendesen vezetett hónapok számítanak (legalább 5 tétel).
+    final count = transactions.where((t) => m.contains(t.date)).length;
+    if (count < 5) continue;
     monthsWithData++;
     final cutoff = today.day.clamp(1, m.daysInMonth);
     for (final t in transactions) {
       if (t.type != EntryType.expense || !m.contains(t.date)) continue;
-      if (t.date.day <= cutoff) usualSoFar += t.amount;
+      if (t.date.day <= cutoff && isVariableExpense(t, fixedTitles)) {
+        usualSoFar += t.amount;
+      }
       byCategoryUsual.update(
         t.categoryId,
         (v) => v + t.amount,
@@ -79,19 +89,23 @@ List<Insight> buildInsights({
     final ratio = (spentSoFar - usual) / usual;
     final percent = (ratio.abs() * 100).round();
     if (percent >= 10) {
+      final multiple = (spentSoFar / usual).toStringAsFixed(1).replaceAll('.', ',');
+      final how = ratio >= 1
+          ? 'ez kb. a szokásos $multiple-szerese'
+          : '$percent%-kal ${ratio > 0 ? 'több' : 'kevesebb'}';
       insights.add(
         Insight(
           InsightKind.pace,
-          'Ilyenkorra általában kb. ${formatForint(_round(usual))} szokott '
-          'elmenni – most ${formatForint(spentSoFar)}, $percent%-kal '
-          '${ratio > 0 ? 'több' : 'kevesebb'}.',
+          'A napi költéseidre ilyenkorra általában kb. '
+          '${formatForint(_round(usual))} szokott elmenni – most '
+          '${formatForint(spentSoFar)}, $how.',
         ),
       );
     } else {
       insights.add(
         Insight(
           InsightKind.pace,
-          'A költésed a szokásos ütemben halad: eddig '
+          'A napi költéseid a szokásos ütemben haladnak: eddig '
           '${formatForint(spentSoFar)} (ilyenkorra általában kb. '
           '${formatForint(_round(usual))}).',
         ),
