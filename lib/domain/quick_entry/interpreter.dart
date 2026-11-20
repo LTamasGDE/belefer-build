@@ -934,8 +934,7 @@ QuickEntryResult _interpretSingle(
   var amountFromHabit = false;
   if (amount == null &&
       foreign == null &&
-      (intent == QuickIntent.record ||
-          intent == QuickIntent.createRecurring) &&
+      (intent == QuickIntent.record || intent == QuickIntent.createRecurring) &&
       habit?.usualAmount != null &&
       (habit!.categoryId == categoryId || !categoryKnown)) {
     amount = habit.usualAmount;
@@ -943,8 +942,7 @@ QuickEntryResult _interpretSingle(
   }
   var accountFromHabit = false;
   if (accountId == null &&
-      (intent == QuickIntent.record ||
-          intent == QuickIntent.createRecurring)) {
+      (intent == QuickIntent.record || intent == QuickIntent.createRecurring)) {
     final learned = lessonHit?.$1.accountId ?? habit?.usualAccountId;
     if (learned != null && context.accounts.any((a) => a.id == learned)) {
       accountId = learned;

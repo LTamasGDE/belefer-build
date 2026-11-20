@@ -315,8 +315,7 @@ class AppState extends ChangeNotifier {
     ];
     _lessons = [
       for (final entry in await _store.readSettingList(_lessonsKey))
-        if (entry is Map)
-          ?_readLesson(entry),
+        if (entry is Map) ?_readLesson(entry),
     ];
     _reminderDefaults = await _store.readReminderDefaults();
     _darkMode = await _store.readDarkMode();

@@ -50,7 +50,11 @@ List<Insight> buildInsights({
     if (t.type != EntryType.expense || !month.contains(t.date)) continue;
     if (t.date.compareTo(today) > 0) continue;
     spentSoFar += t.amount;
-    byCategoryNow.update(t.categoryId, (v) => v + t.amount, ifAbsent: () => t.amount);
+    byCategoryNow.update(
+      t.categoryId,
+      (v) => v + t.amount,
+      ifAbsent: () => t.amount,
+    );
   }
   var usualSoFar = 0;
   var monthsWithData = 0;
@@ -157,5 +161,6 @@ List<Insight> buildInsights({
 }
 
 /// Kerekítés a becsült összegekhez (100 Ft-ra, nagyobbnál 1000-re).
-int _round(int value) =>
-    value >= 20000 ? (value / 1000).round() * 1000 : (value / 100).round() * 100;
+int _round(int value) => value >= 20000
+    ? (value / 1000).round() * 1000
+    : (value / 100).round() * 100;

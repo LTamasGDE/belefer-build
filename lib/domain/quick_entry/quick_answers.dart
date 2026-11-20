@@ -91,10 +91,7 @@ QuickQuestionQuery? detectQuestion(String text) {
   bool has(String prefix) => words.any((w) => w.startsWith(prefix));
   final measure = first == 'mikor' || words.contains('mikor')
       ? QuestionMeasure.when
-      : (has('szokt') ||
-            has('altalaban') ||
-            has('atlag') ||
-            has('rendszerint'))
+      : (has('szokt') || has('altalaban') || has('atlag') || has('rendszerint'))
       ? QuestionMeasure.usual
       : (has('vege') || has('vegere') || has('vegen'))
       ? QuestionMeasure.endOfMonth
@@ -107,12 +104,12 @@ QuickQuestionQuery? detectQuestion(String text) {
             (words.contains('mik') && has('het')))
       ? QuestionMeasure.upcoming
       : words.any(
-        (w) =>
-            w.startsWith('maradt') ||
-            w.startsWith('marad') ||
-            w.startsWith('egyenleg') ||
-            w == 'mennyim',
-      )
+          (w) =>
+              w.startsWith('maradt') ||
+              w.startsWith('marad') ||
+              w.startsWith('egyenleg') ||
+              w == 'mennyim',
+        )
       ? QuestionMeasure.balance
       : words.any(
           (w) =>
@@ -404,7 +401,10 @@ typedef UpcomingEntry = ({
 });
 
 /// A következő napok várható tételei: beállított és felismert ismétlődések.
-List<UpcomingEntry> upcomingItems(QuickEntryContext context, CalendarDay until) {
+List<UpcomingEntry> upcomingItems(
+  QuickEntryContext context,
+  CalendarDay until,
+) {
   final today = context.today;
   final items = <UpcomingEntry>[];
   final ruleKeys = <String>{};

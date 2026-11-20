@@ -45,9 +45,21 @@ void main() {
     for (var d = 1; d <= 19; d += 3)
       _t('Kávé', 950, 'dining', CalendarDay(2026, 11, d), account: 1),
     for (var d = 2; d <= 20; d += 6)
-      _t('Lidl', 4000 + d * 300, 'groceries', CalendarDay(2026, 11, d), account: 3),
+      _t(
+        'Lidl',
+        4000 + d * 300,
+        'groceries',
+        CalendarDay(2026, 11, d),
+        account: 3,
+      ),
     for (var d = 2; d <= 28; d += 9)
-      _t('Lidl', 5000 + d * 100, 'groceries', CalendarDay(2026, 10, d), account: 3),
+      _t(
+        'Lidl',
+        5000 + d * 100,
+        'groceries',
+        CalendarDay(2026, 10, d),
+        account: 3,
+      ),
   ];
   final context = QuickEntryContext(
     today: today,
@@ -155,7 +167,10 @@ void main() {
         ),
       );
       expect(lessons.first.title, 'Új');
-      expect(lessons.where((l) => l.words.first == 'szo${maxLessons + 19}'), hasLength(1));
+      expect(
+        lessons.where((l) => l.words.first == 'szo${maxLessons + 19}'),
+        hasLength(1),
+      );
       expect(Lesson.fromMap(lessons.first.toMap()).title, 'Új');
     });
   });
@@ -169,10 +184,7 @@ void main() {
     });
 
     test('mi várható', () {
-      expect(
-        answer('mi várható a következő két hétben?'),
-        contains('Spotify'),
-      );
+      expect(answer('mi várható a következő két hétben?'), contains('Spotify'));
     });
 
     test('hónap végére', () {
@@ -180,10 +192,7 @@ void main() {
     });
 
     test('szokásos ár', () {
-      expect(
-        answer('mennyibe kerül általában a kávé?'),
-        contains('950'),
-      );
+      expect(answer('mennyibe kerül általában a kávé?'), contains('950'));
     });
 
     test('megállapítások a hónapról', () {

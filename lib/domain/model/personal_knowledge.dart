@@ -91,7 +91,9 @@ class DetectedPattern {
   String get rhythm => switch (frequency) {
     Frequency.weekly => interval == 2 ? 'kéthetente' : 'hetente',
     Frequency.monthly =>
-      dayOfMonth == null ? 'havonta' : 'minden hónap ${dayWithSuffix(dayOfMonth!)}',
+      dayOfMonth == null
+          ? 'havonta'
+          : 'minden hónap ${dayWithSuffix(dayOfMonth!)}',
     Frequency.yearly => 'évente',
   };
 
@@ -315,7 +317,9 @@ int? _indexOfWord(List<String> words, String key, Set<int> skip) {
     if (skip.contains(i)) continue;
     final word = words[i];
     if (word == key) return i;
-    if (key.length >= 3 && word.startsWith(key) && word.length - key.length <= 4) {
+    if (key.length >= 3 &&
+        word.startsWith(key) &&
+        word.length - key.length <= 4) {
       return i;
     }
   }
