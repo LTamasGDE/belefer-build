@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import '../../domain/formatting.dart';
 import '../../domain/models.dart';
 import '../../domain/quick_entry/interpreter.dart';
 import '../../domain/recurring.dart';
@@ -49,12 +50,14 @@ void showQuickEntryDone(ScaffoldMessengerState messenger, QuickEntryDone done) {
       SnackBar(
         content: Text(done.message),
         duration: const Duration(seconds: 6),
-        action: SnackBarAction(
-          label: 'Visszavonás',
-          onPressed: () {
-            done.undo();
-          },
-        ),
+        action: done.undo == null
+            ? null
+            : SnackBarAction(
+                label: 'Visszavonás',
+                onPressed: () {
+                  done.undo!();
+                },
+              ),
       ),
     );
 }
@@ -99,15 +102,50 @@ class _QuickEntryScreenState extends State<QuickEntryScreen> {
 
   void _interpret() {
     final text = _text.text.trim();
+    final state = AppScope.read(context);
     final result = text.isEmpty
         ? null
-        : interpretQuickEntry(text, AppScope.read(context).quickEntryContext);
+        : interpretQuickEntry(text, state.quickEntryContext);
     setState(() => _result = result);
+    // Devizás összeg: forintra váltás a napi árfolyamon.
+    if (result != null &&
+        !result.hasAmount &&
+        result.currency != null &&
+        result.foreignAmount != null) {
+      final currency = result.currency!;
+      final foreign = result.foreignAmount!;
+      state.toForint(foreign, currency).then((value) {
+        if (!mounted || _result != result) return;
+        setState(() {
+          _result = value == null
+              ? result
+              : result.withAmount(
+                  value,
+                  note:
+                      '${formatForeign(foreign, currency)} ≈ '
+                      '${formatForint(value)} (EKB napi árfolyam)',
+                );
+        });
+        if (value == null) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text(
+                'Most nem érem el az árfolyamot – írd be a forintösszeget.',
+              ),
+            ),
+          );
+        }
+      });
+    }
   }
 
   Future<void> _submit() async {
     final result = _result;
     if (_busy || result == null) return;
+    if (result.intent == QuickIntent.question) {
+      Navigator.of(context).maybePop();
+      return;
+    }
     if (!result.isComplete) {
       _focus.requestFocus();
       return;
@@ -145,6 +183,21 @@ class _QuickEntryScreenState extends State<QuickEntryScreen> {
           reminder: state.reminderDefaults.newRuleSettings(
             enabled: result.type == EntryType.expense,
           ),
+        ),
+      );
+    } else if (result.intent == QuickIntent.transfer) {
+      final route = [
+        ?result.transferFrom,
+        ?result.transferTo,
+      ].join(' → ');
+      saved = await openTransactionForm(
+        context,
+        initialType: EntryType.expense,
+        prefill: TransactionDraft(
+          type: EntryType.expense,
+          date: result.date,
+          title: route.isEmpty ? 'Átvezetés' : 'Átvezetés: $route',
+          amount: result.amount,
         ),
       );
     } else {
@@ -213,8 +266,16 @@ class _QuickEntryScreenState extends State<QuickEntryScreen> {
     final complete = result?.isComplete ?? false;
     final canOpenDetails =
         result != null &&
+        !result.isMultiple &&
         (result.intent == QuickIntent.record ||
-            result.intent == QuickIntent.createRecurring);
+            result.intent == QuickIntent.createRecurring ||
+            result.intent == QuickIntent.transfer);
+    String? accountName(int id) {
+      for (final account in state.accounts) {
+        if (account.id == id) return account.name;
+      }
+      return null;
+    }
 
     return Scaffold(
       appBar: AppBar(
@@ -272,14 +333,22 @@ class _QuickEntryScreenState extends State<QuickEntryScreen> {
                   QuestionHints(result: result, today: today),
                   if (result != null) ...[
                     const SizedBox(height: Space.lg),
-                    QuickResultCard(result: result, today: today),
+                    QuickResultCard(
+                      result: result,
+                      today: today,
+                      accountName: accountName,
+                    ),
                   ],
                   const SizedBox(height: Space.lg),
                   FilledButton.icon(
                     key: const ValueKey('quick-entry-submit'),
                     onPressed: complete && !_busy ? _submit : null,
                     icon: Icon(
-                      complete ? Icons.check_rounded : Icons.help_outline,
+                      result?.intent == QuickIntent.transfer
+                          ? Icons.swap_horiz_rounded
+                          : complete
+                          ? Icons.check_rounded
+                          : Icons.help_outline,
                     ),
                     label: Text(quickActionLabel(result)),
                   ),
@@ -289,7 +358,11 @@ class _QuickEntryScreenState extends State<QuickEntryScreen> {
                       key: const ValueKey('quick-entry-details'),
                       onPressed: _busy ? null : _openDetails,
                       icon: const Icon(Icons.tune_rounded),
-                      label: const Text('Részletek megadása űrlapon'),
+                      label: Text(
+                        result.intent == QuickIntent.transfer
+                            ? 'Mégis rögzítem tételként'
+                            : 'Részletek megadása űrlapon',
+                      ),
                     ),
                   ],
                   const SizedBox(height: Space.xl),

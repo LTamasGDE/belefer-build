@@ -15,7 +15,9 @@ class QuickEntryDone {
   const QuickEntryDone(this.message, this.undo, {this.month});
 
   final String message;
-  final Future<void> Function() undo;
+
+  /// Visszavonás; `null`, ha nem történt változás (pl. átvezetésnél).
+  final Future<void> Function()? undo;
 
   /// A rögzített tétel hónapja (ha nem az éppen látott hónap).
   final YearMonth? month;
@@ -40,7 +42,9 @@ String? questionAnswer(
   final answered = result.isAnswered(question);
   switch (question) {
     case QuickQuestion.amount:
-      return answered ? formatForint(result.amount!) : null;
+      if (!answered) return null;
+      if (result.hasAmount) return formatForint(result.amount!);
+      return formatForeign(result.foreignAmount!, result.currency!);
     case QuickQuestion.what:
       if (!answered) return null;
       return result.categoryGuessed
@@ -85,41 +89,63 @@ class QuestionHints extends StatelessWidget {
         ];
     final missing =
         current?.missing ?? const [QuickQuestion.amount, QuickQuestion.what];
+    final guessed = current?.guessed ?? const <QuickQuestion>{};
+    final String headline;
+    if (current?.intent == QuickIntent.question) {
+      return const SizedBox.shrink();
+    } else if (current?.intent == QuickIntent.transfer) {
+      headline =
+          'Saját pénzed mozgatása: nem bevétel és nem kiadás, ezért nem '
+          'könyvelem.';
+    } else if (current != null && current.isMultiple) {
+      headline = current.isSure
+          ? '${current.items.length} tételt találtam, mehet a könyvelés.'
+          : '${current.items.length} tételt találtam – nézd át őket.';
+    } else if (missing.isNotEmpty) {
+      headline = 'Az automatikus könyveléshez ezekre kell válasz:';
+    } else if (guessed.isNotEmpty) {
+      headline =
+          'Ellenőrizd: ${guessed.map(questionLabel).join(' ')} – erre csak '
+          'tippelni tudtam.';
+    } else {
+      headline = 'Minden megvan, mehet a könyvelés.';
+    }
+    final showPills =
+        current == null ||
+        (!current.isMultiple && current.intent != QuickIntent.transfer);
     return Semantics(
       container: true,
-      label: missing.isEmpty
-          ? 'Minden megvan az automatikus könyveléshez.'
-          : 'Az automatikus könyveléshez még kell: '
-                '${missing.map(questionLabel).join(', ')}',
+      label: headline,
       excludeSemantics: true,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            missing.isEmpty
-                ? 'Minden megvan, mehet a könyvelés.'
-                : 'Az automatikus könyveléshez ezekre kell válasz:',
+            headline,
             style: textTheme.labelMedium?.copyWith(
               color: colors.textMuted.withValues(alpha: 0.8),
             ),
           ),
-          const SizedBox(height: Space.sm),
-          Wrap(
-            spacing: Space.sm,
-            runSpacing: Space.sm,
-            children: [
-              for (final question in questions)
-                _HintPill(
-                  key: ValueKey('hint-${question.name}'),
-                  question: questionLabel(question),
-                  answer: current == null
-                      ? null
-                      : questionAnswer(question, current, today),
-                  done: current?.isAnswered(question) ?? false,
-                  required: missing.contains(question),
-                ),
-            ],
-          ),
+          if (showPills) ...[
+            const SizedBox(height: Space.sm),
+            Wrap(
+              spacing: Space.sm,
+              runSpacing: Space.sm,
+              children: [
+                for (final question in questions)
+                  _HintPill(
+                    key: ValueKey('hint-${question.name}'),
+                    question: questionLabel(question),
+                    answer: current == null
+                        ? null
+                        : questionAnswer(question, current, today),
+                    done: current?.isAnswered(question) ?? false,
+                    required: missing.contains(question),
+                    guess: guessed.contains(question),
+                  ),
+              ],
+            ),
+          ],
         ],
       ),
     );
@@ -133,12 +159,16 @@ class _HintPill extends StatelessWidget {
     required this.answer,
     required this.done,
     required this.required,
+    this.guess = false,
   });
 
   final String question;
   final String? answer;
   final bool done;
   final bool required;
+
+  /// Csak tipp: kérdőjellel, hogy érdemes ellenőrizni.
+  final bool guess;
 
   @override
   Widget build(BuildContext context) {
@@ -163,7 +193,11 @@ class _HintPill extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           Icon(
-            done ? Icons.check_circle_rounded : Icons.radio_button_unchecked,
+            guess && done
+                ? Icons.help_rounded
+                : done
+                ? Icons.check_circle_rounded
+                : Icons.radio_button_unchecked,
             size: 16,
             color: done ? colors.accentText : faint,
           ),
@@ -178,7 +212,7 @@ class _HintPill extends StatelessWidget {
                   ),
                   if (answer != null)
                     TextSpan(
-                      text: ' $answer',
+                      text: ' $answer${guess && done ? ' (tipp)' : ''}',
                       style: TextStyle(
                         color: done ? colors.text : faint,
                         fontWeight: done ? FontWeight.w600 : FontWeight.w400,
@@ -199,15 +233,32 @@ class _HintPill extends StatelessWidget {
 
 /// Az értelmezés előnézete: mi fog történni a könyveléskor.
 class QuickResultCard extends StatelessWidget {
-  const QuickResultCard({super.key, required this.result, required this.today});
+  const QuickResultCard({
+    super.key,
+    required this.result,
+    required this.today,
+    this.accountName,
+  });
 
   final QuickEntryResult result;
   final CalendarDay today;
+
+  /// A szövegben megnevezett számla neve („a közösről” → Közös).
+  final String? Function(int id)? accountName;
 
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;
     final textTheme = Theme.of(context).textTheme;
+    if (result.intent == QuickIntent.question) {
+      return _AnswerCard(answer: result.answer ?? '');
+    }
+    if (result.intent == QuickIntent.transfer) {
+      return _TransferCard(result: result);
+    }
+    if (result.isMultiple) {
+      return _MultiCard(result: result, today: today);
+    }
     final target = result.targetRule;
     final (String heading, IconData icon) = switch (result.intent) {
       QuickIntent.record => (
@@ -228,12 +279,18 @@ class QuickResultCard extends StatelessWidget {
         'Ismétlődő tétel új összege',
         Icons.edit_calendar_rounded,
       ),
+      QuickIntent.transfer => ('Átvezetés', Icons.swap_horiz_rounded),
+      QuickIntent.question => ('Válasz', Icons.question_answer_rounded),
     };
 
     final details = <String>[];
     switch (result.intent) {
       case QuickIntent.record:
         details.add(formatFullDate(result.date));
+        final account = result.accountId == null
+            ? null
+            : accountName?.call(result.accountId!);
+        if (account != null) details.add('Számla: $account');
       case QuickIntent.createRecurring:
         final rule = result.toRecurringRule();
         if (rule != null) {
@@ -258,6 +315,14 @@ class QuickResultCard extends StatelessWidget {
             '${formatFromDate(result.date, today)} az új összeg érvényes.',
           );
         }
+      case QuickIntent.transfer || QuickIntent.question:
+        break;
+    }
+    if (!result.hasAmount && result.currency != null) {
+      details.add(
+        '${formatForeign(result.foreignAmount!, result.currency!)} – '
+        'forintra váltom a napi EKB-árfolyamon…',
+      );
     }
 
     final categoryId = target?.categoryId ?? result.categoryId;
@@ -359,14 +424,32 @@ class QuickResultCard extends StatelessWidget {
 String quickActionLabel(QuickEntryResult? result) {
   if (result == null) return 'Elkönyvelés';
   if (!result.isComplete) {
+    if (result.missing.isEmpty) return 'Átváltás…';
     return 'Még kell: ${result.missing.map(questionLabel).join(' ')}';
   }
+  if (result.isMultiple) return '${result.items.length} tétel elkönyvelése';
   return switch (result.intent) {
     QuickIntent.record => 'Elkönyvelés',
     QuickIntent.createRecurring => 'Ismétlődő tétel létrehozása',
     QuickIntent.cancelRecurring => 'Lemondás',
     QuickIntent.changeRecurring => 'Új összeg mentése',
+    QuickIntent.transfer => 'Rendben, nem könyvelem',
+    QuickIntent.question => 'Bezárás',
   };
+}
+
+/// Devizás összeg: „25 €”, „30 USD”.
+String formatForeign(double amount, String currency) {
+  final number = amount == amount.roundToDouble()
+      ? groupDigits(amount.round())
+      : amount.toStringAsFixed(2).replaceAll('.', ',');
+  final symbol = switch (currency) {
+    'EUR' => '€',
+    'USD' => r'$',
+    'GBP' => '£',
+    _ => currency,
+  };
+  return '$number$nbsp$symbol';
 }
 
 /// Az értelmezés végrehajtása. `null`, ha nem volt mit tenni.
@@ -376,12 +459,47 @@ Future<QuickEntryDone?> applyQuickResult(
 ) async {
   if (!result.isComplete) return null;
   final today = state.today();
+  if (result.isMultiple) {
+    final saved = <Transaction>[];
+    for (final transaction in result.toTransactions()) {
+      final accountId =
+          transaction.accountId ??
+          state.selectedAccountId ??
+          state.defaultAccount?.id;
+      saved.add(
+        await state.saveTransaction(
+          transaction.copyWith(accountId: accountId),
+        ),
+      );
+    }
+    if (saved.isEmpty) return null;
+    final total = saved.fold<int>(0, (sum, t) => sum + t.amount);
+    return QuickEntryDone(
+      '${saved.length} tétel rögzítve, összesen ${formatForint(total)}',
+      () async {
+        for (final transaction in saved) {
+          await state.deleteTransaction(transaction.id!);
+        }
+      },
+    );
+  }
   switch (result.intent) {
+    case QuickIntent.transfer:
+      return const QuickEntryDone(
+        'Átvezetés – nem könyveltem, mert nem bevétel és nem kiadás.',
+        null,
+      );
+    case QuickIntent.question:
+      return null;
     case QuickIntent.record:
       final transaction = result.toTransaction();
       if (transaction == null) return null;
-      // Gyorsrögzítésnél a kiválasztott (vagy alapértelmezett) számlára.
-      final accountId = state.selectedAccountId ?? state.defaultAccount?.id;
+      // A szövegben megnevezett, a kiválasztott vagy az alapértelmezett
+      // számlára.
+      final accountId =
+          result.accountId ??
+          state.selectedAccountId ??
+          state.defaultAccount?.id;
       final saved = await state.saveTransaction(
         accountId == null
             ? transaction
@@ -447,3 +565,194 @@ Future<QuickEntryDone?> applyQuickResult(
 
 String _capitalize(String text) =>
     text.isEmpty ? text : text[0].toUpperCase() + text.substring(1);
+
+/// Válasz egy kérdésre („mennyit költöttem ebben a hónapban?”).
+class _AnswerCard extends StatelessWidget {
+  const _AnswerCard({required this.answer});
+
+  final String answer;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.colors;
+    final textTheme = Theme.of(context).textTheme;
+    return Semantics(
+      container: true,
+      liveRegion: true,
+      label: 'Válasz: $answer',
+      excludeSemantics: true,
+      child: Panel(
+        key: const ValueKey('quick-result'),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Row(
+              children: [
+                Icon(
+                  Icons.question_answer_rounded,
+                  size: 16,
+                  color: colors.accentText,
+                ),
+                const SizedBox(width: 6),
+                Text(
+                  'Válasz',
+                  style: textTheme.labelLarge?.copyWith(
+                    color: colors.accentText,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: Space.md),
+            Text(answer, style: textTheme.titleMedium),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Saját számlák közötti átvezetés: honnan hová, mennyi – nem könyveljük.
+class _TransferCard extends StatelessWidget {
+  const _TransferCard({required this.result});
+
+  final QuickEntryResult result;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.colors;
+    final textTheme = Theme.of(context).textTheme;
+    final from = result.transferFrom;
+    final to = result.transferTo;
+    final route = from != null && to != null
+        ? '$from → $to'
+        : to != null
+        ? 'Ide: $to'
+        : from != null
+        ? 'Innen: $from'
+        : 'Saját számlák között';
+    final amount = result.hasAmount
+        ? formatForint(result.amount!)
+        : result.currency != null
+        ? formatForeign(result.foreignAmount!, result.currency!)
+        : null;
+    return Semantics(
+      container: true,
+      liveRegion: true,
+      label: 'Átvezetés: $route${amount == null ? '' : ', $amount'}. '
+          'Nem bevétel és nem kiadás, nem kerül a tételek közé.',
+      excludeSemantics: true,
+      child: Panel(
+        key: const ValueKey('quick-result'),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Row(
+              children: [
+                Icon(
+                  Icons.swap_horiz_rounded,
+                  size: 16,
+                  color: colors.accentText,
+                ),
+                const SizedBox(width: 6),
+                Text(
+                  'Átvezetés',
+                  style: textTheme.labelLarge?.copyWith(
+                    color: colors.accentText,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: Space.md),
+            Row(
+              children: [
+                Expanded(child: Text(route, style: textTheme.titleMedium)),
+                if (amount != null) Text(amount, style: textTheme.titleMedium),
+              ],
+            ),
+            const SizedBox(height: Space.sm),
+            Text(
+              'A saját pénzed egyik helyről a másikra került: ez nem bevétel '
+              'és nem kiadás, ezért nem kerül a tételek közé, és a havi '
+              'egyenlegedet sem változtatja. Ha mégis tételként szeretnéd, '
+              'add meg az űrlapon.',
+              style: textTheme.bodyMedium?.copyWith(color: colors.textMuted),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Több tétel egy mondatban.
+class _MultiCard extends StatelessWidget {
+  const _MultiCard({required this.result, required this.today});
+
+  final QuickEntryResult result;
+  final CalendarDay today;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.colors;
+    final textTheme = Theme.of(context).textTheme;
+    return Semantics(
+      container: true,
+      liveRegion: true,
+      label: '${result.items.length} tétel: '
+          '${result.items.map((item) => '${item.title}, ${formatForint(item.amount!)}').join('; ')}',
+      excludeSemantics: true,
+      child: Panel(
+        key: const ValueKey('quick-result'),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Row(
+              children: [
+                Icon(
+                  Icons.playlist_add_check_rounded,
+                  size: 16,
+                  color: colors.accentText,
+                ),
+                const SizedBox(width: 6),
+                Text(
+                  '${result.items.length} tétel',
+                  style: textTheme.labelLarge?.copyWith(
+                    color: colors.accentText,
+                  ),
+                ),
+              ],
+            ),
+            for (final item in result.items) ...[
+              const SizedBox(height: Space.md),
+              Row(
+                children: [
+                  CategoryAvatar(item.categoryId),
+                  const SizedBox(width: Space.md),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          '${item.title}${item.isSure ? '' : ' (tipp)'}',
+                          style: textTheme.titleMedium,
+                        ),
+                        Text(
+                          '${categoryName(item.categoryId)} · '
+                          '${formatShortDate(item.date, today)}',
+                          style: textTheme.bodySmall?.copyWith(
+                            color: colors.textMuted,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  AmountText(amount: item.amount!, type: item.type),
+                ],
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+}

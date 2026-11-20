@@ -1,3 +1,4 @@
+import '../accounts.dart';
 import '../calendar.dart';
 import '../categories.dart';
 import '../model/belefer_model.dart';
@@ -9,6 +10,8 @@ import '../validation.dart';
 import 'amount_parser.dart';
 import 'date_parser.dart';
 import 'lexicon.dart';
+import 'money_flow.dart';
+import 'quick_answers.dart';
 import 'tokens.dart';
 
 /// Mit szeretne a felhasználó a beírt mondattal.
@@ -24,6 +27,14 @@ enum QuickIntent {
 
   /// Ismétlődő tétel összegének módosítása (pl. „mostantól 150 000 a lakbér”).
   changeRecurring,
+
+  /// Saját számlák, bankok vagy készpénz közötti pénzmozgás (pl. „áttettem
+  /// 50 ezret a megtakarításba”). Nem bevétel és nem kiadás.
+  transfer,
+
+  /// Kérdés (pl. „mennyit költöttem ebben a hónapban?”); a válasz az
+  /// [QuickEntryResult.answer].
+  question,
 }
 
 /// A rögzítéshez szükséges kérdések.
@@ -64,6 +75,14 @@ class QuickEntryResult {
     this.interval = 1,
     this.targetRule,
     this.notes = const [],
+    this.accountId,
+    this.transferFrom,
+    this.transferTo,
+    this.foreignAmount,
+    this.currency,
+    this.items = const [],
+    this.guessed = const {},
+    this.answer,
   });
 
   final QuickIntent intent;
@@ -89,12 +108,38 @@ class QuickEntryResult {
   /// Figyelmeztetések, pl. több szám is szerepelt.
   final List<String> notes;
 
+  /// A mondatban megnevezett számla („a közösről fizettem”); ha `null`, az
+  /// alapértelmezett számla.
+  final int? accountId;
+
+  /// Átvezetésnél a forrás és a cél neve (számla, bank vagy „Készpénz”).
+  final String? transferFrom;
+  final String? transferTo;
+
+  /// Devizás összeg („25 euró”): a forintösszeget a felület számolja ki
+  /// az árfolyamból, addig az [amount] üres.
+  final double? foreignAmount;
+  final String? currency;
+
+  /// Több tétel egy mondatban („Lidl 4500 és benzin 20 000”).
+  final List<QuickEntryResult> items;
+
+  /// A kérdések, amelyekre csak tippelni tudott (pl. a megnevezést egy
+  /// elírástűrő egyezésből vagy a modell bizonytalan jóslatából vette).
+  final Set<QuickQuestion> guessed;
+
+  /// Kérdésre adott válasz.
+  final String? answer;
+
+  /// Több tétel van-e.
+  bool get isMultiple => items.length > 1;
+
   bool get hasAmount => amount != null && amount! > 0;
   bool get hasWhat => title != null && title!.trim().isNotEmpty;
 
   /// Melyik kérdésre van már válasz.
   bool isAnswered(QuickQuestion question) => switch (question) {
-    QuickQuestion.amount => hasAmount,
+    QuickQuestion.amount => hasAmount || currency != null,
     QuickQuestion.what => hasWhat,
     QuickQuestion.when => dateExplicit,
     QuickQuestion.type => typeExplicit,
@@ -117,6 +162,8 @@ class QuickEntryResult {
       QuickQuestion.when,
     ],
     QuickIntent.cancelRecurring => const [QuickQuestion.which],
+    QuickIntent.transfer => const [],
+    QuickIntent.question => const [],
     QuickIntent.changeRecurring => const [
       QuickQuestion.which,
       QuickQuestion.amount,
@@ -125,10 +172,15 @@ class QuickEntryResult {
   };
 
   /// A még megválaszolandó kötelező kérdések.
-  List<QuickQuestion> get missing => [
-    for (final question in questions)
-      if (_isRequired(question) && !isAnswered(question)) question,
-  ];
+  List<QuickQuestion> get missing => isMultiple
+      ? [
+          for (final question in QuickQuestion.values)
+            if (items.any((item) => item.missing.contains(question))) question,
+        ]
+      : [
+          for (final question in questions)
+            if (_isRequired(question) && !isAnswered(question)) question,
+        ];
 
   bool _isRequired(QuickQuestion question) => switch (question) {
     QuickQuestion.amount => intent != QuickIntent.cancelRecurring,
@@ -142,8 +194,41 @@ class QuickEntryResult {
     QuickQuestion.type => false,
   };
 
-  /// Automatikusan elkönyvelhető-e.
-  bool get isComplete => missing.isEmpty;
+  /// Automatikusan elkönyvelhető-e (deviza esetén előbb át kell váltani).
+  bool get isComplete =>
+      missing.isEmpty &&
+      (intent == QuickIntent.transfer ||
+          intent == QuickIntent.question ||
+          intent == QuickIntent.cancelRecurring ||
+          isMultiple ||
+          hasAmount);
+
+  /// Biztos-e minden mező (ha nem, a felület ellenőrzést kér).
+  bool get isSure => guessed.isEmpty && items.every((item) => item.isSure);
+
+  /// Az eredmény forintösszeggel (pl. devizaátváltás után).
+  QuickEntryResult withAmount(int value, {String? note}) => QuickEntryResult(
+    intent: intent,
+    type: type,
+    typeExplicit: typeExplicit,
+    amount: value,
+    title: title,
+    merchant: merchant,
+    categoryId: categoryId,
+    categoryGuessed: categoryGuessed,
+    date: date,
+    dateExplicit: dateExplicit,
+    frequency: frequency,
+    interval: interval,
+    targetRule: targetRule,
+    notes: [...notes, ?note],
+    accountId: accountId,
+    transferFrom: transferFrom,
+    transferTo: transferTo,
+    foreignAmount: foreignAmount,
+    currency: currency,
+    guessed: guessed,
+  );
 
   /// Rögzítendő tétel (a [QuickIntent.record] szándékhoz).
   Transaction? toTransaction() {
@@ -154,8 +239,17 @@ class QuickEntryResult {
       amount: amount!,
       categoryId: categoryId,
       date: date,
+      accountId: accountId,
     );
   }
+
+  /// Az összes rögzítendő tétel (több tételnél mind, egyébként egy).
+  List<Transaction> toTransactions() => isMultiple
+      ? [
+          for (final item in items)
+            if (item.intent == QuickIntent.record) ?item.toTransaction(),
+        ]
+      : [?toTransaction()];
 
   /// Új ismétlődő szabály (a [QuickIntent.createRecurring] szándékhoz).
   RecurringRule? toRecurringRule({
@@ -181,6 +275,7 @@ class QuickEntryContext {
     required this.today,
     this.history = const [],
     this.rules = const [],
+    this.accounts = const [],
   });
 
   final CalendarDay today;
@@ -190,6 +285,9 @@ class QuickEntryContext {
 
   /// Az ismétlődő tételek (lemondáshoz, módosításhoz).
   final List<RecurringRule> rules;
+
+  /// A számlák (a „közösről fizettem” és az átvezetések felismeréséhez).
+  final List<Account> accounts;
 }
 
 class _CategoryVote {
@@ -215,7 +313,106 @@ class _CategoryVote {
 ///
 /// A telefonon fut, internet nélkül. Tűri az elírásokat, a toldalékokat és a
 /// szórend felcserélését, és a korábbi tételekből tanul.
-QuickEntryResult interpretQuickEntry(String text, QuickEntryContext context) {
+///
+/// A [simple] mód (az automatikus rögzítés értesítéseihez) csak egy tételt
+/// értelmez: nem keres kérdést, több tételt, átvezetést és devizát, ezeket az
+/// értesítés-feldolgozó maga kezeli.
+QuickEntryResult interpretQuickEntry(
+  String text,
+  QuickEntryContext context, {
+  bool simple = false,
+}) {
+  if (simple) return _interpretSingle(text, context, simple: true);
+  final question = detectQuestion(text);
+  if (question != null) {
+    return QuickEntryResult(
+      intent: QuickIntent.question,
+      type: EntryType.expense,
+      typeExplicit: false,
+      amount: null,
+      title: null,
+      merchant: null,
+      categoryId: CategoryCatalog.fallbackIdFor(EntryType.expense),
+      categoryGuessed: true,
+      date: context.today,
+      dateExplicit: false,
+      answer: answerQuestion(question, context.today, context.history),
+    );
+  }
+  final whole = _interpretSingle(text, context);
+  final segments = _splitItems(text);
+  if (segments.length < 2) return whole;
+  final parts = [
+    for (final segment in segments) _interpretSingle(segment, context),
+  ];
+  final valid = parts.every(
+    (part) =>
+        part.hasAmount &&
+        part.hasWhat &&
+        part.intent == QuickIntent.record &&
+        part.title != null,
+  );
+  if (!valid) return whole;
+  // A közös dátum („tegnap Tesco 6000 meg tankolás 18 000”) mindegyikre.
+  final dated = parts.where((part) => part.dateExplicit).toList();
+  final items = [
+    for (final part in parts)
+      if (!part.dateExplicit && dated.length == 1)
+        _withDate(part, dated.first.date)
+      else
+        part,
+  ];
+  return QuickEntryResult(
+    intent: QuickIntent.record,
+    type: items.first.type,
+    typeExplicit: true,
+    amount: items.fold<int>(0, (sum, item) => sum + item.amount!),
+    title: items.map((item) => item.title).join(', '),
+    merchant: null,
+    categoryId: items.first.categoryId,
+    categoryGuessed: false,
+    date: items.first.date,
+    dateExplicit: items.any((item) => item.dateExplicit),
+    items: items,
+  );
+}
+
+QuickEntryResult _withDate(QuickEntryResult part, CalendarDay date) =>
+    QuickEntryResult(
+      intent: part.intent,
+      type: part.type,
+      typeExplicit: part.typeExplicit,
+      amount: part.amount,
+      title: part.title,
+      merchant: part.merchant,
+      categoryId: part.categoryId,
+      categoryGuessed: part.categoryGuessed,
+      date: date,
+      dateExplicit: true,
+      notes: part.notes,
+      accountId: part.accountId,
+      guessed: part.guessed,
+    );
+
+/// Több tétel tagolása: „, ”, „; ”, „ és ”, „ meg ”, „ + ”. Csak akkor
+/// bontunk, ha minden részben van szám (a „kenyér és tej 1200” egy tétel).
+List<String> _splitItems(String text) {
+  final parts = text
+      .split(RegExp(r'\s*[,;]\s+|\s+(?:és|meg|plusz|\+)\s+', caseSensitive: false))
+      .map((part) => part.trim())
+      .where((part) => part.isNotEmpty)
+      .toList();
+  if (parts.length < 2) return const [];
+  final hasNumber = RegExp(r'\d|ezer|millió|millio');
+  if (!parts.every(hasNumber.hasMatch)) return const [];
+  return parts;
+}
+
+QuickEntryResult _interpretSingle(
+  String text,
+  QuickEntryContext context, {
+  bool simple = false,
+}) {
   final tokens = tokenize(text);
   final folded = [for (final token in tokens) token.folded];
   final today = context.today;
@@ -239,10 +436,18 @@ QuickEntryResult interpretQuickEntry(String text, QuickEntryContext context) {
   );
   final blocked = <int>{...?dateMatch?.tokenIndexes};
 
+  // Deviza: „25 euró” – a forintösszeget a felület számolja ki.
+  final foreign = simple ? null : findForeignAmount(text, tokens);
+  if (foreign != null) blocked.addAll(foreign.tokens);
+
   // Összeg.
   final candidates = findAmountCandidates(folded, blocked: blocked);
   final amountPick = pickAmount(candidates);
   final used = <int>{...blocked, ...?amountPick?.tokenIndexes};
+  // Darabszám: „2 x 1500”, „két mozijegy 2900-ával”.
+  final multiplied = _multiply(text, folded, amountPick);
+  if (multiplied != null) used.addAll(multiplied.$2);
+  final amount = multiplied?.$1 ?? amountPick?.value;
   final notes = <String>[];
   final strongCandidates = candidates.where((c) => c.score >= 6).length;
   if (amountPick != null &&
@@ -264,7 +469,9 @@ QuickEntryResult interpretQuickEntry(String text, QuickEntryContext context) {
     } else if (incomeWords.contains(word)) {
       incomeScore += 3;
       verbTokens.add(i);
-    } else if (word.length >= 7 && !_lexiconWords.contains(word)) {
+    } else if (word.length >= 7 &&
+        !_lexiconWords.contains(word) &&
+        moneyVerbPerson(word) == null) {
       if (_fuzzyIn(word, expenseWords)) {
         expenseScore += 2;
         verbTokens.add(i);
@@ -274,6 +481,50 @@ QuickEntryResult interpretQuickEntry(String text, QuickEntryContext context) {
       }
     }
   }
+  // Ki adott kinek: „visszaadta”, „átutalta”, „kifizettek” → nekem jött;
+  // „kölcsönadtam”, „fizettem” → tőlem ment.
+  for (var i = 0; i < folded.length; i++) {
+    if (used.contains(i) || verbTokens.contains(i)) continue;
+    switch (moneyVerbPerson(folded[i])) {
+      case 1:
+        expenseScore += 2;
+        verbTokens.add(i);
+      case 3:
+        incomeScore += 4;
+        verbTokens.add(i);
+    }
+  }
+  // Számlák, bankok, készpénz és személyek.
+  final endpoints = findEndpoints(tokens, context.accounts);
+  final endpointTokens = {for (final e in endpoints) ...e.tokens};
+  final people = [
+    ...findPeople(
+      tokens,
+      isKnownName: (index) =>
+          endpointTokens.contains(index) || _isMerchantWord(folded[index]),
+    ),
+  ];
+  // Névvel kezdődő mondat, harmadik személyű igével: „Peti visszaadta”.
+  if (people.isEmpty &&
+      tokens.length > 1 &&
+      tokens.first.original.length >= 3 &&
+      tokens.first.original[0] != tokens.first.original[0].toLowerCase() &&
+      !endpointTokens.contains(0) &&
+      !_isMerchantWord(folded.first) &&
+      !isCommonWord(folded.first) &&
+      folded.skip(1).any((word) => moneyVerbPerson(word) == 3)) {
+    people.add(const PersonMention(0, recipient: false));
+  }
+  final senders = people.where((person) => !person.recipient).toList();
+  final personTokens = {
+    for (final person in people)
+      if (tokens[person.index].original[0] !=
+          tokens[person.index].original[0].toLowerCase())
+        person.index,
+  };
+  if (senders.isNotEmpty && expenseScore == 0 && incomeScore > 0) {
+    incomeScore += 1;
+  }
   // „Visszakaptam” és „kaptam” után a kategória szava erősebb a „fizettem”-nél.
   EntryType? explicitType;
   if (incomeScore > expenseScore) explicitType = EntryType.income;
@@ -281,9 +532,19 @@ QuickEntryResult interpretQuickEntry(String text, QuickEntryContext context) {
 
   // Kategória és kereskedő.
   final votes = <_CategoryVote>[];
-  final merchantVote = _matchMerchant(folded, used, verbTokens);
+  final merchantVote = _matchMerchant(folded, {
+    ...used,
+    ...endpointTokens,
+    ...personTokens,
+  }, verbTokens);
   if (merchantVote != null) votes.add(merchantVote.$1);
-  votes.addAll(_matchKeywords(folded, used, verbTokens));
+  votes.addAll(
+    _matchKeywords(folded, {
+      ...used,
+      ...endpointTokens,
+      ...personTokens,
+    }, verbTokens),
+  );
   votes.addAll(_matchCustomCategories(folded, used));
   votes.addAll(_matchHistory(tokens, used, context.history));
   // A modell személyes része: a korábbi megnevezésekhez hasonló szavak.
@@ -333,6 +594,7 @@ QuickEntryResult interpretQuickEntry(String text, QuickEntryContext context) {
   // nem ért egyet („elvittem a kocsit” ≠ kocsma).
   final model = currentModel;
   String? modelCategoryId;
+  var modelConfidence = 0.0;
   if (model != null && (best == null || best.fuzzy)) {
     final allowed = {
       for (final category in [...expenseCategories, ...incomeCategories])
@@ -340,11 +602,15 @@ QuickEntryResult interpretQuickEntry(String text, QuickEntryContext context) {
     };
     final prediction = model.classify('category', text).restrictedTo(allowed);
     if (best == null) {
-      if (prediction.confidence >= 0.45) modelCategoryId = prediction.best;
+      if (prediction.confidence >= 0.45) {
+        modelCategoryId = prediction.best;
+        modelConfidence = prediction.confidence;
+      }
     } else if (prediction.confidence >= 0.6 &&
         prediction.probabilityOf(best.categoryId) < 0.1) {
       best = null;
       modelCategoryId = prediction.best;
+      modelConfidence = prediction.confidence;
     }
   }
   final type =
@@ -354,11 +620,21 @@ QuickEntryResult interpretQuickEntry(String text, QuickEntryContext context) {
           : modelCategoryId != null
           ? categoryById(modelCategoryId)!.type
           : EntryType.expense);
-  final categoryId =
+  var categoryId =
       best?.categoryId ??
       modelCategoryId ??
       CategoryCatalog.fallbackIdFor(type);
-  final categoryKnown = best != null || modelCategoryId != null;
+  var categoryKnown = best != null || modelCategoryId != null;
+  // Rokontól, ismerőstől kapott pénz: ajándék („kaptam anyától”, „anya
+  // utalt”), ha más kategória nem derült ki.
+  if (type == EntryType.income &&
+      best == null &&
+      senders.isNotEmpty &&
+      !folded.any((w) => w.startsWith('vissza') || w.startsWith('kolcson'))) {
+    categoryId = 'gift_income';
+    categoryKnown = true;
+    modelCategoryId = null;
+  }
 
   // Szándék véglegesítése és célszabály.
   var intent = QuickIntent.record;
@@ -412,6 +688,80 @@ QuickEntryResult interpretQuickEntry(String text, QuickEntryContext context) {
     }
   }
 
+  // Személynek adott vagy személytől kapott pénz: tudjuk, mi történt, akkor
+  // is, ha kategória nem derült ki („átutaltam anyának”, „Peti visszaadta”).
+  String? personTitle;
+  final loan = folded.any(
+    (w) => w.startsWith('kolcson') || w.startsWith('tartoz'),
+  );
+  final weakCategory =
+      !categoryKnown ||
+      (best == null && modelCategoryId != null && modelConfidence < 0.7);
+  if (people.isNotEmpty && (weakCategory || loan)) {
+    categoryKnown = true;
+    modelCategoryId = null;
+    categoryId = CategoryCatalog.fallbackIdFor(type);
+    final name = trimCaseSuffix(tokens[people.first.index].original);
+    final display = name.isEmpty
+        ? name
+        : name[0].toUpperCase() + name.substring(1);
+    personTitle = loan
+        ? (type == EntryType.income
+              ? 'Kölcsön vissza: $display'
+              : 'Kölcsön: $display')
+        : display;
+  } else if (loan) {
+    categoryKnown = true;
+    modelCategoryId = null;
+    categoryId = CategoryCatalog.fallbackIdFor(type);
+    personTitle = type == EntryType.income ? 'Kölcsön vissza' : 'Kölcsön';
+  }
+
+  // Saját számlák, bankok, készpénz közötti mozgás: átvezetés (a „havi”
+  // szó ilyenkor csak a szokást jelzi: „betettem a havi 60 ezret”).
+  if (!simple &&
+      (intent == QuickIntent.record ||
+          (intent == QuickIntent.createRecurring && !createStrong))) {
+    final purchase =
+        best != null &&
+        !best.fuzzy &&
+        best.tokens.isNotEmpty &&
+        categoryById(best.categoryId)?.type == EntryType.expense &&
+        best.score >= 7;
+    final savings = context.accounts.where(
+      (account) => account.kind == AccountKind.savings,
+    );
+    final transfer = detectTransfer(
+      tokens,
+      endpoints,
+      personRecipient: people.any((person) => person.recipient),
+      purchase: purchase,
+      otherContent:
+          explicitType != null ||
+          (best != null && !best.fuzzy && best.tokens.isNotEmpty),
+      savingsName: savings.isEmpty ? null : savings.first.name,
+    );
+    if (transfer != null) {
+      return QuickEntryResult(
+        intent: QuickIntent.transfer,
+        type: EntryType.expense,
+        typeExplicit: true,
+        amount: amount,
+        title: 'Átvezetés',
+        merchant: null,
+        categoryId: CategoryCatalog.fallbackIdFor(EntryType.expense),
+        categoryGuessed: false,
+        date: dateMatch?.day ?? today,
+        dateExplicit: dateMatch != null,
+        notes: notes,
+        transferFrom: transfer.from?.name,
+        transferTo: transfer.to?.name,
+        foreignAmount: foreign?.amount,
+        currency: foreign?.currency,
+      );
+    }
+  }
+
   // Gyakoriság.
   Frequency? frequency;
   var interval = 1;
@@ -454,6 +804,7 @@ QuickEntryResult interpretQuickEntry(String text, QuickEntryContext context) {
   // Megnevezés: kereskedő > kulcsszó (vagy tanult megnevezés) > a mondat
   // maradék szavai > a kategória neve.
   title ??=
+      personTitle ??
       best?.title ??
       _modelTitle(model, tokens, consumed) ??
       _leftoverPhrase(tokens, consumed);
@@ -472,11 +823,34 @@ QuickEntryResult interpretQuickEntry(String text, QuickEntryContext context) {
     date = target?.nextOccurrence(today) ?? today;
   }
 
+  // A mondatban megnevezett számla („a közösről”, „közös kártyával”).
+  int? accountId;
+  for (final direction in const [FlowDirection.via, FlowDirection.from]) {
+    for (final endpoint in endpoints) {
+      if (endpoint.direction == direction && endpoint.accountId != null) {
+        accountId ??= endpoint.accountId;
+      }
+    }
+  }
+  final merchantFuzzy =
+      merchantVote != null && merchant != null && merchantVote.$1.fuzzy;
+  final guessed = <QuickQuestion>{
+    if (amountPick != null && notes.any((note) => note.startsWith('Több')))
+      QuickQuestion.amount,
+    if ((intent == QuickIntent.record ||
+            intent == QuickIntent.createRecurring) &&
+        (!categoryKnown ||
+            merchantFuzzy ||
+            (best?.fuzzy ?? false) ||
+            (best == null && modelCategoryId != null && modelConfidence < 0.7)))
+      QuickQuestion.what,
+  };
+
   return QuickEntryResult(
     intent: intent,
     type: target?.type ?? type,
     typeExplicit: explicitType != null || best != null || target != null,
-    amount: amountPick?.value,
+    amount: amount,
     title: title,
     merchant: merchant,
     categoryId: target?.categoryId ?? categoryId,
@@ -489,8 +863,21 @@ QuickEntryResult interpretQuickEntry(String text, QuickEntryContext context) {
     interval: interval,
     targetRule: target,
     notes: notes,
+    accountId: accountId,
+    foreignAmount: foreign?.amount,
+    currency: foreign?.currency,
+    guessed: guessed,
   );
 }
+
+/// Ismert kereskedő neve-e (a nagybetűs szó ilyenkor nem személynév).
+bool _isMerchantWord(String word) => _merchantWords.any(word.startsWith);
+
+final List<String> _merchantWords = [
+  for (final merchant in merchants)
+    for (final key in merchant.keys)
+      if (!key.contains(' ') && key.length >= 3) key,
+];
 
 /// A kategória-kulcsszavak és kereskedőnevek (egy szóból állók): ezeket nem
 /// tekintjük elírt igének („fizetés” ≠ „fizetem”).
@@ -541,6 +928,7 @@ Set<int>? _matchKey(
   String key,
   Set<int> skip, {
   bool strictShort = true,
+  bool merchant = false,
 }) {
   final parts = key.split(' ');
   if (parts.length > 1) {
@@ -568,7 +956,15 @@ Set<int>? _matchKey(
     final joined = parts.join();
     for (var i = 0; i < words.length; i++) {
       if (skip.contains(i)) continue;
-      if (words[i] == joined || fuzzyWordMatch(words[i], joined)) return {i};
+      final word = words[i];
+      if (word == joined ||
+          (word.startsWith(joined) && fuzzyWordMatch(word, joined)) ||
+          (joined.length >= 7 &&
+              word.length >= joined.length - 1 &&
+              !isCommonWord(word) &&
+              editDistance(word, joined, maxDistance: 1) <= 1)) {
+        return {i};
+      }
     }
     return null;
   }
@@ -590,6 +986,26 @@ Set<int>? _matchKey(
       }
       continue;
     }
+    if (word.startsWith(key)) {
+      if (fuzzyWordMatch(word, key)) return {i};
+      continue;
+    }
+    // Elírás csak ismeretlen szónál: a „számláról” nem „Szamos”, a „kocsit”
+    // nem „kocsma”. Kereskedőnél legfeljebb egy betű eltérés.
+    if (isCommonWord(word)) continue;
+    if (merchant) {
+      // Rövid névnél csak két szomszédos betű felcserélése („lild” → Lidl).
+      if (key.length < 5) {
+        if (key.length == 4 && _isTransposition(word, key)) return {i};
+        continue;
+      }
+      if (candidateStems(word).any(
+        (stem) => stem.length >= 5 && editDistance(stem, key, maxDistance: 1) <= 1,
+      )) {
+        return {i};
+      }
+      continue;
+    }
     if (fuzzyWordMatch(word, key)) return {i};
   }
   return null;
@@ -604,7 +1020,7 @@ Set<int>? _matchKey(
   (_CategoryVote, String)? best;
   for (final merchant in merchants) {
     for (final key in merchant.keys) {
-      final hit = _matchKey(words, key, skip);
+      final hit = _matchKey(words, key, skip, merchant: true);
       if (hit == null) continue;
       final exact =
           hit.length > 1 ||
@@ -613,7 +1029,13 @@ Set<int>? _matchKey(
       final score = exact ? 12 + key.length ~/ 4 : 9;
       if (best == null || score > best.$1.score) {
         best = (
-          _CategoryVote(merchant.categoryId, score, merchant.name, hit),
+          _CategoryVote(
+            merchant.categoryId,
+            score,
+            merchant.name,
+            hit,
+            fuzzy: !exact,
+          ),
           merchant.name,
         );
       }
@@ -639,10 +1061,22 @@ List<_CategoryVote> _matchKeywords(
       continue;
     }
     final exact = hit.length > 1 || words[hit.first] == keyword.key;
+    // Helyhatározó („a kocsmában”, „a pékségnél”): a hely dönt a termék
+    // („sör”) helyett.
+    final word = words[hit.last];
+    final place =
+        word.length > keyword.key.length + 1 &&
+        word.startsWith(keyword.key) &&
+        const ['ban', 'ben', 'nal', 'nel', 'ba', 'be', 'bol', 'bol'].any(
+          word.endsWith,
+        );
     votes.add(
       _CategoryVote(
         keyword.categoryId,
-        keyword.weight + (exact ? 2 : 0) + (hit.length > 1 ? 2 : 0),
+        keyword.weight +
+            (exact ? 2 : 0) +
+            (hit.length > 1 ? 2 : 0) +
+            (place ? 3 : 0),
         keyword.title,
         hit,
         fuzzy: hit.length == 1 && !words[hit.first].startsWith(keyword.key),
@@ -855,4 +1289,90 @@ String _trimAccusative(String word) {
     }
   }
   return word;
+}
+
+const Map<String, int> _countWords = {
+  'ket': 2,
+  'ketto': 2,
+  'harom': 3,
+  'negy': 4,
+  'ot': 5,
+  'hat': 6,
+  'het': 7,
+  'nyolc': 8,
+  'kilenc': 9,
+  'tiz': 10,
+};
+
+/// Darabszám és egységár szorzata: „2 x 1500”, „2x1500”, „3 * 990”,
+/// „két mozijegy 2900-ával”, „4 darab, darabja 750”. Visszaad: (összeg,
+/// a darabszám tokenjei).
+(int, Set<int>)? _multiply(
+  String text,
+  List<String> words,
+  AmountCandidate? pick,
+) {
+  if (pick == null) return null;
+  final first = pick.tokenIndexes.reduce((a, b) => a < b ? a : b);
+  final last = pick.tokenIndexes.reduce((a, b) => a > b ? a : b);
+  int? small(String word) {
+    final match = RegExp(r'^(\d{1,2})(x?)$').firstMatch(word);
+    if (match != null) return int.parse(match.group(1)!);
+    return _countWords[word];
+  }
+
+  // „2 x 1500”, „2x 1500”, „2 * 1500”, „2×1500”.
+  if (first >= 1) {
+    final before = words[first - 1];
+    final glued = RegExp(r'^(\d{1,2})x$').firstMatch(before);
+    if (glued != null) {
+      final count = int.parse(glued.group(1)!);
+      if (count >= 2) return (count * pick.value, {first - 1});
+    }
+    if (first >= 2 && before == 'x') {
+      final count = small(words[first - 2]);
+      if (count != null && count >= 2) {
+        return (count * pick.value, {first - 2, first - 1});
+      }
+    }
+    final count = small(before);
+    if (count != null && count >= 2 && RegExp(r'\d\s*[*×]\s*\d').hasMatch(text)) {
+      return (count * pick.value, {first - 1});
+    }
+  }
+  // Egységár: „2900-ával”, „darabja 750”, „darabonként”, „egyenként”.
+  final perPiece =
+      (last + 1 < words.length &&
+          const {'aval', 'evel', 'javal', 'jevel', 'val', 'vel'}.contains(
+            words[last + 1],
+          )) ||
+      words.any(
+        (w) =>
+            w == 'darabja' ||
+            w.startsWith('darabonkent') ||
+            w == 'egyenkent' ||
+            w == 'per',
+      );
+  if (!perPiece) return null;
+  for (var i = 0; i < words.length; i++) {
+    if (pick.tokenIndexes.contains(i)) continue;
+    final count = small(words[i]);
+    if (count == null || count < 2) continue;
+    // A darabszám mögött darab vagy egy főnév áll, nem pénznem.
+    return (count * pick.value, {i});
+  }
+  return null;
+}
+
+/// Két szomszédos betű felcserélése-e (és semmi más).
+bool _isTransposition(String word, String key) {
+  if (word.length != key.length) return false;
+  final diffs = [
+    for (var i = 0; i < word.length; i++)
+      if (word[i] != key[i]) i,
+  ];
+  return diffs.length == 2 &&
+      diffs[1] == diffs[0] + 1 &&
+      word[diffs[0]] == key[diffs[1]] &&
+      word[diffs[1]] == key[diffs[0]];
 }

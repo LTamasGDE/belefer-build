@@ -190,7 +190,7 @@ OfflineCaptureReading classifyOffline(
   final sentence = event.source == CaptureSource.applePay
       ? '${event.merchant ?? ''} ${event.amountText ?? ''}'
       : '${event.title} ${event.text}';
-  var result = interpretQuickEntry(sentence, context);
+  var result = interpretQuickEntry(sentence, context, simple: true);
   final (currency, foreign) = _detectCurrency(
     event.source == CaptureSource.applePay
         ? (event.amountText ?? '')

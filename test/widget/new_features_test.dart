@@ -46,6 +46,58 @@ void main() {
       expect(state.transactions, isEmpty);
     });
 
+    testWidgets('átvezetést felismer, és nem könyveli', (tester) async {
+      final state = await pumpBelefer(tester);
+      await tapVisible(tester, find.byKey(const ValueKey('quick-entry-bar')));
+      await tester.enterText(
+        find.byKey(const ValueKey('quick-entry-field')),
+        'Átraktam 10000 forintot CIB számláról a revolut sajátra',
+      );
+      await tester.pumpAndSettle();
+      expect(find.text('Átvezetés'), findsOneWidget);
+      expect(find.textContaining('CIB →'), findsOneWidget);
+      expect(find.text('Rendben, nem könyvelem'), findsOneWidget);
+      await tapVisible(
+        tester,
+        find.byKey(const ValueKey('quick-entry-submit')),
+      );
+      expect(state.transactions, isEmpty);
+      expect(find.textContaining('nem könyveltem'), findsOneWidget);
+    });
+
+    testWidgets('több tételt egyszerre könyvel, és együtt vonja vissza', (
+      tester,
+    ) async {
+      final state = await pumpBelefer(tester);
+      await tapVisible(tester, find.byKey(const ValueKey('quick-entry-bar')));
+      await tester.enterText(
+        find.byKey(const ValueKey('quick-entry-field')),
+        'Lidl 4500 és benzin 20 000',
+      );
+      await tester.pumpAndSettle();
+      expect(find.text('2 tétel elkönyvelése'), findsOneWidget);
+      await tapVisible(
+        tester,
+        find.byKey(const ValueKey('quick-entry-submit')),
+      );
+      expect(state.transactions, hasLength(2));
+      await tester.tap(find.text('Visszavonás'));
+      await tester.pumpAndSettle();
+      expect(state.transactions, isEmpty);
+    });
+
+    testWidgets('bizonytalan tippnél ellenőrzést kér', (tester) async {
+      await pumpBelefer(tester);
+      await tapVisible(tester, find.byKey(const ValueKey('quick-entry-bar')));
+      await tester.enterText(
+        find.byKey(const ValueKey('quick-entry-field')),
+        'xyz 5000',
+      );
+      await tester.pumpAndSettle();
+      expect(find.textContaining('Ellenőrizd'), findsOneWidget);
+      expect(find.textContaining('Minden megvan'), findsNothing);
+    });
+
     testWidgets('hiányos mondatnál megmondja, mi kell még', (tester) async {
       await pumpBelefer(tester);
       await tapVisible(tester, find.byKey(const ValueKey('quick-entry-bar')));

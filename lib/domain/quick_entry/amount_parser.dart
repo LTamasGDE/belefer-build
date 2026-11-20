@@ -48,6 +48,12 @@ const Set<String> _thousandWords = {
   'ezerba',
   'ezerbol',
   'ezerrel',
+  'ezerre',
+  'ezerrol',
+  'ezernyi',
+  'ezressel',
+  'ezrest',
+  'ezrek',
   'rugo',
   'rongy',
 };
@@ -351,6 +357,29 @@ List<AmountCandidate> findAmountCandidates(
       continue;
     }
 
+    // Szleng bankjegyek: „egy tízes” (10 000), „két húszas”, „egy ötös”.
+    final note = _banknotes[token];
+    if (note != null && i > 0) {
+      final count = switch (tokens[i - 1]) {
+        'egy' => 1,
+        'ket' || 'ketto' => 2,
+        'harom' => 3,
+        'negy' => 4,
+        _ => 0,
+      };
+      if (count > 0) {
+        candidates.add(
+          AmountCandidate(
+            value: count * note,
+            score: 5,
+            tokenIndexes: {i - 1, i},
+          ),
+        );
+        i++;
+        continue;
+      }
+    }
+
     // Számnevek: „kétezer”, „ötszáz forint”, „másfél millió”, „öt ezer”.
     final wordValue = _readNumberWords(tokens, i, blocked);
     if (wordValue != null) {
@@ -385,6 +414,15 @@ List<AmountCandidate> findAmountCandidates(
   return candidates;
 }
 
+const Map<String, int> _banknotes = {
+  'otos': 5000,
+  'otost': 5000,
+  'tizes': 10000,
+  'tizest': 10000,
+  'huszas': 20000,
+  'huszast': 20000,
+};
+
 /// Egymás utáni számnév-tokenek összeolvasása. Visszaad: (érték,
 /// felhasznált indexek, következő index).
 (double, Set<int>, int)? _readNumberWords(
@@ -408,6 +446,19 @@ List<AmountCandidate> findAmountCandidates(
 
 String _stripNumberSuffix(String word) {
   if (parseHungarianNumberWord(word) != null) return word;
+  // „tízezret”, „ötezret”: az „ezer” e-je kiesik a tárgyragnál.
+  if (word.endsWith('ezret') && word.length > 5) {
+    final stem = '${word.substring(0, word.length - 5)}ezer';
+    if (parseHungarianNumberWord(stem) != null) return stem;
+  }
+  for (final suffix in ['rel', 'ral', 'val', 'vel', 're', 'ra', 'nyi']) {
+    if (word.length > suffix.length + 3 && word.endsWith(suffix)) {
+      final stem = word.substring(0, word.length - suffix.length);
+      if (parseHungarianNumberWord(stem) != null && stem.length >= 4) {
+        return stem;
+      }
+    }
+  }
   for (final suffix in ['ert', 'at', 'et', 'ot', 'ba', 'be', 'bol', 'rol']) {
     if (word.length > suffix.length + 2 && word.endsWith(suffix)) {
       final stem = word.substring(0, word.length - suffix.length);

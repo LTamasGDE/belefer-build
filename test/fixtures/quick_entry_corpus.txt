@@ -1,0 +1,316 @@
+# Gyorsrögzítés – valósághű mondatok elvárt eredménnyel.
+#
+# Formátum: mondat || kulcs=érték; kulcs=érték …
+#   i    szándék: record, recurring, cancel, change, transfer, question
+#   t    típus: k (kiadás) vagy b (bevétel)
+#   a    összeg forintban („-” = ne legyen összeg)
+#   c    kategória-azonosító (több lehetőség „/” jellel)
+#   ti   megnevezés (több lehetőség „/” jellel)
+#   d    dátum (ÉÉÉÉ-HH-NN)
+#   acc  számla neve, amelyről/amelyre a tétel megy
+#   from, to   átvezetésnél a forrás és a cél (számlanév, bank vagy Készpénz)
+#   cur  devizanem (EUR, USD …), fa = devizás összeg
+#   n    ennyi tétel egy mondatban
+#   f    gyakoriság: weekly, monthly, yearly; iv = hányanként
+#   rule ismétlődő tétel neve (lemondás, módosítás)
+#   sure no = a felületnek jeleznie kell, hogy bizonytalan
+#
+# Kontextus: ma 2026-11-20 (péntek). Számlák: Saját (alapértelmezett,
+# felismerő: revolut), Megtakarítás, Közös. Ismétlődő tételek: Netflix,
+# Lakbér, Spotify, Edzőterem bérlet, Fizetés.
+
+## --- Kereskedő + összeg ---
+Lidl 4500 || i=record; t=k; a=4500; c=groceries; ti=Lidl
+tesco 12 ezer || a=12000; c=groceries; ti=Tesco
+Spar 3290 || a=3290; c=groceries; ti=Spar
+aldiban vásároltam 8700-ért || a=8700; c=groceries; ti=Aldi
+penny 2150 || a=2150; c=groceries; ti=Penny
+Auchan 23 400 || a=23400; c=groceries; ti=Auchan
+rossmann 5600 || a=5600; c=groceries; ti=Rossmann
+dm-ben 3400 || a=3400; c=groceries; ti=dm
+meki 2890 || a=2890; c=dining; ti=McDonald’s
+mcdonalds 3100 || a=3100; c=dining; ti=McDonald’s
+burger king 4200 || a=4200; c=dining; ti=Burger King
+KFC 3600 || a=3600; c=dining; ti=KFC
+wolt 6800 || a=6800; c=dining; ti=Wolt
+foodora rendelés 5400 || a=5400; c=dining; ti=Foodora
+starbucks 1850 || a=1850; c=dining; ti=Starbucks
+MOL kút 21000 || a=21000; c=transport; ti=MOL
+OMV 18 500 || a=18500; c=transport; ti=OMV
+Shell tankolás 19900 || a=19900; c=transport; ti=Shell
+bolt taxi 4300 || a=4300; c=transport
+uber 5200 || a=5200; c=transport; ti=Uber
+MÁV jegy 3700 || a=3700; c=transport
+BKV bérlet 8950 || a=8950; c=transport
+IKEA 45 000 || a=45000; ti=IKEA
+Decathlon 12 990 || a=12990; ti=Decathlon
+Zara 15 990 || a=15990; c=clothing; ti=Zara
+H&M 7990 || a=7990; c=clothing; ti=H&M
+Media Markt 89 990 || a=89990; ti=Media Markt/MediaMarkt
+emag 24 990 || a=24990; ti=eMAG
+Netflix 4990 || a=4990; c=subscriptions; ti=Netflix
+Spotify 1990 || a=1990; c=subscriptions; ti=Spotify
+patika 3400 || a=3400; c=health
+Cinema City 5800 || a=5800; c=entertainment; ti=Cinema City
+Szamos cukrászda 2400 || a=2400; c=dining; ti=Szamos
+
+## --- Köznevek, kategóriák ---
+kenyér és tej 1200 || a=1200; c=groceries
+bevásárlás 18 000 || a=18000; c=groceries
+kaja 3500 || a=3500; c=groceries/dining
+ebéd 2800 || a=2800; c=dining
+vacsora az étteremben 14 000 || a=14000; c=dining
+kávé 900 || a=900; c=dining
+pizza 4500 || a=4500; c=dining
+sör a kocsmában 2200 || a=2200; c=dining/entertainment
+fodrász 6000 || a=6000; t=k
+gyógyszer 3400 || a=3400; c=health
+fogorvos 25 000 || a=25000; c=health
+szemüveg 48 000 || a=48000; c=health
+tankoltam 20 ezerért || a=20000; c=transport
+benzin 15000 || a=15000; c=transport
+parkolás 600 || a=600; c=transport
+autópálya-matrica 5150 || a=5150; c=transport
+taxi 4500 || a=4500; c=transport
+vonatjegy Debrecenbe 6400 || a=6400; c=transport
+repülőjegy 38 000 || a=38000; c=transport/entertainment
+albérlet 180 000 || a=180000; c=housing
+lakbér 180e || a=180000; c=housing
+közös költség 22 000 || a=22000; c=housing
+villanyszámla 12 000 || a=12000; c=utilities
+gázszámla 9800 || a=9800; c=utilities
+vízdíj 4300 || a=4300; c=utilities
+fizettem a villanyt 11 500 || a=11500; c=utilities
+internet 6990 || a=6990; c=utilities/subscriptions
+telefonszámla 8990 || a=8990; c=utilities/subscriptions
+mobilszámla 5990 || a=5990; c=utilities/subscriptions
+cipő 24 990 || a=24990; c=clothing
+kabát 39 000 || a=39000; c=clothing
+mozijegy 2900 || a=2900; c=entertainment
+koncertjegy 15 000 || a=15000; c=entertainment
+könyv 4990 || a=4990; c=education/entertainment
+tandíj 120 000 || a=120000; c=education
+nyelvóra 8000 || a=8000; c=education
+ajándék anyának 10 000 || a=10000; c=gifts
+virág 5500 || a=5500; c=gifts
+szülinapi ajándék Petinek 8000 || a=8000; c=gifts
+kutyatáp 7800 || a=7800; t=k
+állatorvos 15 000 || a=15000; t=k
+edzőterem 15 000 || a=15000; t=k
+biztosítás 9600 || a=9600; t=k
+kötelező biztosítás 32 000 || a=32000; t=k
+autószerviz 45 000 || a=45000; c=transport
+gumicsere 12 000 || a=12000; c=transport
+számlavezetési díj 990 || a=990; c=other_expense
+bankkártya éves díja 3000 || a=3000; c=other_expense
+készpénzfelvételi díj 600 || a=600; c=other_expense
+parkolási bírság 10 000 || a=10000; t=k
+adó 45 000 || a=45000; t=k
+játék a gyereknek 6990 || a=6990; t=k
+óvodai befizetés 12 000 || a=12000; c=education
+ruha 12.990 || a=12990; c=clothing
+wc papír, mosószer 4600 || a=4600; c=groceries
+
+## --- A „számla” szó csapdái ---
+kifizettem a gázszámlát 9500 || a=9500; c=utilities
+befizettem a telefonszámlát 7990 || a=7990; c=utilities/subscriptions
+a számlám szerint 3500 volt az ebéd || a=3500; c=dining
+kifizettek egy számlát, 120 ezer jött || t=b; a=120000
+befolyt egy számla 85 000 || t=b; a=85000
+az ügyfél kifizette a számlát 150 000 || t=b; a=150000
+
+## --- Bevételek ---
+fizetés 450 000 || i=record; t=b; a=450000; c=salary
+megjött a fizetés 452 300 || t=b; a=452300; c=salary
+bér 380 ezer || t=b; a=380000; c=salary
+prémium 100 000 || t=b; a=100000; c=salary/side_income
+bónusz 50e || t=b; a=50000; c=salary/side_income
+ösztöndíj 45 000 || t=b; a=45000; c=scholarship
+eladtam a biciklit 30 ezerért || t=b; a=30000; c=side_income
+jófogáson eladtam a régi telefont 40 000 || t=b; a=40000; c=side_income
+vaterán eladtam egy könyvet 2500 || t=b; a=2500; c=side_income
+korrepetálás 6000 jött || t=b; a=6000; c=side_income
+borravaló 3000 || t=b; a=3000
+visszatérítés 4500 || t=b; a=4500; c=refund
+visszakaptam a kauciót 180 000 || t=b; a=180000; c=refund
+adó-visszatérítés 64 000 || t=b; a=64000; c=refund
+családi pótlék 24 000 || t=b; a=24000
+nyugdíj 210 000 || t=b; a=210000
+kaptam anyától 20 ezret || t=b; a=20000; c=gift_income
+nagymama adott 10 000-et || t=b; a=10000; c=gift_income
+szülinapomra kaptam 15 000 || t=b; a=15000; c=gift_income
+nyertem a lottón 5000 || t=b; a=5000
+kamat 1240 || t=b; a=1240
+megtakarítás kamata 3200 || t=b; a=3200
+cashback 850 || t=b; a=850; c=refund
+utalt a főnököm 25 ezret a túlóráért || t=b; a=25000
+jött 12 000 a melóból || t=b; a=12000
+
+## --- Átvezetés saját számlák, bankok, készpénz között ---
+Átraktam 10000 forintot CIB számláról a revolut sajátra || i=transfer; a=10000; from=CIB; to=Saját
+áttettem 50 ezret a megtakarításba || i=transfer; a=50000; to=Megtakarítás
+félretettem 30 000-et || i=transfer; a=30000; to=Megtakarítás
+betettem 20e-t a közösbe || i=transfer; a=20000; to=Közös
+utaltam 40 ezret a közös számlára || i=transfer; a=40000; to=Közös
+kivettem 25 000-et a megtakarításból || i=transfer; a=25000; from=Megtakarítás
+átutaltam az OTP-ről a Revolutra 100 ezret || i=transfer; a=100000; from=OTP; to=Saját
+feltöltöttem a revolutot 30 ezerrel || i=transfer; a=30000; to=Saját
+feltöltöttem a Revolut számlát 15000 || i=transfer; a=15000; to=Saját
+felvettem 20 ezret az automatából || i=transfer; a=20000; to=Készpénz
+készpénzfelvétel 40 000 || i=transfer; a=40000; to=Készpénz
+ATM 30000 || i=transfer; a=30000; to=Készpénz
+kp felvétel 10e || i=transfer; a=10000; to=Készpénz
+befizettem 50 ezer készpénzt a számlámra || i=transfer; a=50000; from=Készpénz
+átvezetés saját számlák között 5000 || i=transfer; a=5000
+a közösről visszaraktam 8000-et a sajátra || i=transfer; a=8000; from=Közös; to=Saját
+átküldtem 60 ezret a K&H-s számlámra || i=transfer; a=60000; to=K&H
+áttettem a fizetésem felét a megtakarításiba, 200 ezret || i=transfer; a=200000; to=Megtakarítás
+Erste számláról 15 000 a Revolutra || i=transfer; a=15000; from=Erste; to=Saját
+pénzt tettem a széfbe 10 000 || i=transfer; a=10000; to=Megtakarítás
+váltottam 100 eurót || i=transfer
+átváltottam 40 000 forintot euróra || i=transfer; a=40000
+befizettem a hitelkártya tartozást 60 000 || i=transfer; a=60000
+
+## --- Személyek: utalás, kölcsön, visszafizetés ---
+átutaltam anyának 20 ezret || i=record; t=k; a=20000
+utaltam Petinek 5000-et a pizzáért || i=record; t=k; a=5000; c=dining
+kölcsönadtam Annának 10 ezret || i=record; t=k; a=10000
+Peti visszaadta a kölcsönt 10 000 || i=record; t=b; a=10000
+visszautalta Anna a 4500-at || i=record; t=b; a=4500
+anya utalt 30 ezret || i=record; t=b; a=30000; c=gift_income
+a párom átutalta a felét a vacsorának, 7000 || i=record; t=b; a=7000
+fizettem Gábornak a fuvarért 3000-et || i=record; t=k; a=3000; c=transport
+kifizettem a takarítónőt 12 000 || i=record; t=k; a=12000
+
+## --- Visszaküldés, visszatérítés ---
+visszavittem a cipőt, visszakaptam 15 ezret || t=b; a=15000; c=refund
+visszaküldtem a csomagot, jóváírtak 8990-et || t=b; a=8990; c=refund
+a Zara visszautalta a 15 990-et || t=b; a=15990; c=refund
+sztornózták a tranzakciót 4500 || t=b; a=4500; c=refund
+
+## --- Számla a szövegből ---
+a közösről fizettem a Tescoban 8000-et || i=record; a=8000; c=groceries; acc=Közös
+közös kártyával tankoltam 20 000 || a=20000; c=transport; acc=Közös
+a megtakarításból fizettem a szervizt 60 000 || a=60000; c=transport; acc=Megtakarítás
+Lidl 6500 a közös számláról || a=6500; c=groceries; acc=Közös
+saját kártyával ebéd 3200 || a=3200; c=dining; acc=Saját
+revoluttal fizettem a kávét 1100 || a=1100; c=dining; acc=Saját
+készpénzzel fizettem a piacon 4000 || a=4000; c=groceries
+lakbér a közösről 180 ezer || a=180000; c=housing; acc=Közös
+
+## --- Ismétlődő tételek ---
+Netflix havi 4990 || i=recurring; a=4990; c=subscriptions; f=monthly
+HBO Max havonta 3490 || i=recurring; a=3490; c=subscriptions; f=monthly
+előfizettem a Disney plusra, 3490 havonta || i=recurring; a=3490; c=subscriptions
+minden hónapban 180 ezer lakbér || i=recurring; a=180000; c=housing; f=monthly
+heti takarítás 8000 || i=recurring; a=8000; f=weekly
+kéthetente 6000 a takarító || i=recurring; a=6000; f=weekly; iv=2
+évente 32 000 a kötelező biztosítás || i=recurring; a=32000; f=yearly
+negyedévente 15 000 a kéményseprő || i=recurring; a=15000; f=monthly; iv=3
+minden hónap 10-én 450 ezer fizetés || i=recurring; t=b; a=450000; c=salary; f=monthly
+havi 15 000 zsebpénz a gyereknek || i=recurring; a=15000; f=monthly
+lemondtam a Netflixet || i=cancel; rule=Netflix
+leiratkoztam a Spotify-ról || i=cancel; rule=Spotify
+nem kell már az edzőterem bérlet || i=cancel; rule=Edzőterem bérlet
+felmondtam a Netflix előfizetést || i=cancel; rule=Netflix
+mostantól 200 ezer a lakbér || i=change; a=200000; rule=Lakbér
+emelték a Netflixet 5490-re || i=change; a=5490; rule=Netflix
+januártól 2490 a Spotify || i=change; a=2490; rule=Spotify
+megemelték a fizetésem 500 ezerre || i=change; a=500000; rule=Fizetés
+
+## --- Dátumok ---
+tegnap kávé 900 || a=900; d=2026-11-19
+tegnapelőtt ebéd 2500 || a=2500; d=2026-11-18
+kedden mozi 3000 || a=3000; d=2026-11-17
+szerdán pizza 4500 || a=4500; d=2026-11-18
+csütörtökön tankoltam 18 000 || a=18000; d=2026-11-19
+hétfőn fodrász 6000 || a=6000; d=2026-11-16
+szombaton piac 4000 || a=4000; d=2026-11-14
+vasárnap ebéd 6000 || a=6000; d=2026-11-15
+múlt szombaton koncert 12 000 || a=12000; d=2026-11-14
+3 napja gyógyszer 2400 || a=2400; d=2026-11-17
+két napja Lidl 5600 || a=5600; d=2026-11-18
+egy hete Spar 7000 || a=7000; d=2026-11-13
+november 3-án lidl 4500 || a=4500; d=2026-11-03
+nov 12 benzin 20000 || a=20000; d=2026-11-12
+11.05. Tesco 8800 || a=8800; d=2026-11-05
+2026.11.10 fodrász 6000 || a=6000; d=2026-11-10
+2026-11-02 albérlet 180000 || a=180000; d=2026-11-02
+okt 28 ruha 9990 || a=9990; d=2026-10-28
+október 31-én jelmez 7000 || a=7000; d=2026-10-31
+15-én koncert 9000 || a=9000; d=2026-11-15
+ma reggel kávé 800 || a=800; d=2026-11-20
+ma ebéd 2900 || a=2900; d=2026-11-20
+vásárlás a Tescoban 6700 || a=6700; d=2026-11-20; c=groceries
+vásároltam cipőt 19 990 || a=19990; d=2026-11-20; c=clothing
+
+## --- Összeg írásmódok ---
+kávé 990,- || a=990
+benzin 15 000 Ft-ért || a=15000
+benzin 15000HUF || a=15000
+HUF 4500 kávé || a=4500
+4 500,00 Ft kávé || a=4500
+ruha 12.990 || a=12990
+lakbér másfél millió || a=1500000
+mozi 3 ezer || a=3000
+ebéd 3e || a=3000
+cipő 25k || a=25000
+húszezer forint benzin || a=20000
+kétezer-ötszáz ebéd || a=2500
+ezerötszáz kávé meg sütemény || a=1500
+tízezret költöttem ruhára || a=10000
+5 rugó a vacsora || a=5000
+másfél ezer a parkolás || a=1500
+egy tízes a tankolás || a=10000
+3,5 ezer ebéd || a=3500
+1,2 millió autó || a=1200000
+Ft 3500 Lidl || a=3500
+3500.- Spar || a=3500
+2 x 1500 mozijegy || a=3000
+két mozijegy 2900-ával || a=5800
+3 db sör 600-ért || t=k
+
+## --- Deviza ---
+25 euró ebéd Bécsben || cur=EUR; fa=25
+Amazon 30 dollár || cur=USD; fa=30
+40 € szállás || cur=EUR; fa=40
+$12 app előfizetés || cur=USD; fa=12
+200 cseh korona sör || cur=CZK; fa=200
+15 font jegy Londonban || cur=GBP; fa=15
+
+## --- Elírások, ékezet nélkül, szleng ---
+tegnap ebed 2500 || a=2500; c=dining; d=2026-11-19
+kave 900 || a=900; c=dining
+tankoltam20ezer || a=20000; c=transport
+lidlbe 4500 || a=4500; c=groceries; ti=Lidl
+tescoban 6000 || a=6000; c=groceries; ti=Tesco
+gyogyszertar 3200 || a=3200; c=health
+mekiben 2600 || a=2600; c=dining; ti=McDonald’s
+kajáltam 3000-ért || a=3000; c=dining/groceries
+benya 18e || a=18000; c=transport
+cigi 2500 || a=2500; t=k
+pia 4000 || a=4000; c=groceries/dining/entertainment
+feszt jegy 35 ezer || a=35000; c=entertainment
+uber eats 5200 || a=5200; c=dining
+vettem egy pulcsit 9990 || a=9990; c=clothing
+elköltöttem 5000-et kajára || a=5000; c=groceries/dining
+kifizettem a lakbért 180 ezer || a=180000; c=housing
+megkaptam a fizum 430 || t=b; c=salary
+
+## --- Több tétel egy mondatban ---
+Lidl 4500 és benzin 20 000 || n=2
+kávé 900, ebéd 2800, mozi 3000 || n=3
+tegnap Tesco 6000 meg tankolás 18 000 || n=2; d=2026-11-19
+fizetés 450 ezer és lakbér 180 ezer || n=2
+
+## --- Kérdések, nem rögzítendő ---
+mennyit költöttem ebben a hónapban? || i=question
+mennyi maradt? || i=question
+mennyit költöttem kajára novemberben || i=question
+mennyi ment el a múlt hónapban || i=question
+mennyi volt a bevételem októberben? || i=question
+hogyan tudok sablont létrehozni? || i=question
+
+## --- Bizonytalan: ne állítsa, hogy minden megvan ---
+xyz 5000 || a=5000; sure=no
+valami 3000 || a=3000; sure=no

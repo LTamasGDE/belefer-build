@@ -216,11 +216,20 @@ class AppState extends ChangeNotifier {
     return result;
   }
 
+  /// Devizás összeg forintban a napi árfolyamon (`null`, ha nem elérhető).
+  Future<int?> toForint(double amount, String currency) async {
+    final rate = await _rates.hufPer(currency);
+    if (rate == null) return null;
+    final value = (amount * rate).round();
+    return value > 0 ? value : null;
+  }
+
   /// A gyorsrögzítés értelmezőjének adatai (a tanuláshoz).
   QuickEntryContext get quickEntryContext => QuickEntryContext(
     today: _today(),
     history: _transactions,
     rules: activeRules,
+    accounts: _accounts,
   );
 
   Future<void> load() async {

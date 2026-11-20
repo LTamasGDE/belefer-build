@@ -1,0 +1,82 @@
+# Ellenőrző mondatok: a fejlesztés közben nem hangoltuk rájuk a szabályokat.
+# Formátum és kontextus: mint a quick_entry_corpus.txt-ben.
+
+## --- Kiadások másképp ---
+ma a pékségben hagytam 1450-et || a=1450; c=groceries
+elment 6 ezer a fodrásznál || a=6000; t=k
+4990 Ft a netflix || a=4990; c=subscriptions
+Ebédre 3200 ment el || a=3200; c=dining
+Vettem egy könyvet 5490-ért || a=5490
+Tescós bevásárlás 14 300 || a=14300; c=groceries
+benzinkút 22 000 || a=22000; c=transport
+gyógyszertárban 5200 || a=5200; c=health
+fizettem 3000-et parkolásért || a=3000; c=transport
+mozi popcornnal 6400 || a=6400; c=entertainment
+spotify előfizetés 1990 || a=1990; c=subscriptions
+cipőjavítás 3500 || a=3500
+fagyi 1200 || a=1200; c=dining/groceries
+pékáru 900 || a=900; c=groceries
+új telefon 189 990 || a=189990
+vízszerelő 25000 || a=25000; t=k
+szemétszállítás 7400 || a=7400; c=utilities/housing
+lakásbiztosítás 4200 || a=4200; t=k
+bérlet 9500 || a=9500; c=transport
+taxi haza 3800 || a=3800; c=transport
+
+## --- Bevételek másképp ---
+jóváírtak 12 500-at || t=b; a=12500
+beérkezett a fizetésem: 465 000 || t=b; a=465000; c=salary
+eladtam a régi laptopot 85 ezerért || t=b; a=85000; c=side_income
+kaptam 5000 borravalót || t=b; a=5000
+visszaadták a garanciális javítás árát 12 000 || t=b; a=12000; c=refund
+apa küldött 15 ezret || t=b; a=15000; c=gift_income
+a tesóm visszafizette a 8000-et || t=b; a=8000
+utalt a megrendelő 95 000-et || t=b; a=95000
+kifizették a túlórát 40 000 || t=b; a=40000
+Jött a családi pótlék 26 000 || t=b; a=26000
+
+## --- Átvezetés másképp ---
+20 ezret raktam félre || i=transfer; a=20000; to=Megtakarítás
+Revolutról átment 30 ezer a közösbe || i=transfer; a=30000; from=Saját; to=Közös
+áttettem a pénzt a CIB-re, 45 000 || i=transfer; a=45000; to=CIB
+megtakarításból vissza a sajátra 12 000 || i=transfer; a=12000; from=Megtakarítás; to=Saját
+kivettem az ATM-ből 15 ezret || i=transfer; a=15000; to=Készpénz
+pénzfelvétel automatából 25000 || i=transfer; a=25000; to=Készpénz
+átutaltam a saját OTP számlámra 70 ezret || i=transfer; a=70000; to=OTP
+a közös számlára betettem a havi 60 ezret || i=transfer; a=60000; to=Közös
+közösbe 50 ezer || i=transfer; a=50000; to=Közös
+megtakarításba 100 000 || i=transfer; a=100000; to=Megtakarítás
+
+## --- Személyek másképp ---
+adtam Zsófinak 3000-et a jegyért || t=k; a=3000
+küldtem a húgomnak 10 ezret || t=k; a=10000
+fizettem a szomszédnak a fűnyírásért 4000-et || t=k; a=4000
+Bence megadta a tartozását, 6000 || t=b; a=6000
+visszakaptam Marcitól a 2500-at || t=b; a=2500
+
+## --- Számla jelölése másképp ---
+Közösről: Lidl 7300 || a=7300; c=groceries; acc=Közös
+megtakarítási számláról fizettem a nyaralást 250 000 || a=250000; acc=Megtakarítás
+saját számláról tankolás 19 000 || a=19000; c=transport; acc=Saját
+
+## --- Dátumok, összegek másképp ---
+tegnapi vacsora 9800 || a=9800; c=dining; d=2026-11-19
+múlt kedden fogorvos 18 000 || a=18000; c=health; d=2026-11-17
+nov. 18. gyógyszer 2100 || a=2100; d=2026-11-18
+18-án Tesco 5600 || a=5600; d=2026-11-18
+hatezer ötszáz a gáz || a=6500
+háromezer-kilencszázkilencven pizza || a=3990
+12,5e benzin || a=12500
+1.5M autó || a=1500000
+ezer forint kávé || a=1000
+
+## --- Több tétel, kérdések másképp ---
+kenyér 600; tej 450; vaj 990 || n=3
+Spar 3400 + Rossmann 2100 || n=2
+mennyit költöttem tegnap? || i=question
+mennyi jött be idén || i=question
+hány forint ment el benzinre a múlt hónapban || i=question
+
+## --- Deviza másképp ---
+ebéd Prágában 450 korona || cur=CZK; fa=450
+szállás 120 euro || cur=EUR; fa=120

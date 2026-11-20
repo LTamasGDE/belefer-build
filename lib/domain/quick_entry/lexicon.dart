@@ -5,6 +5,8 @@
 /// megadni.
 library;
 
+import '../text_fold.dart';
+
 /// Ismert kereskedő vagy szolgáltató.
 class MerchantEntry {
   const MerchantEntry(this.name, this.categoryId, this.keys);
@@ -81,6 +83,7 @@ const List<MerchantEntry> merchants = [
   MerchantEntry('MÁV', 'transport', ['mav', 'mav start', 'mavstart']),
   MerchantEntry('Volán', 'transport', ['volan', 'volanbusz']),
   MerchantEntry('FlixBus', 'transport', ['flixbus']),
+  MerchantEntry('Uber Eats', 'dining', ['uber eats', 'ubereats']),
   MerchantEntry('Uber', 'transport', ['uber']),
   MerchantEntry('Bolt', 'transport', ['bolt taxi', 'bolttal']),
   MerchantEntry('Főtaxi', 'transport', ['fotaxi']),
@@ -290,6 +293,12 @@ const List<KeywordEntry> keywords = [
   KeywordEntry('langos', 'dining', title: 'Lángos'),
   KeywordEntry('palacsinta', 'dining', title: 'Palacsinta'),
   KeywordEntry('kocsma', 'dining', title: 'Kocsma'),
+  KeywordEntry('fuvar', 'transport', title: 'Fuvar', weight: 6),
+  KeywordEntry('ado', 'other_expense', title: 'Adó', weight: 5),
+  KeywordEntry('jelmez', 'clothing', title: 'Jelmez', weight: 5),
+  KeywordEntry('benya', 'transport', title: 'Benzin', weight: 6),
+  KeywordEntry('premium', 'salary', title: 'Prémium', weight: 5),
+  KeywordEntry('sztorno', 'refund', title: 'Sztornó', weight: 7),
   KeywordEntry('sorozo', 'dining', title: 'Söröző'),
   KeywordEntry('koktel', 'dining', title: 'Koktél'),
   KeywordEntry('bar', 'dining', title: 'Bár', weight: 3),
@@ -646,6 +655,12 @@ const Set<String> incomeWords = {
   'kerestem',
   'fizettek',
   'kifizettek',
+  'sztornoztak',
+  'sztornozva',
+  'sztornoztam',
+  'visszaterult',
+  'visszajott',
+  'befolyt',
 };
 
 /// Új ismétlődő tételre utaló szavak.
@@ -857,4 +872,49 @@ const Set<String> stopWords = {
   'osszeg',
   'osszeget',
   'tetel',
+};
+
+/// Gyakori köznapi szavak, amelyek nem kereskedők és nem kategóriák elírásai
+/// („számla” ≠ „Szamos”, „kocsi” ≠ „kocsma”).
+const Set<String> commonWords = {
+  'szamla', 'szamlam', 'kartya', 'kartyam', 'bankkartya', 'penz', 'penzem', //
+  'forint', 'osszeg', 'tetel', 'sajat', 'kozos', 'megtakaritas', 'utalas', //
+  'atutalas', 'bank', 'automata', 'keszpenz', 'tartozas', 'kolcson', 'adossag',
+  'honap', 'het', 'nap', 'ev', 'ora', 'perc', 'reggel', 'este', 'hetvege', //
+  'kocsi', 'auto', 'haz', 'lakas', 'szoba', 'munka', 'melo', 'iroda', 'bolt', //
+  'piac', 'utca', 'varos', 'ut', 'jegy', 'kep', 'telefon', 'gep', 'laptop', //
+  'gyerek', 'anya', 'apa', 'mama', 'papa', 'teso', 'parom', 'barat', 'haver', //
+  'fonok', 'kollega', 'szomszed', 'ugyfel', 'ember', 'csalad', 'vendeg', //
+  'resz', 'fele', 'felet', 'maradek', 'egesz', 'darab', 'csomag', 'doboz', //
+  'uveg', 'zacsko', 'szatyor', 'kosar', 'meret', 'szin', 'fajta', 'masik', //
+  'utolso', 'elso', 'masodik', 'harmadik', 'vegre', 'ujra', 'mindig', //
+  'soha', 'neha', 'gyakran', 'tobb', 'kevesebb', 'tul', 'nagyon', 'kicsit', //
+  'jo', 'rossz', 'draga', 'olcso', 'szep', 'gyors', 'lassu', 'tele', 'ures', //
+  'szerint', 'miatt', 'helyett', 'nelkul', 'kozott', 'utan', 'alatt', //
+  'felett', 'mellett', 'kozben', 'reszere', 'reszet', 'osszesen', 'vegul', //
+  'tegnap', 'ma', 'holnap', 'most', 'aztan', 'utana', 'elotte', 'majd', //
+  'valt', 'valtott', 'tett', 'rakott', 'vitt', 'hozott', 'kert', 'adott', //
+  'mondta', 'irta', 'latta', 'kuldte', 'akarta', 'kellett', 'lehetett', //
+  'volt', 'lesz', 'van', 'nincs', 'kell', 'lehet', 'szabad', 'tud', 'akar', //
+};
+
+/// Ismert szó-e (a tövével együtt nézve): ilyenkor nem tekintjük egy másik
+/// szó elírásának.
+bool isCommonWord(String word) {
+  for (final stem in candidateStems(word)) {
+    if (_knownWords.contains(stem)) return true;
+  }
+  return false;
+}
+
+final Set<String> _knownWords = {
+  ...commonWords,
+  ...stopWords,
+  ...expenseWords,
+  ...incomeWords,
+  ...recurringCreateWords,
+  ...recurringCancelWords,
+  ...recurringChangeWords,
+  for (final keyword in keywords)
+    if (!keyword.key.contains(' ')) keyword.key,
 };
