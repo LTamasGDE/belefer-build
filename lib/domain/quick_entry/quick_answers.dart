@@ -179,8 +179,14 @@ String answerQuestion(
   for (final word in words) {
     if (word.length < 3 || stopWords.contains(word)) continue;
     // A kérdés mértéke nem kategória („bevételem”, „kiadásom”).
-    if (const ['bevetel', 'kiadas', 'koltes', 'penz', 'egyenleg', 'marad']
-        .any(word.startsWith)) {
+    if (const [
+      'bevetel',
+      'kiadas',
+      'koltes',
+      'penz',
+      'egyenleg',
+      'marad',
+    ].any(word.startsWith)) {
       continue;
     }
     for (final keyword in keywords) {
