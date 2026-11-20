@@ -763,6 +763,157 @@ def notification(status: str, rng: random.Random) -> Example:
     return Example(text=noisy(full, rng, 0.05), status=status)
 
 
+# --- Átvezetés saját számlák között (nem bevétel, nem kiadás) -----------------
+
+TRANSFER_PLACES = [
+    'saját', 'közös', 'megtakarítás', 'megtakarítási számla', 'közös számla',
+    'saját számla', 'széf', 'Revolut', 'revolut saját', 'CIB', 'OTP', 'K&H',
+    'Erste', 'MBH', 'Raiffeisen', 'UniCredit', 'Gránit', 'Wise', 'bankszámla',
+    'számlám', 'másik számlám', 'Revolut Közös', 'zsebem', 'persely',
+]
+TRANSFER_VERBS = [
+    'átraktam', 'áttettem', 'átutaltam', 'átküldtem', 'átvezettem', 'utaltam',
+    'raktam át', 'tettem át', 'küldtem át', 'mozgattam', 'visszaraktam',
+    'betettem', 'beraktam', 'kivettem', 'átpakoltam', 'áttoltam',
+]
+
+
+def transfer_sentence(rng: random.Random) -> Example:
+    b = Builder()
+    amount = amount_text('other_income', rng, rng.choice(['acc', None]))
+    src, dst = rng.sample(TRANSFER_PLACES, 2)
+    t = rng.randrange(12)
+    if rng.random() < 0.2:
+        b.add(rng.choice(vocab.DATE_PHRASES))
+    src_word = ''.join(inflect(src, rng.choice(['elat', 'delat']), rng)).replace('-', '-')
+    dst_word = ''.join(inflect(dst, rng.choice(['illat', 'sublat']), rng))
+    if t == 0:
+        b.add(rng.choice(TRANSFER_VERBS)); b.add(amount); b.add(article(rng, dst_word)); b.add(dst_word)
+    elif t == 1:
+        b.add(article(rng, src_word)); b.add(src_word); b.add(article(rng, dst_word)); b.add(dst_word); b.add(amount)
+    elif t == 2:
+        b.add(rng.choice(TRANSFER_VERBS)); b.add(amount); b.add(article(rng, src_word)); b.add(src_word)
+        b.add(article(rng, dst_word)); b.add(dst_word)
+    elif t == 3:
+        b.add(rng.choice(['félretettem', 'félreraktam', 'spóroltam', 'raktam félre', 'tettem félre']))
+        b.add(amount)
+    elif t == 4:
+        b.add(rng.choice(['felvettem', 'kivettem', 'vettem fel']))
+        b.add(amount)
+        b.add(rng.choice(['az automatából', 'az ATM-ből', 'készpénzben', 'kp-ban', 'a bankautomatából']))
+    elif t == 5:
+        b.add(rng.choice(['készpénzfelvétel', 'ATM', 'kp felvétel', 'pénzfelvétel automatából']))
+        b.add(amount)
+    elif t == 6:
+        b.add(rng.choice(['feltöltöttem a Revolutot', 'feltöltöttem a revolut számlát', 'Revolut feltöltés',
+                          'feltöltöttem a kártyát', 'topup']))
+        b.add(amount)
+    elif t == 7:
+        b.add(rng.choice(['váltottam', 'átváltottam'])); b.add(f'{rng.randrange(20, 900)}')
+        b.add(rng.choice(['eurót', 'dollárt', 'fontot', 'frankot', 'forintot euróra']))
+    elif t == 8:
+        b.add(rng.choice(['átvezetés', 'saját számlák között', 'belső átvezetés', 'átutalás saját számlára']))
+        b.add(amount)
+    elif t == 9:
+        b.add(dst_word); b.add(amount)
+    elif t == 10:
+        b.add(rng.choice(['befizettem', 'betettem'])); b.add(amount)
+        b.add(rng.choice(['készpénzt a számlámra', 'kp-t a bankba', 'a hitelkártya tartozást', 'a hitelkártyára']))
+    else:
+        b.add(amount); b.add(article(rng, dst_word)); b.add(dst_word); b.add(rng.choice(TRANSFER_VERBS))
+    if rng.random() < 0.15:
+        b.add(rng.choice(vocab.FILLERS))
+    text, _ = b.build()
+    return Example(text=text, intent='transfer')
+
+
+# --- Kérdések (nem rögzítendők) ----------------------------------------------
+
+QUESTION_TEMPLATES = [
+    'mennyit költöttem {period}?', 'mennyi ment el {period}', 'mennyi maradt?',
+    'mennyi maradt {period}', 'mennyi volt a bevételem {period}?',
+    'mennyit költöttem {thing_sublat} {period}?', 'mennyi ment el {thing_sublat}',
+    'mikor jön a fizetés?', 'mikor vonják le a {thing}?', 'mikor kell fizetni a {thing}?',
+    'mi lesz a héten?', 'mi várható ebben a hónapban?', 'mik jönnek a héten?',
+    'mennyi marad a hónap végére?', 'mennyit szoktam költeni {thing_sublat}?',
+    'mennyibe kerül általában a {thing}?', 'hogyan tudok sablont létrehozni?',
+    'hogy működik ez?', 'mit tudsz?', 'segíts', 'hány forint ment el {thing_sublat}?',
+    'mennyi a kiadásom {period}?', 'mennyi pénzem van még?', 'mikor lesz a {thing}?',
+    'mennyit kerestem {period}?', 'mutasd a {period} kiadásokat',
+]
+QUESTION_PERIODS = [
+    'ebben a hónapban', 'a múlt hónapban', 'novemberben', 'októberben', 'tegnap',
+    'ma', 'ezen a héten', 'a múlt héten', 'idén', 'tavaly', 'januárban',
+]
+
+
+def question_sentence(rng: random.Random) -> Example:
+    category = rng.choice(EXPENSE_CATEGORIES)
+    thing = pick_thing(category, rng).lower()
+    stem, suffix = inflect(thing, 'sublat', rng)
+    text = rng.choice(QUESTION_TEMPLATES).format(
+        period=rng.choice(QUESTION_PERIODS),
+        thing=thing,
+        thing_sublat=stem + suffix.lstrip('-'),
+    )
+    if rng.random() < 0.3:
+        text = text.rstrip('?')
+    return Example(text=noisy(text, rng, 0.05), intent='question')
+
+
+# --- Személyek: utalás, kölcsön, visszafizetés --------------------------------
+
+def person_sentence(rng: random.Random) -> Example:
+    person = rng.choice(vocab.PEOPLE)
+    b = Builder()
+    t = rng.randrange(8)
+    if t < 3:
+        # Kiadás személynek: „utaltam Petinek 5000-et a pizzáért”.
+        category = rng.choice(['dining', 'transport', 'gifts', 'entertainment', 'other_expense'])
+        thing = pick_thing(category, rng)
+        stem, suffix = inflect(person, 'dat', rng)
+        b.add(rng.choice(['utaltam', 'átutaltam', 'adtam', 'küldtem', 'fizettem']))
+        b.add(stem + suffix.lstrip('-'), title=True)
+        b.add(amount_text(category, rng, 'acc'))
+        if category != 'other_expense' or rng.random() < 0.5:
+            t_stem, t_suffix = inflect(thing, 'causal', rng)
+            b.add(article(rng, t_stem)); b.add(t_stem + t_suffix.lstrip('-'), title=True)
+        text, mask = b.build()
+        return Example(text=text, category=category, intent='record', title_mask=mask, tags=['expense'])
+    if t == 3:
+        stem, suffix = inflect(person, 'dat', rng)
+        b.add(rng.choice(['kölcsönadtam', 'adtam kölcsön', 'kölcsön adtam']))
+        b.add(stem + suffix.lstrip('-'), title=True)
+        b.add(amount_text('other_expense', rng, 'acc'))
+        text, mask = b.build()
+        return Example(text=text, category='other_expense', intent='record', title_mask=mask, tags=['expense'])
+    if t == 4:
+        b.add(person, title=True)
+        b.add(rng.choice(['visszaadta a kölcsönt', 'visszaadta', 'megadta a tartozását', 'visszafizette',
+                          'visszautalta']))
+        b.add(amount_text('other_income', rng, rng.choice(['acc', None])))
+        text, mask = b.build()
+        return Example(text=text, category='other_income', intent='record', title_mask=mask, tags=['income'])
+    if t == 5:
+        b.add(person, title=True)
+        b.add(rng.choice(['utalt', 'küldött', 'adott', 'átutalt']))
+        b.add(amount_text('gift_income', rng, 'acc'))
+        text, mask = b.build()
+        return Example(text=text, category='gift_income', intent='record', title_mask=mask, tags=['income'])
+    if t == 6:
+        b.add(rng.choice(['a párom', 'a lakótársam', 'Peti', 'Anna', 'a tesóm']), title=True)
+        b.add(rng.choice(['átutalta a felét', 'kifizette a részét', 'visszautalta a felét']))
+        b.add(amount_text('refund', rng))
+        text, mask = b.build()
+        return Example(text=text, category='refund', intent='record', title_mask=mask, tags=['income'])
+    stem, suffix = inflect(person, 'ablat', rng)
+    b.add(rng.choice(['kaptam', 'visszakaptam', 'megkaptam']))
+    b.add(stem + suffix.lstrip('-'), title=True)
+    b.add(amount_text('gift_income', rng, 'acc'))
+    text, mask = b.build()
+    return Example(text=text, category='gift_income', intent='record', title_mask=mask, tags=['income'])
+
+
 # --- Összeállítás ------------------------------------------------------------
 
 def dataset(seed: int, scale: float = 1.0) -> list[Example]:
@@ -788,6 +939,12 @@ def dataset(seed: int, scale: float = 1.0) -> list[Example]:
         data.append(cancel_recurring(rng))
     for _ in range(n(6000)):
         data.append(change_recurring(rng))
+    for _ in range(n(9000)):
+        data.append(transfer_sentence(rng))
+    for _ in range(n(5000)):
+        data.append(question_sentence(rng))
+    for _ in range(n(8000)):
+        data.append(person_sentence(rng))
     for status, count in [('expense', 9000), ('income', 5000), ('failed', 5000), ('internal', 5000), ('other', 5000)]:
         for _ in range(n(count)):
             data.append(notification(status, rng))

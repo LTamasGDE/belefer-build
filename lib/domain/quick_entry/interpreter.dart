@@ -2,6 +2,7 @@ import '../accounts.dart';
 import '../calendar.dart';
 import '../categories.dart';
 import '../model/belefer_model.dart';
+import '../model/personal_knowledge.dart';
 import '../model/personal_memory.dart';
 import '../models.dart';
 import '../recurring.dart';
@@ -83,6 +84,8 @@ class QuickEntryResult {
     this.items = const [],
     this.guessed = const {},
     this.answer,
+    this.accountFromHabit = false,
+    this.amountFromHabit = false,
   });
 
   final QuickIntent intent;
@@ -130,6 +133,12 @@ class QuickEntryResult {
 
   /// Kérdésre adott válasz.
   final String? answer;
+
+  /// A számlát a szokásaidból vette (nem a szövegből).
+  final bool accountFromHabit;
+
+  /// Az összeget a szokásaidból vette („kávé” → a szokásos 950 Ft).
+  final bool amountFromHabit;
 
   /// Több tétel van-e.
   bool get isMultiple => items.length > 1;
@@ -228,6 +237,7 @@ class QuickEntryResult {
     foreignAmount: foreignAmount,
     currency: currency,
     guessed: guessed,
+    accountFromHabit: accountFromHabit,
   );
 
   /// Rögzítendő tétel (a [QuickIntent.record] szándékhoz).
@@ -276,6 +286,7 @@ class QuickEntryContext {
     this.history = const [],
     this.rules = const [],
     this.accounts = const [],
+    this.lessons = const [],
   });
 
   final CalendarDay today;
@@ -288,6 +299,17 @@ class QuickEntryContext {
 
   /// A számlák (a „közösről fizettem” és az átvezetések felismeréséhez).
   final List<Account> accounts;
+
+  /// A gyorsrögzítésből tanult leckék (beírt szavak → elmentett tétel).
+  final List<Lesson> lessons;
+
+  /// A tételekből tanult tudás (szokások, ismétlődések, leckék).
+  PersonalKnowledge get knowledge => PersonalKnowledge.of(
+    history,
+    rules: rules,
+    lessons: lessons,
+    today: today,
+  );
 }
 
 class _CategoryVote {
@@ -336,7 +358,7 @@ QuickEntryResult interpretQuickEntry(
       categoryGuessed: true,
       date: context.today,
       dateExplicit: false,
-      answer: answerQuestion(question, context.today, context.history),
+      answer: answerQuestion(question, context),
     );
   }
   final whole = _interpretSingle(text, context);
@@ -464,7 +486,7 @@ QuickEntryResult _interpretSingle(
   // Darabszám: „2 x 1500”, „két mozijegy 2900-ával”.
   final multiplied = _multiply(text, folded, amountPick);
   if (multiplied != null) used.addAll(multiplied.$2);
-  final amount = multiplied?.$1 ?? amountPick?.value;
+  var amount = multiplied?.$1 ?? amountPick?.value;
   final notes = <String>[];
   final strongCandidates = candidates.where((c) => c.score >= 6).length;
   if (amountPick != null &&
@@ -566,6 +588,22 @@ QuickEntryResult _interpretSingle(
     }, verbTokens),
   );
   votes.addAll(_matchCustomCategories(folded, used));
+  // Leckék: amit korábban így írtál, és ahogy elmentetted. Ez a legerősebb
+  // jel, mert a te döntésed volt.
+  final knowledge = context.knowledge;
+  final lessonHit = knowledge.lessons.isEmpty
+      ? null
+      : knowledge.lessonFor(folded);
+  if (lessonHit != null) {
+    votes.add(
+      _CategoryVote(
+        lessonHit.$1.categoryId,
+        16,
+        lessonHit.$1.title,
+        lessonHit.$2,
+      ),
+    );
+  }
   votes.addAll(_matchHistory(tokens, used, context.history));
   // A modell személyes része: a korábbi megnevezésekhez hasonló szavak.
   if (context.history.isNotEmpty) {
@@ -751,16 +789,51 @@ QuickEntryResult _interpretSingle(
     final savings = context.accounts.where(
       (account) => account.kind == AccountKind.savings,
     );
-    final transfer = detectTransfer(
+    var transfer = detectTransfer(
       tokens,
       endpoints,
       personRecipient: people.any((person) => person.recipient),
       purchase: purchase,
       otherContent:
-          explicitType != null ||
+          (explicitType != null &&
+              !verbTokens.every(
+                (i) => const {
+                  'ment',
+                  'elment',
+                  'el',
+                  'utaltam',
+                  'atutaltam',
+                  'kuldtem',
+                  'atkuldtem',
+                }.contains(folded[i]),
+              )) ||
           (best != null && !best.fuzzy && best.tokens.isNotEmpty),
       savingsName: savings.isEmpty ? null : savings.first.name,
     );
+    // A saját modell a szabályokból kimaradó megfogalmazásokat is felismeri
+    // („átpakoltam a Revolutra 20e-t”); csak ha számla is szerepel.
+    if (transfer == null &&
+        model != null &&
+        !purchase &&
+        explicitType == null &&
+        endpoints.isNotEmpty &&
+        !people.any((person) => person.recipient)) {
+      final prediction = model.classify('intent', text);
+      if (prediction.best == 'transfer' && prediction.confidence >= 0.85) {
+        FlowEndpoint? pick(FlowDirection direction) {
+          for (final endpoint in endpoints) {
+            if (endpoint.direction == direction) return endpoint;
+          }
+          return null;
+        }
+
+        transfer = TransferInfo(
+          from: pick(FlowDirection.from),
+          to: pick(FlowDirection.to) ?? pick(FlowDirection.object),
+          tokens: const {},
+        );
+      }
+    }
     if (transfer != null) {
       return QuickEntryResult(
         intent: QuickIntent.transfer,
@@ -852,11 +925,38 @@ QuickEntryResult _interpretSingle(
       }
     }
   }
+  // Szokások: ha nem írtad, a szokásos összeg és számla („kávé” → 950 Ft,
+  // „Lidl” → Közös). Kérdezés helyett tipp, amit felülírhatsz.
+  final habit = title == null
+      ? null
+      : knowledge.habitFor(title) ??
+            (merchant == null ? null : knowledge.habitFor(merchant));
+  var amountFromHabit = false;
+  if (amount == null &&
+      foreign == null &&
+      (intent == QuickIntent.record ||
+          intent == QuickIntent.createRecurring) &&
+      habit?.usualAmount != null &&
+      (habit!.categoryId == categoryId || !categoryKnown)) {
+    amount = habit.usualAmount;
+    amountFromHabit = true;
+  }
+  var accountFromHabit = false;
+  if (accountId == null &&
+      (intent == QuickIntent.record ||
+          intent == QuickIntent.createRecurring)) {
+    final learned = lessonHit?.$1.accountId ?? habit?.usualAccountId;
+    if (learned != null && context.accounts.any((a) => a.id == learned)) {
+      accountId = learned;
+      accountFromHabit = true;
+    }
+  }
   final merchantFuzzy =
       merchantVote != null && merchant != null && merchantVote.$1.fuzzy;
   final guessed = <QuickQuestion>{
     if (amountPick != null && notes.any((note) => note.startsWith('Több')))
       QuickQuestion.amount,
+    if (amountFromHabit) QuickQuestion.amount,
     if ((intent == QuickIntent.record ||
             intent == QuickIntent.createRecurring) &&
         (!categoryKnown ||
@@ -887,6 +987,8 @@ QuickEntryResult _interpretSingle(
     foreignAmount: foreign?.amount,
     currency: foreign?.currency,
     guessed: guessed,
+    accountFromHabit: accountFromHabit,
+    amountFromHabit: amountFromHabit,
   );
 }
 

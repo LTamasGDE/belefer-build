@@ -26,11 +26,15 @@ class UpcomingItem {
     required this.rule,
     required this.date,
     required this.amount,
+    this.learned = false,
   });
 
   final RecurringRule rule;
   final CalendarDay date;
   final int amount;
+
+  /// Nem beállított, hanem a tételeidből felismert ismétlődés (szokás).
+  final bool learned;
 
   EntryType get type => rule.type;
 }
@@ -91,17 +95,24 @@ class Forecast {
 /// - Az egyéb (nem ismétlődő) kiadásokat napi átlaggal becsüli: az aktuális
 ///   hónapban legalább 7 eltelt nap után az idei, előtte az előző három hónap
 ///   átlagából.
+///
+/// A [learnedRules] a tételekből felismert (nem beállított) ismétlődések:
+/// ezek is várható tételek, és a napi átlagba sem számítanak bele.
 Forecast? forecastMonth({
   required Iterable<Transaction> transactions,
   required Iterable<RecurringRule> rules,
   required YearMonth month,
   required CalendarDay today,
+  Iterable<RecurringRule> learnedRules = const [],
 }) {
   final current = YearMonth.of(today);
   if (month.compareTo(current) < 0) return null;
   final isCurrent = month == current;
 
-  final ruleTitles = {for (final rule in rules) foldForMatching(rule.title)};
+  final ruleTitles = {
+    for (final rule in rules) foldForMatching(rule.title),
+    for (final rule in learnedRules) foldForMatching(rule.title),
+  };
   var actualIncome = 0;
   var actualExpense = 0;
   var variableSoFar = 0;
@@ -141,6 +152,27 @@ Forecast? forecastMonth({
         );
       }
     }
+  }
+  // Felismert ismétlődések: a várható alkalom, ha ebben a hónapban még nem
+  // rögzítetted (a pár napot késő alkalom is várható még).
+  for (final rule in learnedRules) {
+    final key = foldForMatching(rule.title);
+    final recordedThisMonth = transactions.any(
+      (t) =>
+          month.contains(t.date) &&
+          foldForMatching(t.title) == key &&
+          t.date.compareTo(
+                CalendarDay(rule.startDate.year, rule.startDate.month, 1),
+              ) >=
+              0,
+    );
+    if (recordedThisMonth) continue;
+    var date = rule.startDate;
+    if (isCurrent && date.compareTo(from) < 0) date = from;
+    if (!month.contains(date)) continue;
+    upcoming.add(
+      UpcomingItem(rule: rule, date: date, amount: rule.amount, learned: true),
+    );
   }
   upcoming.sort((a, b) => a.date.compareTo(b.date));
 

@@ -161,3 +161,20 @@ status	other	Your verification code is 482913
 status	other	Próbáld ki a Metal csomagot egy hónapig ingyen
 status	other	Elkészült az októberi kimutatásod
 status	other	Bence 5 000 Ft-ot kért tőled
+# Átvezetés és kérdés (26.11.6)
+intent	transfer	Átraktam 10000 forintot CIB számláról a revolut sajátra
+intent	transfer	áttettem 50 ezret a megtakarításba
+intent	transfer	félretettem 30 000-et
+intent	transfer	felvettem 20 ezret az automatából
+intent	transfer	a közösről visszaraktam 8000-et a sajátra
+intent	transfer	Revolut feltöltés 20 000
+intent	transfer	betettem 20e-t a közösbe
+intent	question	mennyit költöttem ebben a hónapban?
+intent	question	mikor jön a fizetés?
+intent	question	mi lesz a héten?
+intent	question	mennyi marad a hónap végére
+intent	question	mennyit szoktam költeni kajára?
+category	other_expense	kölcsönadtam Annának 10 ezret
+category	other_income	Peti visszaadta a kölcsönt 10 000
+category	gift_income	anya utalt 30 ezret
+category	dining	utaltam Petinek 5000-et a pizzáért

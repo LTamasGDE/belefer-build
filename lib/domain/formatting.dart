@@ -87,10 +87,15 @@ const List<String> _weekdayOnNames = [
 /// „kedden”, „vasárnap” – a hét napja határozóként.
 String weekdayOn(int weekday) => _weekdayOnNames[weekday - 1];
 
-/// A hónap napja ragozva: 1-jén, 2-án, 5-én, 20-án, 21-jén.
+/// A hónap napja ragozva: 1-jén, 2-án, 5-én, 11-én, 20-án, 21-én.
 String dayWithSuffix(int day) {
   final String suffix;
-  if (day % 10 == 0) {
+  if (day == 1) {
+    suffix = 'jén';
+  } else if (day % 10 == 1) {
+    // tizenegyedikén, huszonegyedikén
+    suffix = 'én';
+  } else if (day % 10 == 0) {
     suffix = day == 10 ? 'én' : 'án';
   } else {
     suffix = const {

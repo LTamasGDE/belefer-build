@@ -10,6 +10,8 @@ import '../domain/categories.dart';
 import '../domain/demo_data.dart';
 import '../domain/forecast.dart';
 import '../domain/formatting.dart';
+import '../domain/insights.dart';
+import '../domain/model/personal_knowledge.dart';
 import '../domain/model/personal_memory.dart';
 import '../domain/models.dart';
 import '../domain/monthly_summary.dart';
@@ -54,6 +56,7 @@ class AppState extends ChangeNotifier {
 
   static const String _captureKey = 'capture';
   static const String _captureLogKey = 'captureLog';
+  static const String _lessonsKey = 'lessons';
 
   bool _revolutCapture = false;
   List<CaptureLogEntry> _captureLog = const [];
@@ -153,16 +156,81 @@ class AppState extends ChangeNotifier {
   MonthlySummary get summary =>
       summarizeMonth(_visibleTransactions, _selectedMonth);
 
-  /// Előrejelzés a kiválasztott hónapra (múltbeli hónapra `null`).
+  /// Előrejelzés a kiválasztott hónapra (múltbeli hónapra `null`). A
+  /// tételeidből felismert ismétlődéseket (fizetés, előfizetések) is várja.
   Forecast? get forecast => forecastMonth(
     transactions: _visibleTransactions,
     rules: [
       for (final rule in activeRules)
         if (_inSelectedAccount(rule.accountId)) rule,
     ],
+    learnedRules: [
+      for (final pattern in knowledge.patterns)
+        if (_inSelectedAccount(pattern.accountId)) pattern.toRule(),
+    ],
     month: _selectedMonth,
     today: _today(),
   );
+
+  /// „Mi van, mi lesz”: az aktuális hónap megállapításai.
+  List<Insight> get insights => isCurrentMonth
+      ? buildInsights(
+          transactions: _visibleTransactions,
+          rules: [
+            for (final rule in activeRules)
+              if (_inSelectedAccount(rule.accountId)) rule,
+          ],
+          knowledge: knowledge,
+          today: _today(),
+        )
+      : const [];
+
+  // --- Tanult tudás ---
+
+  List<Lesson> _lessons = const [];
+
+  /// A gyorsrögzítésből tanult leckék.
+  List<Lesson> get lessons => _lessons;
+
+  /// A tételekből tanult tudás: szokások, ismétlődések, leckék.
+  PersonalKnowledge get knowledge => PersonalKnowledge.of(
+    _transactions,
+    rules: _rules,
+    lessons: _lessons,
+    today: _today(),
+  );
+
+  /// A következő gyorsrögzítési mentés ebből a szövegből jön (űrlapon át):
+  /// a mentett tételből lecke lesz.
+  String? pendingLessonText;
+
+  /// Lecke: a beírt szöveg és ahogy végül elmentetted.
+  Future<void> learnFrom(String text, Transaction saved) async {
+    final words = lessonWords(text);
+    if (words.isEmpty || _demo) return;
+    _lessons = addLesson(
+      _lessons,
+      Lesson(
+        words: words,
+        title: saved.title,
+        categoryId: saved.categoryId,
+        type: saved.type,
+        accountId: saved.accountId,
+        day: _today(),
+      ),
+    );
+    await _store.writeSettingList(_lessonsKey, [
+      for (final lesson in _lessons) lesson.toMap(),
+    ]);
+    _changed();
+  }
+
+  /// A tanult leckék törlése (a tételekből számolt szokások maradnak).
+  Future<void> forgetLessons() async {
+    _lessons = const [];
+    await _store.writeSettingList(_lessonsKey, const []);
+    _changed();
+  }
 
   List<Transaction> transactionsOfSelectedMonth({EntryType? type}) =>
       transactionsInMonth(_visibleTransactions, _selectedMonth, type: type);
@@ -230,6 +298,7 @@ class AppState extends ChangeNotifier {
     history: _transactions,
     rules: activeRules,
     accounts: _accounts,
+    lessons: _lessons,
   );
 
   Future<void> load() async {
@@ -243,6 +312,11 @@ class AppState extends ChangeNotifier {
     _captureLog = [
       for (final entry in await _store.readSettingList(_captureLogKey))
         if (entry is Map) CaptureLogEntry.fromMap(entry),
+    ];
+    _lessons = [
+      for (final entry in await _store.readSettingList(_lessonsKey))
+        if (entry is Map)
+          ?_readLesson(entry),
     ];
     _reminderDefaults = await _store.readReminderDefaults();
     _darkMode = await _store.readDarkMode();
@@ -284,6 +358,11 @@ class AppState extends ChangeNotifier {
     final saved = await _store.saveTransaction(transaction);
     _transactions = _replace(_transactions, saved, (t) => t.id);
     _changed();
+    final lessonText = pendingLessonText;
+    if (lessonText != null) {
+      pendingLessonText = null;
+      await learnFrom(lessonText, saved);
+    }
     return saved;
   }
 
@@ -831,4 +910,12 @@ class _Snapshot {
   final List<Transaction> transactions;
   final List<EntryTemplate> templates;
   final List<RecurringRule> rules;
+}
+
+Lesson? _readLesson(Map<Object?, Object?> map) {
+  try {
+    return Lesson.fromMap(map.cast<String, Object?>());
+  } on Object {
+    return null;
+  }
 }

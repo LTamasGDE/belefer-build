@@ -151,7 +151,11 @@ class _QuickEntryScreenState extends State<QuickEntryScreen> {
       return;
     }
     setState(() => _busy = true);
-    final done = await applyQuickResult(AppScope.read(context), result);
+    final done = await applyQuickResult(
+      AppScope.read(context),
+      result,
+      text: _text.text.trim(),
+    );
     if (!mounted) return;
     if (done == null) {
       setState(() => _busy = false);
@@ -167,6 +171,10 @@ class _QuickEntryScreenState extends State<QuickEntryScreen> {
     if (result == null) return;
     final navigator = Navigator.of(context);
     final state = AppScope.read(context);
+    // Amit az űrlapon végül elmentesz, abból tanul (a javításaidból is).
+    if (result.intent == QuickIntent.record) {
+      state.pendingLessonText = _text.text.trim();
+    }
     final bool saved;
     if (result.intent == QuickIntent.createRecurring) {
       saved = await openRecurringForm(
@@ -210,6 +218,7 @@ class _QuickEntryScreenState extends State<QuickEntryScreen> {
         ),
       );
     }
+    state.pendingLessonText = null;
     if (saved && mounted) navigator.pop();
   }
 

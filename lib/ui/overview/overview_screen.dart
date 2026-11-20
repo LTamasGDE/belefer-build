@@ -47,6 +47,10 @@ class OverviewScreen extends StatelessWidget {
             child: ForecastCard(forecast: forecast),
           )
         : null;
+    final insights = state.insights;
+    final insightsCard = insights.isEmpty
+        ? null
+        : InsightsCard(insights: insights);
     final breakdown = Panel(
       key: TourKeys.breakdown,
       padding: const EdgeInsets.fromLTRB(
@@ -113,6 +117,10 @@ class OverviewScreen extends StatelessWidget {
                               forecastCard,
                               const SizedBox(height: Space.lg),
                             ],
+                            if (insightsCard != null) ...[
+                              insightsCard,
+                              const SizedBox(height: Space.lg),
+                            ],
                             breakdown,
                           ],
                         ),
@@ -144,6 +152,10 @@ class OverviewScreen extends StatelessWidget {
                     const SizedBox(height: Space.lg),
                     if (forecastCard != null) ...[
                       forecastCard,
+                      const SizedBox(height: Space.lg),
+                    ],
+                    if (insightsCard != null) ...[
+                      insightsCard,
                       const SizedBox(height: Space.lg),
                     ],
                     breakdown,

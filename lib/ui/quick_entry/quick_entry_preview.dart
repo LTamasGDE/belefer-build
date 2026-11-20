@@ -43,7 +43,10 @@ String? questionAnswer(
   switch (question) {
     case QuickQuestion.amount:
       if (!answered) return null;
-      if (result.hasAmount) return formatForint(result.amount!);
+      if (result.hasAmount) {
+        return '${formatForint(result.amount!)}'
+            '${result.amountFromHabit ? ' (szokásos)' : ''}';
+      }
       return formatForeign(result.foreignAmount!, result.currency!);
     case QuickQuestion.what:
       if (!answered) return null;
@@ -212,7 +215,9 @@ class _HintPill extends StatelessWidget {
                   ),
                   if (answer != null)
                     TextSpan(
-                      text: ' $answer${guess && done ? ' (tipp)' : ''}',
+                      text:
+                          ' $answer'
+                          '${guess && done && !answer!.endsWith(')') ? ' (tipp)' : ''}',
                       style: TextStyle(
                         color: done ? colors.text : faint,
                         fontWeight: done ? FontWeight.w600 : FontWeight.w400,
@@ -290,7 +295,11 @@ class QuickResultCard extends StatelessWidget {
         final account = result.accountId == null
             ? null
             : accountName?.call(result.accountId!);
-        if (account != null) details.add('Számla: $account');
+        if (account != null) {
+          details.add(
+            'Számla: $account${result.accountFromHabit ? ' (szokásos)' : ''}',
+          );
+        }
       case QuickIntent.createRecurring:
         final rule = result.toRecurringRule();
         if (rule != null) {
@@ -453,10 +462,14 @@ String formatForeign(double amount, String currency) {
 }
 
 /// Az értelmezés végrehajtása. `null`, ha nem volt mit tenni.
+///
+/// A [text] a beírt mondat: a könyvelt tételből lecke lesz, így legközelebb
+/// ugyanígy érti.
 Future<QuickEntryDone?> applyQuickResult(
   AppState state,
-  QuickEntryResult result,
-) async {
+  QuickEntryResult result, {
+  String? text,
+}) async {
   if (!result.isComplete) return null;
   final today = state.today();
   if (result.isMultiple) {
@@ -503,6 +516,7 @@ Future<QuickEntryDone?> applyQuickResult(
             ? transaction
             : transaction.copyWith(accountId: accountId),
       );
+      if (text != null) await state.learnFrom(text, saved);
       final kind = saved.type == EntryType.expense ? 'Kiadás' : 'Bevétel';
       final month = YearMonth.of(saved.date);
       return QuickEntryDone(
