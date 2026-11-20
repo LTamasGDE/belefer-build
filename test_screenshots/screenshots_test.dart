@@ -104,6 +104,15 @@ Future<AppState> _state({
       _tx(e, 'Ebéd a csapattal', 14600, 'dining', 16),
       _tx(e, 'Zenei előfizetés', 1990, 'subscriptions', 12),
       _tx(e, 'Mozi', 3200, 'entertainment', 17),
+      // Korábbi hónapok: ebből tanulja a szokásokat és az ismétlődéseket.
+      for (final month in [8, 9, 10]) ...[
+        _tx(i, 'Fizetés', 420000, 'salary', 5, month: month),
+        _tx(e, 'Zenei előfizetés', 1990, 'subscriptions', 12, month: month),
+        _tx(e, 'Heti bevásárlás', 24500, 'groceries', 4, month: month),
+        _tx(e, 'Heti bevásárlás', 27200, 'groceries', 18, month: month),
+        _tx(e, 'Ebéd a csapattal', 6200, 'dining', 9, month: month),
+      ],
+      for (final day in [2, 6, 10, 13, 16]) _tx(e, 'Kávé', 950, 'dining', day),
     ]) {
       await state.saveTransaction(t);
     }
@@ -220,6 +229,9 @@ void main() {
       await tester.pumpAndSettle();
       await tester.tap(legend);
       await _shot(tester, '02_overview_selected_$mode');
+      await tester.ensureVisible(find.byKey(const ValueKey('insights-card')));
+      await tester.pumpAndSettle();
+      await _shot(tester, '02b_overview_insights_$mode');
 
       await _tab(tester, 'Tételek');
       await _shot(tester, '03_transactions_$mode');
@@ -270,6 +282,8 @@ void main() {
         ('17b_quick_entry_multi', 'kávé 900, ebéd 2800, mozi 3000'),
         ('17c_quick_entry_question', 'mennyit költöttem ebben a hónapban?'),
         ('17d_quick_entry_guess', 'xyz 5000'),
+        ('17e_quick_entry_habit', 'kávé'),
+        ('17f_quick_entry_when', 'mikor jön a fizetés?'),
       ]) {
         await tester.enterText(
           find.byKey(const ValueKey('quick-entry-field')),
@@ -414,6 +428,9 @@ void main() {
     );
     await tester.pumpAndSettle();
     await _shot(tester, '29_model');
+    await tester.ensureVisible(find.byKey(const ValueKey('learned-panel')));
+    await tester.pumpAndSettle();
+    await _shot(tester, '29b_model_learned');
   });
 
   testWidgets('széles kijelző (tablet, fekvő)', (tester) async {

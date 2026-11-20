@@ -64,7 +64,9 @@ void main() {
         'cancel_recurring',
         'change_recurring',
         'create_recurring',
+        'question',
         'record',
+        'transfer',
       ]);
       expect(model.weightCount, greaterThan(100000));
       expect(model.flags['sw'], contains('kb'));
