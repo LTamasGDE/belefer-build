@@ -88,7 +88,13 @@ const Map<String, String> _banks = {
 /// A számlafajtákra utaló szavak.
 const Map<AccountKind, List<String>> _kindWords = {
   AccountKind.personal: ['sajat'],
-  AccountKind.savings: ['megtakaritas', 'megtakaritasi', 'szef', 'persely'],
+  AccountKind.savings: [
+    'megtakaritas',
+    'megtakaritasi',
+    'szef',
+    'persely',
+    'savings',
+  ],
   AccountKind.shared: ['kozos'],
 };
 
@@ -187,6 +193,13 @@ List<FlowEndpoint> findEndpoints(
   }
 
   FlowDirection resolve(int index, FlowDirection direction) {
+    // Angol elöljáró: „transfer to savings”, „from Revolut”.
+    if (direction == FlowDirection.bare && index > 0) {
+      if (words[index - 1] == 'to' || words[index - 1] == 'into') {
+        return FlowDirection.to;
+      }
+      if (words[index - 1] == 'from') return FlowDirection.from;
+    }
     final after = suffixEnd(index);
     if (direction == FlowDirection.bare) {
       for (var k = index + 1; k < after; k++) {
@@ -230,6 +243,28 @@ List<FlowEndpoint> findEndpoints(
           FlowEndpoint(
             name: account.name,
             accountId: account.id,
+            tokens: withCarrier(i),
+            direction: resolve(i, direction),
+          ),
+        );
+        taken.add(i);
+        break;
+      }
+    }
+  }
+
+  // A számlafajta szava akkor is számla, ha ilyen számla nincs felvéve
+  // („a megtakarításba”, „a közösbe”).
+  for (final kind in AccountKind.values) {
+    if (accounts.any((account) => account.kind == kind)) continue;
+    for (var i = 0; i < words.length; i++) {
+      if (taken.contains(i)) continue;
+      for (final key in _kindWords[kind]!) {
+        final direction = _keyDirection(words[i], key);
+        if (direction == null) continue;
+        endpoints.add(
+          FlowEndpoint(
+            name: kind.label,
             tokens: withCarrier(i),
             direction: resolve(i, direction),
           ),
@@ -344,6 +379,7 @@ const List<String> _moveStems = [
   'tettem',
   'raktam',
   'befizet',
+  'transfer',
 ];
 
 /// Más fizet vagy ad nekem pénzt, vagy én fizetek valakinek („adtam”,
@@ -702,13 +738,25 @@ TransferInfo? detectTransfer(
     );
   }
 
-  // Feltöltöttem a Revolutot: tárgyként a cél.
+  // Feltöltöttem a Revolutot, „Revolut feltöltés”: tárgyként vagy rag
+  // nélkül a cél.
   if (to == null && words.any((w) => w.startsWith('feltolt'))) {
-    to = pick(const [FlowDirection.object]);
+    to = pick(const [FlowDirection.object, FlowDirection.bare]);
   }
   if (from == null && to == null) return null;
   if (purchase) return null;
   final hasVerb = verbIndexes.isNotEmpty;
+  // „CIB számláról a revolut sajátra”: a forrás mellett rag nélkül említett
+  // másik számla a cél.
+  if (to == null && from != null && hasVerb) {
+    for (final endpoint in endpoints) {
+      if (endpoint.direction == FlowDirection.bare &&
+          endpoint.name != from.name) {
+        to = endpoint;
+        break;
+      }
+    }
+  }
   // Csak a cél és az összeg: „közösbe 50 ezer”, „megtakarításba 100 000”.
   if (to != null && from == null && !hasVerb && !otherContent) {
     return TransferInfo(to: to, tokens: used);

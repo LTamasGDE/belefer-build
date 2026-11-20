@@ -397,6 +397,10 @@ QuickEntryResult _withDate(QuickEntryResult part, CalendarDay date) =>
 /// Több tétel tagolása: „, ”, „; ”, „ és ”, „ meg ”, „ + ”. Csak akkor
 /// bontunk, ha minden részben van szám (a „kenyér és tej 1200” egy tétel).
 List<String> _splitItems(String text) {
+  // „nem 4500, hanem 5400”: javítás, nem két tétel.
+  if (RegExp(r'\bhanem\b', caseSensitive: false).hasMatch(text)) {
+    return const [];
+  }
   final parts = text
       .split(
         RegExp(r'\s*[,;]\s+|\s+(?:és|meg|plusz|\+)\s+', caseSensitive: false),
@@ -437,6 +441,17 @@ QuickEntryResult _interpretSingle(
     preferFuture: createStrong && !cancel,
   );
   final blocked = <int>{...?dateMatch?.tokenIndexes};
+
+  // Javítás: „nem 4500, hanem 5400” – a „nem” utáni szám érvénytelen.
+  final but = folded.indexOf('hanem');
+  if (but > 0) {
+    final not = folded.lastIndexOf('nem', but);
+    if (not >= 0) {
+      for (var k = not + 1; k < but; k++) {
+        blocked.add(k);
+      }
+    }
+  }
 
   // Deviza: „25 euró” – a forintösszeget a felület számolja ki.
   final foreign = simple ? null : findForeignAmount(text, tokens);
@@ -498,7 +513,10 @@ QuickEntryResult _interpretSingle(
   }
   // Számlák, bankok, készpénz és személyek.
   final endpoints = findEndpoints(tokens, context.accounts);
-  final endpointTokens = {for (final e in endpoints) ...e.tokens};
+  final endpointTokens = {
+    for (final e in endpoints)
+      if (e.direction != FlowDirection.bare) ...e.tokens,
+  };
   final people = [
     ...findPeople(
       tokens,

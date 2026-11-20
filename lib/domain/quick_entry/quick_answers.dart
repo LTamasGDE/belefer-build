@@ -6,7 +6,6 @@ import '../calendar.dart';
 import '../categories.dart';
 import '../formatting.dart';
 import '../models.dart';
-import '../text_fold.dart';
 import 'lexicon.dart';
 import 'tokens.dart';
 

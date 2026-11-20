@@ -107,43 +107,65 @@ List<String> checkResult(
           QuickIntent.transfer => 'transfer',
           QuickIntent.question => 'question',
         };
-        if (name != value) errors.add('szándék $name≠$value');
+        if (name != value) {
+          errors.add('szándék $name≠$value');
+        }
       case 't':
         final actual = r.type == EntryType.income ? 'b' : 'k';
-        if (actual != value) errors.add('típus $actual≠$value');
-        if (r.intent == QuickIntent.transfer) errors.add('átvezetésnek vette');
+        if (actual != value) {
+          errors.add('típus $actual≠$value');
+        }
+        if (r.intent == QuickIntent.transfer) {
+          errors.add('átvezetésnek vette');
+        }
       case 'a':
         final want = value == '-' ? null : int.parse(value);
-        if (r.amount != want) errors.add('összeg ${r.amount}≠$value');
+        if (r.amount != want) {
+          errors.add('összeg ${r.amount}≠$value');
+        }
       case 'c':
         if (!oneOf(r.categoryId, value)) {
           errors.add('kategória ${r.categoryId}≠$value');
         }
-        if (r.intent == QuickIntent.transfer) errors.add('átvezetésnek vette');
+        if (r.intent == QuickIntent.transfer) {
+          errors.add('átvezetésnek vette');
+        }
       case 'ti':
-        if (!oneOf(r.title, value))
+        if (!oneOf(r.title, value)) {
           errors.add('megnevezés "${r.title}"≠$value');
+        }
       case 'd':
-        if (r.date.toString() != value) errors.add('dátum ${r.date}≠$value');
+        if (r.date.toString() != value) {
+          errors.add('dátum ${r.date}≠$value');
+        }
       case 'acc':
         final name = r.accountId == null
             ? null
             : context.accounts.firstWhere((a) => a.id == r.accountId).name;
-        if (name != value) errors.add('számla $name≠$value');
+        if (name != value) {
+          errors.add('számla $name≠$value');
+        }
       case 'from':
-        if (r.transferFrom != value)
+        if (r.transferFrom != value) {
           errors.add('honnan ${r.transferFrom}≠$value');
+        }
       case 'to':
-        if (r.transferTo != value) errors.add('hová ${r.transferTo}≠$value');
+        if (r.transferTo != value) {
+          errors.add('hová ${r.transferTo}≠$value');
+        }
       case 'cur':
-        if (r.currency != value) errors.add('deviza ${r.currency}≠$value');
+        if (r.currency != value) {
+          errors.add('deviza ${r.currency}≠$value');
+        }
       case 'fa':
         if (r.foreignAmount != double.parse(value)) {
           errors.add('devizaösszeg ${r.foreignAmount}≠$value');
         }
       case 'n':
         final count = r.items.isEmpty ? 1 : r.items.length;
-        if (count != int.parse(value)) errors.add('tételszám $count≠$value');
+        if (count != int.parse(value)) {
+          errors.add('tételszám $count≠$value');
+        }
         if (r.items.isNotEmpty) {
           for (final MapEntry(key: k2, value: v2) in expect.entries) {
             if (k2 == 'd' &&

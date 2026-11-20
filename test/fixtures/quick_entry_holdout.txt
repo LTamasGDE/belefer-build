@@ -80,3 +80,43 @@ hány forint ment el benzinre a múlt hónapban || i=question
 ## --- Deviza másképp ---
 ebéd Prágában 450 korona || cur=CZK; fa=450
 szállás 120 euro || cur=EUR; fa=120
+
+# Második ellenőrző kör (jelek, angol szavak, javítás, határesetek).
+## --- Jelek, rövid, furcsa ---
+-5000 lidl || t=k; a=5000; c=groceries
++20000 fizetés || t=b; a=20000
+LIDL 4500 || a=4500; c=groceries
+🍕 pizza 4500 || a=4500; c=dining
+5000 || a=5000; sure=no
+Lidl || a=-
+kávé: 950 Ft || a=950; c=dining
+ebéd (céges) 3200 || a=3200; c=dining
+nem 4500, hanem 5400 a Lidl || a=5400
+## --- Angol szavak ---
+grocery 8000 || a=8000; c=groceries
+salary 400000 || t=b; a=400000; c=salary
+refund 3000 || t=b; a=3000; c=refund
+transfer to savings 20000 || i=transfer; a=20000
+## --- Átvezetés ---
+megtakarításból kivettem 30e-t || i=transfer; a=30000; from=Megtakarítás
+áttettem a közösről a megtakarításba 40 ezret || i=transfer; a=40000; from=Közös; to=Megtakarítás
+Revolut feltöltés 20 000 || i=transfer; a=20000; to=Saját
+felvettem kp-t 20 ezer || i=transfer; a=20000; to=Készpénz
+## --- Nem átvezetés ---
+Revolut előfizetés díja 2990 || t=k; a=2990
+megtakarítási célra vettem egy biciklit 90 ezer || t=k; a=90000
+a közös vacsora 12 000 || t=k; a=12000; c=dining
+közös költség befizetve 25 000 || t=k; a=25000; c=housing
+befizettem a közös költséget 25 000 || t=k; a=25000; c=housing
+utaltam a lakbért 180 000 || t=k; a=180000; c=housing
+átutaltam a villanyszámlát 12 300 || t=k; a=12300; c=utilities
+## --- Személyek ---
+Kati kifizette helyettem az ebédet, 3000 || a=3000
+tartozom Gergőnek 5000-rel || a=5000
+## --- Dátum ---
+hétvégén piac 6000 || a=6000
+múlt héten fodrász 7000 || a=7000
+tegnap este Wolt 6500 || a=6500; c=dining; d=2026-11-19
+## --- Kérdés ---
+mennyi pénzem maradt? || i=question
+mennyit fizettem a Lidlben? || i=question

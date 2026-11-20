@@ -295,6 +295,16 @@ const List<KeywordEntry> keywords = [
   KeywordEntry('kocsma', 'dining', title: 'Kocsma'),
   KeywordEntry('fuvar', 'transport', title: 'Fuvar', weight: 6),
   KeywordEntry('ado', 'other_expense', title: 'Adó', weight: 5),
+  // Angol szavak (vegyes nyelvű jegyzetekhez).
+  KeywordEntry('grocery', 'groceries', title: 'Bevásárlás', weight: 6),
+  KeywordEntry('groceries', 'groceries', title: 'Bevásárlás', weight: 6),
+  KeywordEntry('salary', 'salary', title: 'Fizetés', weight: 7),
+  KeywordEntry('refund', 'refund', title: 'Visszatérítés', weight: 7),
+  KeywordEntry('rent', 'housing', title: 'Lakbér', weight: 6),
+  KeywordEntry('coffee', 'dining', title: 'Kávé', weight: 6),
+  KeywordEntry('lunch', 'dining', title: 'Ebéd', weight: 6),
+  KeywordEntry('dinner', 'dining', title: 'Vacsora', weight: 6),
+  KeywordEntry('fuel', 'transport', title: 'Tankolás', weight: 6),
   KeywordEntry('jelmez', 'clothing', title: 'Jelmez', weight: 5),
   KeywordEntry('benya', 'transport', title: 'Benzin', weight: 6),
   KeywordEntry('premium', 'salary', title: 'Prémium', weight: 5),
@@ -880,6 +890,7 @@ const Set<String> commonWords = {
   'szamla', 'szamlam', 'kartya', 'kartyam', 'bankkartya', 'penz', 'penzem', //
   'forint', 'osszeg', 'tetel', 'sajat', 'kozos', 'megtakaritas', 'utalas', //
   'atutalas', 'bank', 'automata', 'keszpenz', 'tartozas', 'kolcson', 'adossag',
+  'koltseg', 'kiadas', 'bevetel', 'egyenleg', 'jutalek', 'dij', 'ar', 'aru', //
   'honap', 'het', 'nap', 'ev', 'ora', 'perc', 'reggel', 'este', 'hetvege', //
   'kocsi', 'auto', 'haz', 'lakas', 'szoba', 'munka', 'melo', 'iroda', 'bolt', //
   'piac', 'utca', 'varos', 'ut', 'jegy', 'kep', 'telefon', 'gep', 'laptop', //
