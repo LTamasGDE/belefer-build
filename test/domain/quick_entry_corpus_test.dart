@@ -121,7 +121,8 @@ List<String> checkResult(
         }
         if (r.intent == QuickIntent.transfer) errors.add('átvezetésnek vette');
       case 'ti':
-        if (!oneOf(r.title, value)) errors.add('megnevezés "${r.title}"≠$value');
+        if (!oneOf(r.title, value))
+          errors.add('megnevezés "${r.title}"≠$value');
       case 'd':
         if (r.date.toString() != value) errors.add('dátum ${r.date}≠$value');
       case 'acc':
@@ -130,7 +131,8 @@ List<String> checkResult(
             : context.accounts.firstWhere((a) => a.id == r.accountId).name;
         if (name != value) errors.add('számla $name≠$value');
       case 'from':
-        if (r.transferFrom != value) errors.add('honnan ${r.transferFrom}≠$value');
+        if (r.transferFrom != value)
+          errors.add('honnan ${r.transferFrom}≠$value');
       case 'to':
         if (r.transferTo != value) errors.add('hová ${r.transferTo}≠$value');
       case 'cur':

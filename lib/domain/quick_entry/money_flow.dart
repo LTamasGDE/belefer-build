@@ -128,9 +128,17 @@ FlowDirection? _directionOf(String rest) {
   if (_toEndings.contains(ending)) return FlowDirection.to;
   if (_viaEndings.contains(ending)) return FlowDirection.via;
   if (_objectEndings.contains(ending)) return FlowDirection.object;
-  if (const {'m', 'om', 'am', 'em', 'unk', 'i', 's', 'os', 'es'}.contains(
-    ending,
-  )) {
+  if (const {
+    'm',
+    'om',
+    'am',
+    'em',
+    'unk',
+    'i',
+    's',
+    'os',
+    'es',
+  }.contains(ending)) {
     return FlowDirection.bare;
   }
   return null;
@@ -250,11 +258,7 @@ List<FlowEndpoint> findEndpoints(
         _directionOf(words[i + 1].substring(1)) ?? FlowDirection.bare,
       );
       endpoints.add(
-        FlowEndpoint(
-          name: 'K&H',
-          tokens: withCarrier(i),
-          direction: direction,
-        ),
+        FlowEndpoint(name: 'K&H', tokens: withCarrier(i), direction: direction),
       );
       taken.addAll({i, i + 1});
       continue;
@@ -479,8 +483,7 @@ class PersonMention {
 String? _relationRest(String word) {
   String? best;
   for (final stem in _relationStems) {
-    if (word.startsWith(stem) &&
-        (best == null || stem.length > best.length)) {
+    if (word.startsWith(stem) && (best == null || stem.length > best.length)) {
       best = stem;
     }
   }
@@ -612,9 +615,13 @@ TransferInfo? detectTransfer(
   final withdrawal =
       _anyStartsWith(words, 'keszpenzfelvet') ||
       (cash.isNotEmpty &&
-          (cash.any((e) => const {'atm', 'automata', 'bankautomata'}.any(
-                (k) => words[e.tokens.first].startsWith(k),
-              )) ||
+          (cash.any(
+                (e) => const {
+                  'atm',
+                  'automata',
+                  'bankautomata',
+                }.any((k) => words[e.tokens.first].startsWith(k)),
+              ) ||
               words.any((w) => w.startsWith('felvet') || w == 'felvetel')));
   final deposit =
       cash.isNotEmpty &&

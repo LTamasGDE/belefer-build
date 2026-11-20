@@ -186,10 +186,7 @@ class _QuickEntryScreenState extends State<QuickEntryScreen> {
         ),
       );
     } else if (result.intent == QuickIntent.transfer) {
-      final route = [
-        ?result.transferFrom,
-        ?result.transferTo,
-      ].join(' → ');
+      final route = [?result.transferFrom, ?result.transferTo].join(' → ');
       saved = await openTransactionForm(
         context,
         initialType: EntryType.expense,

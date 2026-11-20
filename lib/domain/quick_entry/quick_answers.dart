@@ -15,10 +15,7 @@ enum QuestionMeasure { expense, income, balance, help }
 
 /// Egy felismert kérdés.
 class QuickQuestionQuery {
-  const QuickQuestionQuery({
-    required this.measure,
-    required this.words,
-  });
+  const QuickQuestionQuery({required this.measure, required this.words});
 
   final QuestionMeasure measure;
 
@@ -65,7 +62,8 @@ QuickQuestionQuery? detectQuestion(String text) {
       _questionStarts.contains(first) ||
       (asks && _weakQuestionStarts.contains(first));
   final hasNumber = words.any(
-    (word) => RegExp(r'^\d').hasMatch(word) && !RegExp(r'^\d{1,2}$').hasMatch(word),
+    (word) =>
+        RegExp(r'^\d').hasMatch(word) && !RegExp(r'^\d{1,2}$').hasMatch(word),
   );
   if (!startsLikeQuestion && !(asks && !hasNumber)) return null;
   // „mennyi volt a Lidl? 4500” típusú furcsaságokat rögzítésnek vesszük.
@@ -212,7 +210,8 @@ String answerQuestion(
   final capital = label[0].toUpperCase() + label.substring(1);
   if (count == 0) return '$capital$what nincs rögzített tétel.';
   return switch (query.measure) {
-    QuestionMeasure.expense => '$capital$what ${formatForint(expense)} ment el.',
+    QuestionMeasure.expense =>
+      '$capital$what ${formatForint(expense)} ment el.',
     QuestionMeasure.income => '$capital$what ${formatForint(income)} jött be.',
     _ =>
       '$capital ${formatForint(income)} jött be, ${formatForint(expense)} '

@@ -467,9 +467,7 @@ Future<QuickEntryDone?> applyQuickResult(
           state.selectedAccountId ??
           state.defaultAccount?.id;
       saved.add(
-        await state.saveTransaction(
-          transaction.copyWith(accountId: accountId),
-        ),
+        await state.saveTransaction(transaction.copyWith(accountId: accountId)),
       );
     }
     if (saved.isEmpty) return null;
@@ -638,7 +636,8 @@ class _TransferCard extends StatelessWidget {
     return Semantics(
       container: true,
       liveRegion: true,
-      label: 'Átvezetés: $route${amount == null ? '' : ', $amount'}. '
+      label:
+          'Átvezetés: $route${amount == null ? '' : ', $amount'}. '
           'Nem bevétel és nem kiadás, nem kerül a tételek közé.',
       excludeSemantics: true,
       child: Panel(
@@ -698,7 +697,8 @@ class _MultiCard extends StatelessWidget {
     return Semantics(
       container: true,
       liveRegion: true,
-      label: '${result.items.length} tétel: '
+      label:
+          '${result.items.length} tétel: '
           '${result.items.map((item) => '${item.title}, ${formatForint(item.amount!)}').join('; ')}',
       excludeSemantics: true,
       child: Panel(

@@ -398,7 +398,9 @@ QuickEntryResult _withDate(QuickEntryResult part, CalendarDay date) =>
 /// bontunk, ha minden részben van szám (a „kenyér és tej 1200” egy tétel).
 List<String> _splitItems(String text) {
   final parts = text
-      .split(RegExp(r'\s*[,;]\s+|\s+(?:és|meg|plusz|\+)\s+', caseSensitive: false))
+      .split(
+        RegExp(r'\s*[,;]\s+|\s+(?:és|meg|plusz|\+)\s+', caseSensitive: false),
+      )
       .map((part) => part.trim())
       .where((part) => part.isNotEmpty)
       .toList();
@@ -1000,7 +1002,8 @@ Set<int>? _matchKey(
         continue;
       }
       if (candidateStems(word).any(
-        (stem) => stem.length >= 5 && editDistance(stem, key, maxDistance: 1) <= 1,
+        (stem) =>
+            stem.length >= 5 && editDistance(stem, key, maxDistance: 1) <= 1,
       )) {
         return {i};
       }
@@ -1067,9 +1070,16 @@ List<_CategoryVote> _matchKeywords(
     final place =
         word.length > keyword.key.length + 1 &&
         word.startsWith(keyword.key) &&
-        const ['ban', 'ben', 'nal', 'nel', 'ba', 'be', 'bol', 'bol'].any(
-          word.endsWith,
-        );
+        const [
+          'ban',
+          'ben',
+          'nal',
+          'nel',
+          'ba',
+          'be',
+          'bol',
+          'bol',
+        ].any(word.endsWith);
     votes.add(
       _CategoryVote(
         keyword.categoryId,
@@ -1336,16 +1346,23 @@ const Map<String, int> _countWords = {
       }
     }
     final count = small(before);
-    if (count != null && count >= 2 && RegExp(r'\d\s*[*×]\s*\d').hasMatch(text)) {
+    if (count != null &&
+        count >= 2 &&
+        RegExp(r'\d\s*[*×]\s*\d').hasMatch(text)) {
       return (count * pick.value, {first - 1});
     }
   }
   // Egységár: „2900-ával”, „darabja 750”, „darabonként”, „egyenként”.
   final perPiece =
       (last + 1 < words.length &&
-          const {'aval', 'evel', 'javal', 'jevel', 'val', 'vel'}.contains(
-            words[last + 1],
-          )) ||
+          const {
+            'aval',
+            'evel',
+            'javal',
+            'jevel',
+            'val',
+            'vel',
+          }.contains(words[last + 1])) ||
       words.any(
         (w) =>
             w == 'darabja' ||
