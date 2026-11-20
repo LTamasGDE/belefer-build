@@ -1,7 +1,7 @@
 # Belefér
 
 Magyar nyelvű, személyes pénzügykövető Androidra és iOS-re, Flutterrel.
-Kiadás: **26.11.4**, alkalmazásverzió: `0.3.2+5`.
+Kiadás: **26.11.5**, alkalmazásverzió: `0.3.3+6`.
 
 ## Funkciók
 
@@ -19,6 +19,30 @@ Kiadás: **26.11.4**, alkalmazásverzió: `0.3.2+5`.
   bevétel?*); ha minden megvan, egy koppintással könyvel, visszavonhatóan.
   Ismétlődő tételt is felvesz („Netflix havi 4990”), lemond („lemondtam a
   Spotifyt”) vagy módosít („mostantól 190 ezer a lakbér”).
+- **Gyorsrögzítés bővítése (26.11.5):**
+  - **Átvezetés:** saját számlák, bankok és készpénz közötti mozgás
+    („átraktam 10 ezret a CIB-ről a Revolut sajátra”, „félretettem 30 ezret”,
+    „felvettem 20 ezret az automatából”). Megmutatja, honnan hová ment a pénz,
+    de nem könyveli, mert nem bevétel és nem kiadás. Ha mégis tételként kell,
+    űrlapon megadható.
+  - **Számla a szövegből:** „a közösről fizettem a Tescoban 8000”, „közös
+    kártyával tankoltam”.
+  - **Több tétel egy mondatban:** „Lidl 4500 és benzin 20 000”; együtt
+    könyveli és együtt vonja vissza őket.
+  - **Kérdések:** „mennyit költöttem ebben a hónapban?”, „mennyi maradt?”,
+    „mennyi ment el benzinre a múlt hónapban?”.
+  - **Deviza:** „25 euró ebéd”; a napi EKB-árfolyamon forintra váltja.
+  - **Személyek és kölcsön:** „kölcsönadtam Annának 10 ezret”, „Peti
+    visszaadta”, „anya utalt 30 ezret”. Azt is felismeri, ki adott kinek.
+  - **Darabszám és javítás:** „2 x 1500”, „két mozijegy 2900-ával”,
+    „nem 4500, hanem 5400”.
+  - **Őszinte bizonytalanság:** ha csak tippel (elírástűrő egyezés vagy
+    bizonytalan modell), „Ellenőrizd” jelzést ad, és nem írja ki, hogy
+    minden megvan.
+  - **Szigorúbb elírástűrés:** gyakori szót nem vesz más szó elírásának
+    („számláról” ≠ Szamos).
+  - Több száz valósághű mondat ellenőrzi
+    (`test/fixtures/quick_entry_*.txt`).
 - **Saját nyelvi modell (26.11.2):** a gyorsrögzítés, a blokkok és a banki
   értesítések értelmezése mögött a Belefér saját, a telefonon futó modellje
   áll (kb. 1,4 MB, internet, kulcs és előfizetés nélkül). Magyar pénzügyi
@@ -97,8 +121,8 @@ alkalmazás törlésekor az adatok is törlődnek.
 ## APK letöltése (Android)
 
 A telepíthető APK a build-repó kiadásai között van, bejelentkezés nélkül
-letölthető: <https://github.com/LTamasGDE/belefer-build/releases/tag/26.11.4>.
-Telefonon a `belefer-26.11.4.apk` fájlt érdemes letölteni (release mód). A
+letölthető: <https://github.com/LTamasGDE/belefer-build/releases/tag/26.11.5>.
+Telefonon a `belefer-26.11.5.apk` fájlt érdemes letölteni (release mód). A
 `-debug.apk` változat hibakereséshez való. Minden CI-futás a debug APK-t
 `belefer-android-debug-apk` artifactként is feltölti (GitHub-bejelentkezéssel,
 zipben tölthető le).
@@ -111,7 +135,7 @@ idejére (Play Áruház → profil → Play Protect → fogaskerék), vagy telep
 számítógépről USB-n, amit a Play Protect nem tilt:
 
 ```
-adb install -r belefer-26.11.4.apk
+adb install -r belefer-26.11.5.apk
 ```
 
 **Értesítés-hozzáférés Xiaominál:** a HyperOS-ből hiányzik a „Korlátozott
@@ -132,7 +156,7 @@ eltávolítás kellene.
 ## iPhone-ra telepítés (ingyenes Apple ID-val)
 
 iOS-en linkről nem lehet appot telepíteni, ezért a kiadás egy aláíratlan
-csomagot is tartalmaz: `belefer-26.11.4-unsigned.ipa`. Ezt a
+csomagot is tartalmaz: `belefer-26.11.5-unsigned.ipa`. Ezt a
 [SideStore](https://docs.sidestore.io/docs/installation/prerequisites) írja
 alá a saját Apple ID-ddal:
 
