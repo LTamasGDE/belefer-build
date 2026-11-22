@@ -18,7 +18,7 @@ CATEGORY_WORDS: dict[str, list[str]] = {
         'darált hús', 'sertéskaraj', 'marhahús', 'hal', 'liszt', 'cukor', 'só',
         'olaj', 'étolaj', 'rizs', 'tészta', 'spagetti', 'kávé', 'őrölt kávé',
         'kávékapszula', 'tea', 'ásványvíz', 'víz', 'üdítő', 'kóla', 'gyümölcslé',
-        'sör', 'bor', 'joghurt', 'kefir', 'tejföl', 'túró', 'vaj', 'margarin',
+        'sör', 'bor', 'pia', 'piák', 'üdítő', 'ásványvíz', 'energiaital', 'joghurt', 'kefir', 'tejföl', 'túró', 'vaj', 'margarin',
         'pékáru', 'kifli', 'zsemle', 'kakaós csiga', 'pogácsa', 'kalács',
         'müzli', 'zabpehely', 'csoki', 'csokoládé', 'keksz', 'chips', 'nasi',
         'jégkrém', 'fagyasztott pizza', 'mirelit', 'konzerv', 'ketchup',

@@ -222,6 +222,76 @@ def fit(name, kind, X, y, C, keep, max_iter=400):
     return head
 
 
+def fit_stream(name, kind, items, label_of, featurize, *, epochs=2, batch=1024,
+               lr=0.3, l2=2e-8, max_entries=300_000, base_keep=0.03, seed=11):
+    """Softmax-regresszió kötegenkénti AdaGrad-dal: a mondatokat kötegenként
+    alakítja jellemzőkké, így milliós adaton is elfér a memóriában.
+
+    [items] a tanító elemek, [label_of] elemenként a címke (a megnevezés-
+    jelölőnél None: a címkéket a [featurize] adja tokenenként)."""
+    started = time.time()
+    if label_of is not None:
+        labels = sorted({label_of(item) for item in items})
+    else:
+        labels = ['o', 't']
+    index = {label: i for i, label in enumerate(labels)}
+    k = len(labels)
+    W = np.zeros((DIM, k), dtype=np.float32)
+    G = np.full((DIM, k), 1e-6, dtype=np.float32)
+    b = np.zeros(k, dtype=np.float64)
+    Gb = np.full(k, 1e-6)
+    rng = np.random.default_rng(seed)
+    seen = 0
+    for epoch in range(epochs):
+        order = rng.permutation(len(items))
+        for start in range(0, len(order), batch):
+            chunk = [items[i] for i in order[start:start + batch]]
+            X, y_labels = featurize(chunk)
+            if X.shape[0] == 0:
+                continue
+            y = np.fromiter((index[label] for label in y_labels), dtype=np.int64, count=len(y_labels))
+            cols, inverse = np.unique(X.indices, return_inverse=True)
+            Xs = sparse.csr_matrix((X.data.astype(np.float32), inverse, X.indptr),
+                                   shape=(X.shape[0], len(cols)))
+            Wc = W[cols]
+            Z = Xs @ Wc + b
+            Z -= Z.max(axis=1, keepdims=True)
+            P = np.exp(Z)
+            P /= P.sum(axis=1, keepdims=True)
+            P[np.arange(len(y)), y] -= 1.0
+            P /= len(y)
+            gW = (Xs.T @ P).astype(np.float32) + l2 * Wc
+            gb = P.sum(axis=0)
+            Gc = G[cols] + gW * gW
+            G[cols] = Gc
+            W[cols] = Wc - lr * gW / np.sqrt(Gc)
+            Gb += gb * gb
+            b -= lr * gb / np.sqrt(Gb)
+            seen += X.shape[0]
+        print(f'    {name}: {epoch + 1}. kör kész ({time.time() - started:.0f} s)', flush=True)
+    coef = W.T.astype(np.float64)
+    # A modell mérete: a legnagyobb súlyok közül legfeljebb [max_entries].
+    magnitudes = np.abs(coef).ravel()
+    keep = base_keep
+    if np.count_nonzero(magnitudes >= keep) > max_entries:
+        keep = float(np.partition(magnitudes, -max_entries)[-max_entries])
+    head = Head(name, kind, labels, coef, b, keep=keep)
+    print(f'  {name}: {len(items)} mondat ({seen // epochs} sor/kör), {k} címke, '
+          f'{head.entry_count} súly, {time.time() - started:.0f} s', flush=True)
+    return head
+
+
+def seq_featurize(attr):
+    def run(chunk):
+        X = sequence_matrix([e.text for e in chunk])
+        return X, [getattr(e, attr) for e in chunk]
+    return run
+
+
+def title_featurize(chunk):
+    return token_matrix(chunk)
+
+
 def accuracy(head: Head, texts, labels) -> float:
     hits = 0
     for text, label in zip(texts, labels):
@@ -230,12 +300,16 @@ def accuracy(head: Head, texts, labels) -> float:
     return hits / max(1, len(texts))
 
 
-def main(scale: float = 1.0) -> None:
+def main(scale: float = 1.0, sentences: int = 0) -> None:
     random.seed(0)
     print('Adatok generálása…', flush=True)
-    train = generate.dataset(1, scale)
+    if sentences:
+        train = generate.unique_dataset(sentences)
+    else:
+        train = generate.dataset(1, scale)
     valid = generate.dataset(7, 0.06)
-    print(f'  {len(train)} tanító, {len(valid)} ellenőrző példa', flush=True)
+    unique = len({e.text for e in train})
+    print(f'  {len(train)} tanító mondat ({unique} különböző), {len(valid)} ellenőrző', flush=True)
 
     rng = random.Random(3)
     cat_train = [e for e in train if e.category]
@@ -244,13 +318,25 @@ def main(scale: float = 1.0) -> None:
     title_train = [e for e in train if e.title_mask is not None]
 
     print('Tanítás…', flush=True)
-    heads = [
-        fit('category', 0, sequence_matrix([e.text for e in cat_train]), [e.category for e in cat_train], C=20, keep=0.03),
-        fit('intent', 0, sequence_matrix([e.text for e in intent_train]), [e.intent for e in intent_train], C=10, keep=0.03),
-        fit('status', 0, sequence_matrix([e.text for e in status_train]), [e.status for e in status_train], C=10, keep=0.03),
-    ]
-    X_title, y_title = token_matrix(title_train)
-    heads.append(fit('title', 1, X_title, y_title, C=5, keep=0.03))
+    if sentences:
+        heads = [
+            fit_stream('category', 0, cat_train, lambda e: e.category, seq_featurize('category'),
+                       max_entries=420_000),
+            fit_stream('intent', 0, intent_train, lambda e: e.intent, seq_featurize('intent'),
+                       max_entries=160_000),
+            fit_stream('status', 0, status_train, lambda e: e.status, seq_featurize('status'),
+                       max_entries=120_000),
+            fit_stream('title', 1, title_train, None, title_featurize, batch=256,
+                       max_entries=160_000),
+        ]
+    else:
+        heads = [
+            fit('category', 0, sequence_matrix([e.text for e in cat_train]), [e.category for e in cat_train], C=20, keep=0.03),
+            fit('intent', 0, sequence_matrix([e.text for e in intent_train]), [e.intent for e in intent_train], C=10, keep=0.03),
+            fit('status', 0, sequence_matrix([e.text for e in status_train]), [e.status for e in status_train], C=10, keep=0.03),
+        ]
+        X_title, y_title = token_matrix(title_train)
+        heads.append(fit('title', 1, X_title, y_title, C=5, keep=0.03))
     by_name = {h.name: h for h in heads}
 
     print('Ellenőrzés (generált):', flush=True)
@@ -313,4 +399,9 @@ def main(scale: float = 1.0) -> None:
 
 
 if __name__ == '__main__':
-    main(float(sys.argv[1]) if len(sys.argv) > 1 else 1.0)
+    # `train.py 2000000`: legalább ennyi különböző mondaton, kötegenként.
+    arg = float(sys.argv[1]) if len(sys.argv) > 1 else 1.0
+    if arg >= 10_000:
+        main(sentences=int(arg))
+    else:
+        main(arg)

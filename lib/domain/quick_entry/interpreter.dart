@@ -816,7 +816,8 @@ QuickEntryResult _interpretSingle(
         model != null &&
         !purchase &&
         explicitType == null &&
-        endpoints.isNotEmpty &&
+        (best == null || best.fuzzy) &&
+        endpoints.any((e) => e.direction != FlowDirection.bare) &&
         !people.any((person) => person.recipient)) {
       final prediction = model.classify('intent', text);
       if (prediction.best == 'transfer' && prediction.confidence >= 0.85) {

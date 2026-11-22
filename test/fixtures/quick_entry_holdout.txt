@@ -120,3 +120,65 @@ tegnap este Wolt 6500 || a=6500; c=dining; d=2026-11-19
 ## --- Kérdés ---
 mennyi pénzem maradt? || i=question
 mennyit fizettem a Lidlben? || i=question
+
+# Harmadik ellenőrző kör (ritka szavak), a 2 milliós tanítás után írva.
+## --- Ritka szavak ---
+babakocsi 89 000 || a=89000; t=k
+pelenka 6990 || a=6990; c=groceries/health
+macskaalom 3200 || a=3200; t=k
+kutyakozmetika 9000 || a=9000; t=k
+hajfestés 18 000 || a=18000; t=k
+manikűr 7000 || a=7000; t=k
+masszázs 12 000 || a=12000; c=health/entertainment
+gyógytorna 8000 || a=8000; c=health
+vérvétel 6000 || a=6000; c=health
+kontaktlencse 14 000 || a=14000; c=health
+szemcsepp 2400 || a=2400; c=health
+vitamin 4500 || a=4500; c=health
+bringaszerviz 9000 || a=9000; c=transport
+autómosás 3500 || a=3500; c=transport
+olajcsere 25 000 || a=25000; c=transport
+gumiabroncs 80 000 || a=80000; c=transport
+rollerbérlés 900 || a=900; c=transport
+hévjegy 650 || a=650; c=transport
+reptéri transzfer 12 000 || a=12000; c=transport
+kerékpár 120 000 || a=120000; t=k
+fűnyíró 45 000 || a=45000; t=k
+festék a falra 23 000 || a=23000; t=k
+csempe 60 000 || a=60000; c=housing
+kaució 300 000 || a=300000; c=housing
+lakásbiztosítás 4200 || a=4200; t=k
+csatornadíj 3000 || a=3000; c=utilities
+távhő 15 000 || a=15000; c=utilities
+fűtésszámla 18 000 || a=18000; c=utilities
+tárhely előfizetés 1500 || a=1500; c=subscriptions
+iCloud 1290 || a=1290; c=subscriptions
+ChatGPT előfizetés 8000 || a=8000; c=subscriptions
+YouTube Premium 2390 || a=2390; c=subscriptions
+társasjáték 12 000 || a=12000; c=entertainment
+bowling 6000 || a=6000; c=entertainment
+szabadulószoba 16 000 || a=16000; c=entertainment
+múzeumjegy 3500 || a=3500; c=entertainment
+állatkerti belépő 4000 || a=4000; c=entertainment
+strandbelépő 3000 || a=3000; c=entertainment
+gofri 1500 || a=1500; c=dining
+lángos 1400 || a=1400; c=dining
+gyros 2600 || a=2600; c=dining
+sushi 9000 || a=9000; c=dining
+reggeli a pékségben 1800 || a=1800; c=groceries/dining
+zöldség a piacon 3400 || a=3400; c=groceries
+húsvéti sonka 7000 || a=7000; c=groceries
+pulóver 14 000 || a=14000; c=clothing
+melltartó 9000 || a=9000; c=clothing
+téli csizma 35 000 || a=35000; c=clothing
+esernyő 4000 || a=4000; t=k
+nyelvvizsga 30 000 || a=30000; c=education
+online kurzus 15 000 || a=15000; c=education
+füzetek az iskolába 3500 || a=3500; c=education
+esküvői ajándék 30 000 || a=30000; c=gifts
+csokor 6000 || a=6000; c=gifts
+osztálypénz 5000 || a=5000; c=education/other_expense
+jutalom a munkahelyen 80 000 || t=b; a=80000; c=salary/side_income
+albérlő fizetett 120 000 || t=b; a=120000
+eladtam a tévét 40 000 || t=b; a=40000; c=side_income
+fuvaroztam, kaptam 8000-et || t=b; a=8000

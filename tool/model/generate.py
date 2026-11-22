@@ -916,6 +916,101 @@ def person_sentence(rng: random.Random) -> Example:
 
 # --- Összeállítás ------------------------------------------------------------
 
+# --- Változatosság: a címkét nem változtató kiegészítések ---------------------
+
+ENRICH_BEFORE = [
+    'ma', 'tegnap', 'reggel', 'este', 'délben', 'munka után', 'ebédszünetben',
+    'hétvégén', 'hétfőn', 'kedden', 'szerdán', 'csütörtökön', 'pénteken',
+    'szombaton', 'vasárnap', 'az előbb', 'most', 'végre', 'megint', 'szokás szerint',
+    'gyorsan', 'útközben', 'hazafelé', 'reggel munkába menet', 'tegnap este',
+    'ma reggel', 'múlt héten', 'pár napja', 'az imént', 'ma délután',
+]
+ENRICH_AFTER = [
+    'kártyával', 'készpénzzel', 'Revoluttal', 'a közös kártyával', 'a saját kártyámmal',
+    'Apple Payjel', 'Google Payjel', 'telefonnal', 'átutalással', 'a közösről',
+    'a sajátról', 'Petivel', 'a párommal', 'a gyerekekkel', 'a barátokkal',
+    'a kollégákkal', 'egyedül', 'anyával', 'a családdal', 'Budapesten', 'Debrecenben',
+    'Szegeden', 'Győrben', 'Pécsen', 'a belvárosban', 'a plázában', 'a sarkon',
+    'a munkahely mellett', 'otthon', 'útközben', 'szülinapra', 'a hétvégére',
+    'a buliba', 'karácsonyra', 'a nyaralásra', 'a gyereknek', 'magamnak',
+    'meglepetésnek', 'akciósan', 'leárazva', 'kuponnal', 'pont jókor',
+    'végül is', 'de megérte', 'sajnos', 'na', 'asszem', 'kb', 'körülbelül',
+    'nagyjából', 'összesen', 'mindennel együtt', 'borravalóval', 'szállítással együtt',
+]
+EMOJI = ['🙂', '😅', '🛒', '☕', '🍕', '🚗', '💸', '🎉', '😬', '👍', '🙈', '💰']
+
+
+def enrich(example: Example, rng: random.Random) -> Example:
+    """Időhatározó, fizetési mód, társaság, hely, ok, emoji, kis- és
+    nagybetű: a kategóriát és a megnevezést nem változtatja."""
+    text = example.text
+    if '\n' in text:
+        return example
+    before = rng.choice(ENRICH_BEFORE) if rng.random() < 0.35 else ''
+    after = ' '.join(rng.sample(ENRICH_AFTER, rng.choice([1, 1, 1, 2]))) if rng.random() < 0.55 else ''
+    emoji = rng.choice(EMOJI) if rng.random() < 0.06 else ''
+    parts = [part for part in [before, text, after, emoji] if part]
+    new_text = ' '.join(parts)
+    style = rng.random()
+    if style < 0.05:
+        new_text = new_text.upper()
+    elif style < 0.25:
+        new_text = new_text.lower()
+    elif style < 0.32:
+        new_text = new_text[:1].upper() + new_text[1:]
+    if rng.random() < 0.08:
+        new_text += rng.choice(['.', '!', '...', ' :)', '!!'])
+    mask = example.title_mask
+    if mask is not None:
+        lead = len(raw_tokens(before)) if before else 0
+        tail = len(raw_tokens(new_text)) - lead - len(mask)
+        if tail < 0 or raw_tokens(new_text)[lead:lead + len(mask)] != raw_tokens(text.upper() if style < 0.05 else text.lower() if style < 0.25 else text)[:len(mask)] and False:
+            return example
+        mask = [0] * lead + mask + [0] * tail
+        if len(mask) != len(raw_tokens(new_text)):
+            return example
+    return Example(
+        text=new_text,
+        category=example.category,
+        intent=example.intent,
+        status=example.status,
+        title_mask=mask,
+        tags=example.tags,
+    )
+
+
+def unique_dataset(target: int, seed: int = 1, log=print) -> list[Example]:
+    """Legalább [target] különböző mondat: körönként új adatot generál,
+    változatosabbá teszi, és a már látott mondatokat kihagyja. A kevés
+    változatot adó fajták (kérdés, egyéb értesítés) felső korlátot kapnak,
+    hogy ne torzítsák az arányokat."""
+    seen: set[int] = set()
+    out: list[Example] = []
+    caps = {'question': 120_000, 'status:other': 90_000, 'status:failed': 160_000,
+            'cancel_recurring': 150_000}
+    counts: dict[str, int] = {}
+    round_no = 0
+    while len(out) < target:
+        round_no += 1
+        rng = random.Random(seed * 1000 + round_no)
+        for example in dataset(seed * 1000 + round_no, 2.0):
+            if example.status is None and example.intent != 'cancel_recurring' and rng.random() < 0.7:
+                example = enrich(example, rng)
+            kind = (example.intent if example.intent and example.intent != 'record'
+                    else f'status:{example.status}' if example.status else 'record')
+            cap = caps.get(kind)
+            if cap is not None and counts.get(kind, 0) >= cap:
+                continue
+            key = hash(example.text)
+            if key in seen:
+                continue
+            seen.add(key)
+            counts[kind] = counts.get(kind, 0) + 1
+            out.append(example)
+        log(f'  {round_no}. kör: {len(out)} különböző mondat')
+    return out
+
+
 def dataset(seed: int, scale: float = 1.0) -> list[Example]:
     rng = random.Random(seed)
     data: list[Example] = []

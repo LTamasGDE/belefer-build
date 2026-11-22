@@ -306,6 +306,7 @@ const List<KeywordEntry> keywords = [
   KeywordEntry('dinner', 'dining', title: 'Vacsora', weight: 6),
   KeywordEntry('fuel', 'transport', title: 'Tankolás', weight: 6),
   KeywordEntry('jelmez', 'clothing', title: 'Jelmez', weight: 5),
+  KeywordEntry('gofri', 'dining', title: 'Gofri', weight: 6),
   KeywordEntry('benya', 'transport', title: 'Benzin', weight: 6),
   KeywordEntry('premium', 'salary', title: 'Prémium', weight: 5),
   KeywordEntry('sztorno', 'refund', title: 'Sztornó', weight: 7),

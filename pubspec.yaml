@@ -2,7 +2,7 @@ name: belefer
 description: "Belefér – magyar nyelvű, személyes pénzügykövető."
 publish_to: "none"
 
-version: 0.3.4+7
+version: 0.3.5+8
 
 environment:
   sdk: ^3.10.0

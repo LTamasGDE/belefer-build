@@ -1,7 +1,7 @@
 # Belefér
 
 Magyar nyelvű, személyes pénzügykövető Androidra és iOS-re, Flutterrel.
-Kiadás: **26.11.6**, alkalmazásverzió: `0.3.4+7`.
+Kiadás: **26.11.7**, alkalmazásverzió: `0.3.5+8`.
 
 ## Funkciók
 
@@ -19,6 +19,12 @@ Kiadás: **26.11.6**, alkalmazásverzió: `0.3.4+7`.
   bevétel?*); ha minden megvan, egy koppintással könyvel, visszavonhatóan.
   Ismétlődő tételt is felvesz („Netflix havi 4990”), lemond („lemondtam a
   Spotifyt”) vagy módosít („mostantól 190 ezer a lakbér”).
+- **2 millió mondaton tanított modell (26.11.7):** 2 027 927 különböző
+  mondaton tanítottam. A mondatok változatosak: időhatározó, fizetési mód,
+  társaság, hely, ok, emoji, kis- és nagybetű, elírások. A tanítás kötegenként
+  halad (AdaGrad-softmax), így ekkora adaton is elfér a memóriában. Új,
+  korábban nem látott mondatokon a kategória pontossága 95,3%-ról 98,3%-ra, a
+  szándéké 98,8%-ról 99,7%-ra nőtt. A modell kb. 2,3 MB.
 - **Tanul rólad, kérdezés nélkül (26.11.6):** a háttérben, a tételeidből
   tanul, de ezt nem mutatja: egyszerűen jól tippel.
   - A „kávé” beírására a szokásos összeget írja be, a Lidl a szokásos
@@ -133,8 +139,8 @@ alkalmazás törlésekor az adatok is törlődnek.
 ## APK letöltése (Android)
 
 A telepíthető APK a build-repó kiadásai között van, bejelentkezés nélkül
-letölthető: <https://github.com/LTamasGDE/belefer-build/releases/tag/26.11.6>.
-Telefonon a `belefer-26.11.6.apk` fájlt érdemes letölteni (release mód). A
+letölthető: <https://github.com/LTamasGDE/belefer-build/releases/tag/26.11.7>.
+Telefonon a `belefer-26.11.7.apk` fájlt érdemes letölteni (release mód). A
 `-debug.apk` változat hibakereséshez való. Minden CI-futás a debug APK-t
 `belefer-android-debug-apk` artifactként is feltölti (GitHub-bejelentkezéssel,
 zipben tölthető le).
@@ -147,7 +153,7 @@ idejére (Play Áruház → profil → Play Protect → fogaskerék), vagy telep
 számítógépről USB-n, amit a Play Protect nem tilt:
 
 ```
-adb install -r belefer-26.11.6.apk
+adb install -r belefer-26.11.7.apk
 ```
 
 **Értesítés-hozzáférés Xiaominál:** a HyperOS-ből hiányzik a „Korlátozott
@@ -168,7 +174,7 @@ eltávolítás kellene.
 ## iPhone-ra telepítés (ingyenes Apple ID-val)
 
 iOS-en linkről nem lehet appot telepíteni, ezért a kiadás egy aláíratlan
-csomagot is tartalmaz: `belefer-26.11.6-unsigned.ipa`. Ezt a
+csomagot is tartalmaz: `belefer-26.11.7-unsigned.ipa`. Ezt a
 [SideStore](https://docs.sidestore.io/docs/installation/prerequisites) írja
 alá a saját Apple ID-ddal:
 
@@ -255,7 +261,8 @@ assets/model/  a betanított modell (belefer_model.bin)
 
 ```
 pip install numpy scipy scikit-learn
-python3 tool/model/train.py 0.6     # kb. 2 perc, 0.6 = az adatmennyiség aránya
+python3 tool/model/train.py 2000000   # kb. 20 perc: legalább 2 millió különböző mondat
+python3 tool/model/train.py 0.6       # gyors próba (kb. 2 perc), 0.6 = az adatmennyiség aránya
 python3 tool/model/probe.py "tegnap a hentesnél 6700"
 ```
 
